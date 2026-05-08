@@ -603,8 +603,32 @@ def _select_signal_in_list(
     format_dlg: pywinauto.WindowSpecification,
     signal_name: str,
 ) -> None:
+    # Ensure the Signals tab is active
+    _click_tab(format_dlg, ["Signals", "訊號", "Signal"])
+    time.sleep(0.4)
+
+    # Discover the list control class — log all descendants on first failure
+    lv = None
+    for cls in ["SysListView32", "ListBox", "ListView20WndClass", "TListView"]:
+        try:
+            ctrl = format_dlg.child_window(class_name=cls)
+            if ctrl.exists(timeout=1):
+                lv = ctrl
+                logger.debug("Signal list control class: %s", cls)
+                break
+        except Exception:
+            pass
+
+    if lv is None:
+        # Diagnostic: show every descendant class name
+        try:
+            classes = sorted({d.class_name() for d in format_dlg.descendants()})
+            logger.debug("Format Objects descendants (all classes): %s", classes)
+        except Exception as e:
+            logger.debug("Could not enumerate descendants: %s", e)
+        raise MCUIError("Could not find signal list control in Format Objects dialog")
+
     try:
-        lv = format_dlg.child_window(class_name="SysListView32")
         count = lv.item_count()
         for i in range(count):
             text = lv.get_item(i).text()
@@ -623,7 +647,7 @@ def _select_signal_in_list(
     except MCUIError:
         raise
     except Exception as e:
-        raise MCUIError(f"Could not find signal list: {e}") from e
+        raise MCUIError(f"Signal list error: {e}") from e
 
 
 def _click_button_in_dlg(dlg, titles: List[str]) -> bool:
