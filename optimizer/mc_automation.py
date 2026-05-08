@@ -153,22 +153,42 @@ class MultiChartsConnection:
 # ---------------------------------------------------------------------------
 
 def _focus_window(hwnd: int) -> None:
-    """Bring window to foreground."""
+    """
+    Bring MC window to foreground.
+    Win+D clears all overlapping windows first; after the desktop shell
+    is the foreground there is no high-integrity window competing, so
+    ShowWindow + SetForegroundWindow succeed from a non-admin process.
+    """
+    import win32gui
+    import win32con
+
+    # Skip if MC already has focus
     try:
-        import win32gui
-        import win32con
+        if win32gui.GetForegroundWindow() == hwnd:
+            return
+    except Exception:
+        pass
+
+    # Minimize all other windows via Win+D
+    pyautogui.hotkey("win", "d")
+    time.sleep(0.6)
+
+    # Restore the MC window (now nothing is covering it)
+    try:
         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
-        time.sleep(0.1)
+        time.sleep(0.4)
     except Exception:
         pass
+
+    # SetForegroundWindow now works because the desktop was foreground
     try:
-        # SwitchToThisWindow bypasses some UIPI restrictions vs SetForegroundWindow
-        ctypes.windll.user32.SwitchToThisWindow(hwnd, True)
-        time.sleep(0.35)
+        ctypes.windll.user32.SetForegroundWindow(hwnd)
+        time.sleep(0.3)
     except Exception:
         pass
+
+    # Final click to confirm focus
     try:
-        import win32gui
         rect = win32gui.GetWindowRect(hwnd)
         cx = (rect[0] + rect[2]) // 2
         cy = (rect[1] + rect[3]) // 2
