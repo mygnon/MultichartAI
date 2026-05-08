@@ -519,6 +519,21 @@ def _pyautogui_click_popup_item(app: Application, item_titles: List[str]) -> boo
 
 def _open_format_signals(conn: MultiChartsConnection) -> pywinauto.WindowSpecification:
     """Open Format Signals/Objects dialog."""
+    # Reuse if already open from a previous attempt (avoids right-clicking on the dialog)
+    _fmt_titles = [r".*Format Objects.*", r".*Format Signals.*",
+                   r".*格式物件.*", r".*格式訊號.*"]
+    for title_re in _fmt_titles:
+        try:
+            dlg = conn.app.window(title_re=title_re)
+            if dlg.exists(timeout=0):
+                logger.debug("Format dialog already open — reusing it")
+                r = dlg.rectangle()
+                pyautogui.click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+                time.sleep(0.3)
+                return dlg
+        except Exception:
+            pass
+
     _focus_window(conn._hwnd)
     time.sleep(0.4)
 
@@ -620,7 +635,22 @@ def _select_signal_in_list(
             pass
 
     if lv is None:
-        # Diagnostic: show every descendant class name
+        # Fallback: try every descendant that has item_count()
+        try:
+            for desc in format_dlg.descendants():
+                try:
+                    n = desc.item_count()
+                    if n > 0:
+                        logger.debug("Found usable list via brute-force: class=%s items=%d",
+                                     desc.class_name(), n)
+                        lv = desc
+                        break
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    if lv is None:
         try:
             classes = sorted({d.class_name() for d in format_dlg.descendants()})
             logger.debug("Format Objects descendants (all classes): %s", classes)
