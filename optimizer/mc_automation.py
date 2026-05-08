@@ -153,7 +153,20 @@ class MultiChartsConnection:
 # ---------------------------------------------------------------------------
 
 def _focus_window(hwnd: int) -> None:
-    """Bring window to foreground via pyautogui click at its center."""
+    """Bring window to foreground."""
+    try:
+        import win32gui
+        import win32con
+        win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+        time.sleep(0.1)
+    except Exception:
+        pass
+    try:
+        # SwitchToThisWindow bypasses some UIPI restrictions vs SetForegroundWindow
+        ctypes.windll.user32.SwitchToThisWindow(hwnd, True)
+        time.sleep(0.35)
+    except Exception:
+        pass
     try:
         import win32gui
         rect = win32gui.GetWindowRect(hwnd)
@@ -162,7 +175,7 @@ def _focus_window(hwnd: int) -> None:
         pyautogui.click(cx, cy)
         time.sleep(0.3)
     except Exception as e:
-        logger.debug("_focus_window failed: %s", e)
+        logger.debug("_focus_window click failed: %s", e)
 
 
 def _pg_hotkey(*keys) -> None:
@@ -442,58 +455,83 @@ def _close_format_dialog(conn: MultiChartsConnection) -> None:
 # Format Signals dialog helpers
 # ---------------------------------------------------------------------------
 
+def _pyautogui_click_popup_item(app: Application, item_titles: List[str]) -> bool:
+    """
+    Locate a popup menu item via pywinauto (read-only, no UIPI) and click with pyautogui.
+    Returns True if an item was found and clicked.
+    """
+    try:
+        popup = app.window(class_name="#32768")
+        if not popup.exists(timeout=2):
+            return False
+        # Primary: enumerate via menu() API
+        try:
+            menu = popup.menu()
+            for i in range(menu.item_count()):
+                try:
+                    item = menu.item(i)
+                    text = item.text()
+                    if any(t.lower() in text.lower() for t in item_titles):
+                        r = item.rectangle()
+                        pyautogui.click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+                        time.sleep(0.3)
+                        logger.debug("Clicked popup item: '%s'", text)
+                        return True
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        # Fallback: child_window by title
+        for title in item_titles:
+            try:
+                item = popup.child_window(title=title)
+                if item.exists(timeout=0):
+                    r = item.rectangle()
+                    pyautogui.click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+                    time.sleep(0.3)
+                    return True
+            except Exception:
+                pass
+    except Exception as e:
+        logger.debug("_pyautogui_click_popup_item failed: %s", e)
+    return False
+
+
 def _open_format_signals(conn: MultiChartsConnection) -> pywinauto.WindowSpecification:
-    """Open Format Signals dialog via pyautogui menu navigation."""
+    """Open Format Signals/Objects dialog via right-click → pyautogui click."""
+    _focus_window(conn._hwnd)
+    time.sleep(0.4)
+
     main = conn.main_window()
     rect = main.rectangle()
     cx = (rect.left + rect.right) // 2
-    cy_menu = rect.top + 15  # menu bar is near the top
+    cy = (rect.top + rect.bottom) // 2
 
-    # Click MC window to focus it
-    pyautogui.click(cx, cy_menu)
-    time.sleep(0.3)
+    # Right-click in chart area
+    pyautogui.rightClick(cx, cy)
+    time.sleep(0.7)
 
-    # Try Format menu → Strategies via pyautogui
-    _pg_hotkey("alt", "o")   # "Format" menu might be under Alt+O or Alt+F
-    time.sleep(0.4)
+    target_names = [
+        "Format Signals...", "Format Objects...", "Format Strategies...",
+        "格式物件...", "格式訊號...", "格式策略...",
+    ]
+    if _pyautogui_click_popup_item(conn.app, target_names):
+        try:
+            return _wait_for_any_window(
+                conn.app,
+                [r".*Format.*", r".*格式.*"],
+                timeout=8,
+            )
+        except WindowNotFoundError:
+            pass
 
-    # Check if a menu appeared
-    try:
-        return _wait_for_any_window(
-            conn.app,
-            [r".*Format Objects.*", r".*Format Signals.*", r".*格式物件.*", r".*格式訊號.*"],
-            timeout=3,
-        )
-    except WindowNotFoundError:
-        pass
-
-    # Escape and try right-click on chart area
+    # Dismiss any leftover menu
     _pg_press("escape")
     time.sleep(0.2)
 
-    # Right-click in the chart area
-    chart_cx = (rect.left + rect.right) // 2
-    chart_cy = (rect.top + rect.bottom) // 2
-    pyautogui.rightClick(chart_cx, chart_cy)
-    time.sleep(0.5)
-
-    # Look for context menu then click Format Signals
-    try:
-        popup = conn.app.window(class_name="#32768")
-        for item in ["Format Signals...", "Format Objects...", "格式物件...", "格式訊號..."]:
-            try:
-                popup.menu_item(item).click()
-                time.sleep(0.5)
-                break
-            except Exception:
-                pass
-    except Exception:
-        pass
-
-    return _wait_for_any_window(
-        conn.app,
-        [r".*Format.*", r".*格式.*"],
-        timeout=10,
+    raise WindowNotFoundError(
+        "Could not open Format Signals/Objects dialog.\n"
+        "Make sure the chart is visible, has a strategy applied, and MC is in the foreground."
     )
 
 
