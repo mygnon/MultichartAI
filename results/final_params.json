@@ -1,0 +1,61 @@
+{
+  "strategy": "_2021Basic_Break_NQ",
+  "symbol": "TWF.TXF HOT",
+  "timeframe": "Daily (1440 min)",
+  "insample_period": "2019/01/01 - 2026/01/01",
+  "objective_function": "NetProfit^2 / abs(MaxDrawdown)  [only when NetProfit > 0 AND MaxDrawdown < 0]",
+  "plateau_radius": 2,
+
+  "phase1_LE_SE": {
+    "grid": "LE: 1-50 step 1  x  SE: 1-50 step 1  (2500 combos)",
+    "fixed": "STP=1.5, LMT=6",
+    "plateau_champion": { "LE": 9, "SE": 50, "plateau_score": 2845040, "net_profit": 2258600, "max_drawdown": -1395200, "objective": 3656303 },
+    "best_objective_peak": { "LE": 5, "SE": 49, "plateau_score": null, "net_profit": 2862800, "max_drawdown": -781400, "objective": 10488385, "note": "edge of parameter space — not on plateau" }
+  },
+
+  "phase2_STP_LMT": {
+    "grid": "STP: 0.5-5.0 step 0.5  x  LMT: 2-16 step 1  (150 combos)",
+    "fixed": "LE=9, SE=50",
+    "plateau_champion": { "STP": 5.0, "LMT": 16, "plateau_score": 7849667, "net_profit": 3091800, "max_drawdown": -1097400, "objective": 8710796, "trades": 23 },
+    "top5": [
+      { "rank": 1, "STP": 5.0, "LMT": 16, "net_profit": 3091800, "max_drawdown": -1097400, "plateau_score": 7849667, "objective": 8710796 },
+      { "rank": 2, "STP": 4.5, "LMT": 16, "net_profit": 3091800, "max_drawdown": -1097400, "plateau_score": 7849667, "objective": 8710796 },
+      { "rank": 3, "STP": 4.0, "LMT": 16, "net_profit": 3167200, "max_drawdown": -1022000, "plateau_score": 7432783, "objective": 9815221 },
+      { "rank": 7, "STP": 3.0, "LMT": 16, "net_profit": 3262800, "max_drawdown": -931400,  "plateau_score": 5834367, "objective": 11429959, "note": "highest objective in top-10" },
+      { "rank": 9, "STP": 0.5, "LMT": 9,  "net_profit": 3439000, "max_drawdown": -657400,  "plateau_score": 5760600, "objective": 17990145, "trades": 54, "note": "most trades, STP at edge" }
+    ]
+  },
+
+  "combined_recommendation": {
+    "LE": 9,
+    "SE": 50,
+    "STP": 5.0,
+    "LMT": 16,
+    "net_profit": 3091800,
+    "max_drawdown": -1097400,
+    "plateau_score_phase2": 7849667,
+    "objective": 8710796,
+    "total_trades": 23,
+    "note": "Most robust plateau. STP=3-5, LMT=15-16 is the stable region."
+  },
+
+  "alternative_higher_objective": {
+    "LE": 9,
+    "SE": 50,
+    "STP": 3.0,
+    "LMT": 16,
+    "net_profit": 3262800,
+    "max_drawdown": -931400,
+    "objective": 11429959,
+    "note": "Higher net profit and lower drawdown than champion, plateau rank #7"
+  },
+
+  "output_files": {
+    "phase1_raw_csv":    "Breakout_Daily_decoded.csv",
+    "phase1_heatmap":    "Breakout_Daily_heatmap.png",
+    "phase2_raw_csv":    "Breakout_Daily_STP_LMT_raw.csv",
+    "phase2_heatmap":    "Breakout_Daily_STP_LMT_heatmap.png",
+    "phase2_plateau_json": "Breakout_Daily_STP_LMT_plateau.json",
+    "html_report":       "optimization_report.html"
+  }
+}

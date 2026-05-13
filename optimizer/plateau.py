@@ -37,6 +37,20 @@ def compute_objective(df: pd.DataFrame) -> pd.Series:
     return obj
 
 
+def _detect_variable_params(df: pd.DataFrame, cfg: StrategyConfig) -> Tuple[str, str]:
+    """Return the names of the two params that vary in df (>1 unique value).
+
+    Skips fixed params (only 1 unique value) so plateau analysis always uses
+    the actually-swept axes even when fixed params are listed in cfg.params.
+    """
+    variable = [p.name for p in cfg.params if p.name in df.columns and df[p.name].nunique() > 1]
+    if len(variable) >= 2:
+        return variable[0], variable[1]
+    # fallback: just use first two listed params
+    names = [p.name for p in cfg.params]
+    return names[0], names[1]
+
+
 def build_objective_grid(
     df: pd.DataFrame,
     cfg: StrategyConfig,
@@ -49,8 +63,7 @@ def build_objective_grid(
         p2_vals: sorted unique values of param2, shape (M,)
         grid:    shape (N, M), grid[i,j] = Objective at (p1[i], p2[j]), NaN if missing
     """
-    p1_name = cfg.params[0].name
-    p2_name = cfg.params[1].name
+    p1_name, p2_name = _detect_variable_params(df, cfg)
 
     p1_vals = np.sort(df[p1_name].unique())
     p2_vals = np.sort(df[p2_name].unique())
@@ -108,8 +121,7 @@ def rank_plateau_candidates(
     p2_vals: np.ndarray,
     top_n: int = PLATEAU_TOP_N,
 ) -> List[PlateauResult]:
-    p1_name = cfg.params[0].name
-    p2_name = cfg.params[1].name
+    p1_name, p2_name = _detect_variable_params(df, cfg)
 
     flat_scores = plateau_scores.ravel()
     sorted_idx = np.argsort(flat_scores)[::-1]

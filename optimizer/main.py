@@ -20,12 +20,49 @@ Usage examples:
 """
 from __future__ import annotations
 import argparse
+import ctypes
 import logging
 import os
 import sys
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+
+
+def _is_admin() -> bool:
+    try:
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return False
+
+
+def _relaunch_as_admin() -> None:
+    """Re-launch this script elevated (UAC prompt) and exit the current process.
+
+    Uses ShellExecuteW("runas", python_exe, ...) directly — avoids cmd.exe
+    quoting issues.  The elevated child window stays visible.
+    """
+    script = str(Path(sys.argv[0]).resolve())
+    workdir = str(Path(sys.argv[0]).resolve().parent)
+
+    # Rebuild argv without --_elevated to avoid passing it twice
+    extra_args = [a for a in sys.argv[1:] if a != "--_elevated"]
+    # Quote arguments that contain spaces
+    quoted = [f'"{a}"' if (" " in a and not a.startswith('"')) else a
+              for a in extra_args]
+    all_args = f'"{script}" ' + " ".join(quoted) + " --_elevated"
+
+    print("[auto-elevate] Requesting elevation — a UAC prompt will appear.")
+    print(f"[auto-elevate] Command: {sys.executable} {all_args}")
+    ret = ctypes.windll.shell32.ShellExecuteW(
+        None, "runas", sys.executable, all_args, workdir, 1
+    )
+    if ret <= 32:
+        print(f"[auto-elevate] ShellExecuteW failed (code={ret}). "
+              "Please run manually as Administrator.")
+    else:
+        print(f"[auto-elevate] Elevated process launched (code={ret}).")
+
 
 import plateau as plateau_mod
 import visualize
@@ -48,7 +85,8 @@ def parse_args() -> argparse.Namespace:
         default="all",
         help=(
             'Comma-separated strategy names or "all". '
-            'Choices: breakout_daily, breakout_hourly, supertrend_daily, supertrend_hourly'
+            'Choices: breakout_daily, breakout_daily_stp_lmt, breakout_hourly, '
+            'supertrend_daily, supertrend_hourly'
         ),
     )
     p.add_argument(
@@ -93,6 +131,11 @@ def parse_args() -> argparse.Namespace:
         "--skip-oos",
         action="store_true",
         help="Skip OOS validation even when MC connection is available",
+    )
+    p.add_argument(
+        "--_elevated",
+        action="store_true",
+        help=argparse.SUPPRESS,  # internal flag — set by auto-elevation relaunch
     )
     return p.parse_args()
 
@@ -287,6 +330,14 @@ def _preflight_check(
 
 def main() -> int:
     args = parse_args()
+
+    # MC64 runs as Administrator; we must match its integrity level for UI automation.
+    # Auto-elevate via UAC if not already elevated (unless --from-csv / --dry-run).
+    _elevated_flag = getattr(args, "_elevated", False)
+    if not args.from_csv and not args.dry_run and not _is_admin() and not _elevated_flag:
+        _relaunch_as_admin()
+        return 0
+
     logging.basicConfig(
         level=getattr(logging, args.log_level),
         format="%(asctime)s %(levelname)-8s %(name)s — %(message)s",

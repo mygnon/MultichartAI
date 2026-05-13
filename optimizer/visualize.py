@@ -14,6 +14,7 @@ import pandas as pd
 import seaborn as sns
 
 from config import StrategyConfig, PLATEAU_NEIGHBORHOOD_RADIUS
+import plateau as plateau_mod
 from plateau import PlateauResult
 
 
@@ -26,8 +27,13 @@ def plot_heatmap(
     candidates: List[PlateauResult],
     output_dir: str,
 ) -> str:
-    p1_name = cfg.params[0].name
-    p2_name = cfg.params[1].name
+    # Use detected variable-param names from the first candidate when available
+    if candidates:
+        p1_name = candidates[0].param1_name
+        p2_name = candidates[0].param2_name
+    else:
+        p1_name = cfg.params[0].name
+        p2_name = cfg.params[1].name
 
     fig, axes = plt.subplots(1, 2, figsize=(18, 7))
     fig.suptitle(
@@ -93,7 +99,8 @@ def save_results_json(
     output_dir: str,
 ) -> str:
     total_runs = len(df)
-    valid_runs = int((df["Objective"] > 0).sum())
+    obj_col = df["Objective"] if "Objective" in df.columns else plateau_mod.compute_objective(df)
+    valid_runs = int((obj_col > 0).sum())
 
     payload = {
         "strategy": cfg.name,

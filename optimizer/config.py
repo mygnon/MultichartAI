@@ -104,6 +104,23 @@ SUPERTREND_HOURLY = StrategyConfig(
     chart_symbol="TWF.TXF HOT",
 )
 
+# Phase-2 sequential optimization: fix LE=9, SE=50 (plateau champion from Phase 1),
+# sweep STP × LMT to find their stable region.
+BREAKOUT_DAILY_STP_LMT = StrategyConfig(
+    name="Breakout_Daily_STP_LMT",
+    mc_signal_name="_2021Basic_Break_NQ",
+    timeframe="daily",
+    bar_period=1440,
+    params=[
+        ParamAxis("LE",  start=9,   stop=9,   step=1),    # fixed (plateau Phase-1 best)
+        ParamAxis("SE",  start=50,  stop=50,  step=1),    # fixed (plateau Phase-1 best)
+        ParamAxis("STP", start=0.5, stop=5.0, step=0.5),  # 10 values — stop-loss multiplier
+        ParamAxis("LMT", start=2.0, stop=16.0, step=1.0), # 15 values — profit-target multiplier
+    ],
+    chart_workspace=r"C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp",
+    chart_symbol="TWF.TXF HOT",
+)
+
 ALL_STRATEGIES: List[StrategyConfig] = [
     BREAKOUT_DAILY,
     BREAKOUT_HOURLY,
@@ -113,10 +130,11 @@ ALL_STRATEGIES: List[StrategyConfig] = [
 
 STRATEGY_MAP = {s.name.lower().replace("_", ""): s for s in ALL_STRATEGIES}
 STRATEGY_MAP.update({
-    "breakout_daily":    BREAKOUT_DAILY,
-    "breakout_hourly":   BREAKOUT_HOURLY,
-    "supertrend_daily":  SUPERTREND_DAILY,
-    "supertrend_hourly": SUPERTREND_HOURLY,
+    "breakout_daily":          BREAKOUT_DAILY,
+    "breakout_daily_stp_lmt":  BREAKOUT_DAILY_STP_LMT,
+    "breakout_hourly":         BREAKOUT_HOURLY,
+    "supertrend_daily":        SUPERTREND_DAILY,
+    "supertrend_hourly":       SUPERTREND_HOURLY,
 })
 
 # ---------------------------------------------------------------------------
@@ -142,6 +160,7 @@ MC_COLUMN_MAP = {
     "Maximum Strategy Drawdown":     "MaxDrawdown",
     "Max. Strategy Drawdown":        "MaxDrawdown",
     "Maximum Intraday Drawdown":     "MaxDrawdown",
+    "Max Intraday Drawdown":         "MaxDrawdown",   # MCReport binary decode
     "Total Number of Trades":        "TotalTrades",
     "Total Trades":                  "TotalTrades",
     "# of Trades":                   "TotalTrades",

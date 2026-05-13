@@ -1,0 +1,82 @@
+{
+  "strategy": "Breakout_Hourly  (adaptive 10-attempt)",
+  "symbol": "TWF.TXF HOT",
+  "timeframe": "Hourly (60 min)",
+  "insample": "2019/01/01 - 2026/01/01",
+  "objective_function": "NetProfit² / |MaxDrawdown|  [NetProfit>0 AND MaxDrawdown<0]",
+  "generated_at": "2026-05-13T13:06:21",
+  "plateau_radius": 2,
+  "best_params": {
+    "LE": 5.0,
+    "SE": 5.0,
+    "STP": 4.5,
+    "LMT": 22.0,
+    "net_profit": 2868400.0,
+    "max_drawdown": -1771400.0,
+    "objective": 4644755.0,
+    "plateau_score": 4629869.0,
+    "total_trades": 3881
+  },
+  "attempt_log": [
+    {
+      "attempt": 1,
+      "name": "01_wide",
+      "rows": 220,
+      "note": "LE=5.0 SE=5.0"
+    },
+    {
+      "attempt": 2,
+      "name": "02_zoom",
+      "rows": 40,
+      "note": "LE=5.0 SE=5.0"
+    },
+    {
+      "attempt": 3,
+      "name": "03_expand",
+      "rows": 72,
+      "note": "LE=5.0 SE=5.0"
+    },
+    {
+      "attempt": 4,
+      "name": "04_fine",
+      "rows": 60,
+      "note": "LE=5.0 SE=5.0"
+    },
+    {
+      "attempt": 5,
+      "name": "05_stp_lmt_wide",
+      "rows": 228,
+      "note": "STP=5.5 LMT=17.0"
+    },
+    {
+      "attempt": 6,
+      "name": "06_stp_lmt_zoom",
+      "rows": 357,
+      "note": "STP=5.0 LMT=22.0"
+    },
+    {
+      "attempt": 7,
+      "name": "07_stp_lmt_fine",
+      "rows": 357,
+      "note": "STP=5.0 LMT=24.0"
+    },
+    {
+      "attempt": 8,
+      "name": "08_re_verify_le_se",
+      "rows": 121,
+      "note": "LE=5.0 SE=15.0"
+    },
+    {
+      "attempt": 9,
+      "name": "09_boundary",
+      "rows": 156,
+      "note": "LE=5.0 SE=5.0"
+    },
+    {
+      "attempt": 10,
+      "name": "10_4d",
+      "rows": 135,
+      "note": "LE=5.0 SE=5.0 STP=4.5 LMT=22.0"
+    }
+  ]
+}
