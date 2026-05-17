@@ -1,5 +1,5 @@
 """
-Adaptive 10-attempt Breakout Hourly parameter search.
+Adaptive 10-attempt Breakout Daily parameter search.
 
 Each attempt uses the PREVIOUS attempt's plateau champion as its center,
 alternating between zooming in (finer step) and expanding out (wider radius)
@@ -8,26 +8,26 @@ to converge on the best stable plateau.
 Attempt schedule
 ────────────────
 Phase 1 — LE × SE discovery  (STP/LMT held at defaults)
-  01  Wide initial scan      LE/SE 5-200 step 10   (~400 combos)
-  02  Zoom-in                LE/SE ±40 step 5      (~289 combos)
-  03  Expand-out boundary    LE/SE ±60 step 6      (~441 combos)
-  04  Fine zoom              LE/SE ±20 step 2      (~441 combos)
+  01  Wide initial scan      LE/SE 2-80 step 4    (~400 combos)
+  02  Zoom-in                LE/SE ±12 step 2     (~169 combos)
+  03  Expand-out boundary    LE/SE ±24 step 3     (~289 combos)
+  04  Fine zoom              LE/SE ±8 step 1      (~289 combos)
 
 Phase 2 — STP × LMT discovery  (LE/SE fixed at phase-1 best)
   05  Wide STP×LMT           STP 0.5-6 ×0.5 / LMT 2-20 ×1  (11×19=209 combos)
   06  Zoom-in                STP ±2.0 ×0.25 / LMT ±5 ×0.5  (~varies ≤300)
-  07  Fine zoom              STP ±0.75 ×0.1 / LMT ±3 ×0.25 (~varies ≤300)
+  07  Fine zoom              STP ±0.75 ×0.1 / LMT ±3 ×0.25  (~varies ≤300)
 
 Phase 3 — Cross-validate + 4D
-  08  Re-verify LE×SE with refined STP/LMT  (±20 step 2)
-  09  Wide boundary check    LE/SE ±70 step 7
-  10  4D grid                LE ±4 step 2 × SE ±4 step 2 × STP ±0.5 step 0.25 × LMT ±2 step 1
+  08  Re-verify LE×SE with refined STP/LMT  (±8 step 1)
+  09  Wide boundary check    LE/SE ±30 step 4
+  10  4D grid                LE ±3 step 1 × SE ±3 step 1 × STP ±0.5 step 0.25 × LMT ±2 step 1
 
 Usage
 ─────
-  python search_hourly.py
-  python search_hourly.py --attempt 5   # resume from attempt 5
-  python search_hourly.py --from-csv    # re-analyze existing CSVs only
+  python search_daily.py
+  python search_daily.py --attempt 5   # resume from attempt 5
+  python search_daily.py --from-csv    # re-analyze existing CSVs only
 """
 from __future__ import annotations
 import argparse
@@ -60,18 +60,18 @@ from config import DateRange, ParamAxis, StrategyConfig, PLATEAU_NEIGHBORHOOD_RA
 WORKSPACE  = r"C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp"
 SYMBOL     = "TWF.TXF HOT"
 SIGNAL     = "_2021Basic_Break_NQ"
-OUTPUT_DIR = Path(r"C:\Users\Tim\MultichartAI\results\hourly_search")
+OUTPUT_DIR = Path(r"C:\Users\Tim\MultichartAI\results\daily_search")
 INSAMPLE   = DateRange("2019/01/01", "2026/01/01")
 
 DEFAULT_STP = 1.5
 DEFAULT_LMT = 6.0
 
-LE_LO, LE_HI   = 5, 300
-SE_LO, SE_HI   = 5, 300
-STP_LO, STP_HI = 0.5, 8.0   # start from 0.5 to avoid boundary trap
-LMT_LO, LMT_HI = 2.0, 24.0  # start from 2.0 to avoid boundary trap
+LE_LO, LE_HI   = 2, 100    # start from 2 to avoid LE=1 boundary trap
+SE_LO, SE_HI   = 2, 100
+STP_LO, STP_HI = 0.5, 8.0  # start from 0.5 to avoid STP boundary trap
+LMT_LO, LMT_HI = 2.0, 24.0 # start from 2.0 to avoid LMT boundary trap
 
-_LOG_FILE = OUTPUT_DIR / f"search_hourly_{int(time.time())}.log"
+_LOG_FILE = OUTPUT_DIR / f"search_daily_{int(time.time())}.log"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -116,10 +116,10 @@ def _cfg(name: str,
          stp: Tuple[float, float, float],
          lmt: Tuple[float, float, float]) -> StrategyConfig:
     return StrategyConfig(
-        name=f"BH_{name}",
+        name=f"BD_{name}",
         mc_signal_name=SIGNAL,
-        timeframe="hourly",
-        bar_period=60,
+        timeframe="daily",
+        bar_period=1440,
         params=[
             ParamAxis("LE",  *le),
             ParamAxis("SE",  *se),
@@ -137,7 +137,7 @@ def _cfg(name: str,
 # ─────────────────────────────────────────────────────────────────────────────
 
 def csv_for(name: str) -> Path:
-    return OUTPUT_DIR / f"BH_{name}_raw.csv"
+    return OUTPUT_DIR / f"BD_{name}_raw.csv"
 
 
 def run_or_load(name: str, cfg: StrategyConfig,
@@ -294,9 +294,9 @@ def save_json(le, se, stp, lmt, obj, plateau_score, np_, mdd, trades,
               attempt_log: List[dict]) -> Path:
     best_attempt = max(attempt_log, key=lambda x: x.get("plateau_score", 0), default=None)
     payload = {
-        "strategy": "Breakout_Hourly  (adaptive 10-attempt)",
+        "strategy": "Breakout_Daily  (adaptive 10-attempt)",
         "symbol": SYMBOL,
-        "timeframe": "Hourly (60 min)",
+        "timeframe": "Daily (1440 min)",
         "insample": f"{INSAMPLE.from_date} - {INSAMPLE.to_date}",
         "objective_function": "NetProfit² / |MaxDrawdown|  [NetProfit>0 AND MaxDrawdown<0]",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
@@ -312,7 +312,7 @@ def save_json(le, se, stp, lmt, obj, plateau_score, np_, mdd, trades,
         "best_plateau_attempt": best_attempt,
         "attempt_log": attempt_log,
     }
-    out = OUTPUT_DIR / "final_params_hourly.json"
+    out = OUTPUT_DIR / "final_params_daily.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     log.info("Saved: %s", out)
@@ -327,7 +327,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                from_csv: bool, start_attempt: int) -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    best_le,  best_se  = 20.0, 20.0
+    best_le,  best_se  = 12.0, 12.0   # start away from boundary
     best_stp, best_lmt = DEFAULT_STP, DEFAULT_LMT
     attempt_log: List[dict] = []
     le_se_dfs:   List[pd.DataFrame] = []
@@ -358,8 +358,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     A = 1
     _name = "01_wide"
     if start_attempt <= A:
-        _cfg1 = _cfg(_name,
-                     le=(5, 200, 10), se=(5, 200, 10),
+        _cfg1 = _cfg(_name, le=(2, 80, 4), se=(2, 80, 4),
                      stp=fixed(DEFAULT_STP), lmt=fixed(DEFAULT_LMT))
         df1 = run_or_load(_name, _cfg1, conn, from_csv)
         if df1 is not None:
@@ -369,19 +368,19 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            df1 = mc.load_results_csv(str(p), _cfg(_name,(5,200,10),(5,200,10),
+            df1 = mc.load_results_csv(str(p), _cfg(_name,(2,80,4),(2,80,4),
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df1 is not None:
                 le_se_dfs.append(df1)
                 best_le, best_se, _ = best_le_se(df1)
     log.info("After Attempt 1 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 2: Zoom-in ±40 step 5  ───────────────────────────────────────
+    # ── Attempt 2: Zoom-in ±12 step 2  ───────────────────────────────────────
     A = 2
     _name = "02_zoom"
     if start_attempt <= A:
-        _le2 = zoom(best_le, 40, 5, LE_LO, LE_HI)
-        _se2 = zoom(best_se, 40, 5, SE_LO, SE_HI)
+        _le2 = zoom(best_le, 12, 2, LE_LO, LE_HI)
+        _se2 = zoom(best_se, 12, 2, SE_LO, SE_HI)
         _cfg2 = _cfg(_name, _le2, _se2, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df2 = run_or_load(_name, _cfg2, conn, from_csv)
         if df2 is not None:
@@ -392,8 +391,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            _le2 = zoom(best_le, 40, 5, LE_LO, LE_HI)
-            _se2 = zoom(best_se, 40, 5, SE_LO, SE_HI)
+            _le2 = zoom(best_le, 12, 2, LE_LO, LE_HI)
+            _se2 = zoom(best_se, 12, 2, SE_LO, SE_HI)
             df2 = mc.load_results_csv(str(p), _cfg(_name,_le2,_se2,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df2 is not None:
@@ -402,12 +401,12 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                 best_le, best_se, _ = best_le_se(merged)
     log.info("After Attempt 2 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 3: Expand-out ±60 step 6  ────────────────────────────────────
+    # ── Attempt 3: Expand-out ±24 step 3  ────────────────────────────────────
     A = 3
     _name = "03_expand"
     if start_attempt <= A:
-        _le3 = zoom(best_le, 60, 6, LE_LO, LE_HI)
-        _se3 = zoom(best_se, 60, 6, SE_LO, SE_HI)
+        _le3 = zoom(best_le, 24, 3, LE_LO, LE_HI)
+        _se3 = zoom(best_se, 24, 3, SE_LO, SE_HI)
         _cfg3 = _cfg(_name, _le3, _se3, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df3 = run_or_load(_name, _cfg3, conn, from_csv)
         if df3 is not None:
@@ -418,8 +417,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            _le3 = zoom(best_le, 60, 6, LE_LO, LE_HI)
-            _se3 = zoom(best_se, 60, 6, SE_LO, SE_HI)
+            _le3 = zoom(best_le, 24, 3, LE_LO, LE_HI)
+            _se3 = zoom(best_se, 24, 3, SE_LO, SE_HI)
             df3 = mc.load_results_csv(str(p), _cfg(_name,_le3,_se3,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df3 is not None:
@@ -428,12 +427,12 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                 best_le, best_se, _ = best_le_se(merged)
     log.info("After Attempt 3 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 4: Fine zoom ±20 step 2  ─────────────────────────────────────
+    # ── Attempt 4: Fine zoom ±8 step 1  ──────────────────────────────────────
     A = 4
     _name = "04_fine"
     if start_attempt <= A:
-        _le4 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-        _se4 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+        _le4 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+        _se4 = zoom(best_se, 8, 1, SE_LO, SE_HI)
         _cfg4 = _cfg(_name, _le4, _se4, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df4 = run_or_load(_name, _cfg4, conn, from_csv)
         if df4 is not None:
@@ -444,8 +443,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            _le4 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-            _se4 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+            _le4 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+            _se4 = zoom(best_se, 8, 1, SE_LO, SE_HI)
             df4 = mc.load_results_csv(str(p), _cfg(_name,_le4,_se4,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df4 is not None:
@@ -459,8 +458,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     _name = "05_stp_lmt_wide"
     stp_lmt_dfs: List[pd.DataFrame] = []
     if start_attempt <= A:
-        _cfg5 = _cfg(_name,
-                     fixed(best_le), fixed(best_se),
+        _cfg5 = _cfg(_name, fixed(best_le), fixed(best_se),
                      stp=(0.5, 6.0, 0.5), lmt=(2.0, 20.0, 1.0))
         df5 = run_or_load(_name, _cfg5, conn, from_csv)
         if df5 is not None:
@@ -541,8 +539,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     A = 8
     _name = "08_re_verify_le_se"
     if start_attempt <= A:
-        _le8 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-        _se8 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+        _le8 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+        _se8 = zoom(best_se, 8, 1, SE_LO, SE_HI)
         _cfg8 = _cfg(_name, _le8, _se8, fixed(best_stp), fixed(best_lmt))
         df8 = run_or_load(_name, _cfg8, conn, from_csv)
         if df8 is not None:
@@ -553,8 +551,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            _le8 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-            _se8 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+            _le8 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+            _se8 = zoom(best_se, 8, 1, SE_LO, SE_HI)
             df8 = mc.load_results_csv(str(p), _cfg(_name,_le8,_se8,
                                                     fixed(best_stp),fixed(best_lmt)))
             if df8 is not None:
@@ -563,12 +561,12 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                 best_le, best_se, _ = best_le_se(merged)
     log.info("After Attempt 8 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 9: Wide boundary check ±70 step 7  ───────────────────────────
+    # ── Attempt 9: Wide boundary check ±30 step 4  ───────────────────────────
     A = 9
     _name = "09_boundary"
     if start_attempt <= A:
-        _le9 = zoom(best_le, 70, 7, LE_LO, LE_HI)
-        _se9 = zoom(best_se, 70, 7, SE_LO, SE_HI)
+        _le9 = zoom(best_le, 30, 4, LE_LO, LE_HI)
+        _se9 = zoom(best_se, 30, 4, SE_LO, SE_HI)
         _cfg9 = _cfg(_name, _le9, _se9, fixed(best_stp), fixed(best_lmt))
         df9 = run_or_load(_name, _cfg9, conn, from_csv)
         if df9 is not None:
@@ -579,8 +577,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     else:
         p = csv_for(_name)
         if p.exists():
-            _le9 = zoom(best_le, 70, 7, LE_LO, LE_HI)
-            _se9 = zoom(best_se, 70, 7, SE_LO, SE_HI)
+            _le9 = zoom(best_le, 30, 4, LE_LO, LE_HI)
+            _se9 = zoom(best_se, 30, 4, SE_LO, SE_HI)
             df9 = mc.load_results_csv(str(p), _cfg(_name,_le9,_se9,
                                                     fixed(best_stp),fixed(best_lmt)))
             if df9 is not None:
@@ -596,8 +594,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     final_obj, final_plateau = 0.0, 0.0
     final_np, final_mdd, final_trades = 0.0, 0.0, 0
 
-    _le10  = zoom(best_le,  4, 2,    LE_LO,  LE_HI)
-    _se10  = zoom(best_se,  4, 2,    SE_LO,  SE_HI)
+    _le10  = zoom(best_le,  3, 1,    LE_LO,  LE_HI)
+    _se10  = zoom(best_se,  3, 1,    SE_LO,  SE_HI)
     _stp10 = zoom(best_stp, 0.5, 0.25, STP_LO, STP_HI)
     _lmt10 = zoom(best_lmt, 2.0, 1.0,  LMT_LO, LMT_HI)
     _cfg10 = _cfg(_name, _le10, _se10, _stp10, _lmt10)
@@ -636,7 +634,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     # ── Final summary  ───────────────────────────────────────────────────────
     log.info("")
     log.info("══════════════════════════════════════════")
-    log.info("  FINAL RECOMMENDATION  (Breakout Hourly)")
+    log.info("  FINAL RECOMMENDATION  (Breakout Daily)")
     log.info("══════════════════════════════════════════")
     log.info("  LE=%.4g  SE=%.4g  STP=%.4g  LMT=%.4g",
              final_le, final_se, final_stp, final_lmt)
@@ -663,7 +661,7 @@ def _is_admin() -> bool:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Adaptive 10-attempt Breakout Hourly search")
+    ap = argparse.ArgumentParser(description="Adaptive 10-attempt Breakout Daily search")
     ap.add_argument("--from-csv", action="store_true",
                     help="Re-analyze existing CSVs; do not launch MC automation")
     ap.add_argument("--attempt", type=int, default=1, metavar="N",

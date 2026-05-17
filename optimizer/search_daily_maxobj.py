@@ -1,17 +1,19 @@
 """
-Adaptive 10-attempt Breakout Hourly parameter search.
+Adaptive 10-attempt Breakout Daily parameter search — Max Objective mode.
 
-Each attempt uses the PREVIOUS attempt's plateau champion as its center,
-alternating between zooming in (finer step) and expanding out (wider radius)
-to converge on the best stable plateau.
+Selection criterion: argmax(NetProfit² / |MaxDrawdown|) — finds the single
+best-performing parameter set rather than the most stable plateau region.
+
+Each attempt centers on the BEST OBJECTIVE point from the previous attempt.
+No plateau_score is computed or recorded.
 
 Attempt schedule
 ────────────────
 Phase 1 — LE × SE discovery  (STP/LMT held at defaults)
-  01  Wide initial scan      LE/SE 5-200 step 10   (~400 combos)
-  02  Zoom-in                LE/SE ±40 step 5      (~289 combos)
-  03  Expand-out boundary    LE/SE ±60 step 6      (~441 combos)
-  04  Fine zoom              LE/SE ±20 step 2      (~441 combos)
+  01  Wide initial scan      LE/SE 2-80 step 4    (~441 combos)
+  02  Zoom-in                LE/SE ±12 step 2     (~169 combos)
+  03  Expand-out boundary    LE/SE ±24 step 3     (~289 combos)
+  04  Fine zoom              LE/SE ±8 step 1      (~289 combos)
 
 Phase 2 — STP × LMT discovery  (LE/SE fixed at phase-1 best)
   05  Wide STP×LMT           STP 0.5-6 ×0.5 / LMT 2-20 ×1  (11×19=209 combos)
@@ -19,15 +21,15 @@ Phase 2 — STP × LMT discovery  (LE/SE fixed at phase-1 best)
   07  Fine zoom              STP ±0.75 ×0.1 / LMT ±3 ×0.25 (~varies ≤300)
 
 Phase 3 — Cross-validate + 4D
-  08  Re-verify LE×SE with refined STP/LMT  (±20 step 2)
-  09  Wide boundary check    LE/SE ±70 step 7
-  10  4D grid                LE ±4 step 2 × SE ±4 step 2 × STP ±0.5 step 0.25 × LMT ±2 step 1
+  08  Re-verify LE×SE with refined STP/LMT  (±8 step 1)
+  09  Wide boundary check    LE/SE ±30 step 4
+  10  4D grid                LE ±3 step 1 × SE ±3 step 1 × STP ±0.5 step 0.25 × LMT ±2 step 1
 
 Usage
 ─────
-  python search_hourly.py
-  python search_hourly.py --attempt 5   # resume from attempt 5
-  python search_hourly.py --from-csv    # re-analyze existing CSVs only
+  python search_daily_maxobj.py
+  python search_daily_maxobj.py --attempt 5   # resume from attempt 5
+  python search_daily_maxobj.py --from-csv    # re-analyze existing CSVs only
 """
 from __future__ import annotations
 import argparse
@@ -42,7 +44,6 @@ from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.ndimage import minimum_filter
 
 _HERE = Path(__file__).resolve().parent
 if str(_HERE) not in sys.path:
@@ -50,7 +51,7 @@ if str(_HERE) not in sys.path:
 
 import mc_automation as mc
 import plateau as plateau_mod
-from config import DateRange, ParamAxis, StrategyConfig, PLATEAU_NEIGHBORHOOD_RADIUS
+from config import DateRange, ParamAxis, StrategyConfig
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -60,18 +61,18 @@ from config import DateRange, ParamAxis, StrategyConfig, PLATEAU_NEIGHBORHOOD_RA
 WORKSPACE  = r"C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp"
 SYMBOL     = "TWF.TXF HOT"
 SIGNAL     = "_2021Basic_Break_NQ"
-OUTPUT_DIR = Path(r"C:\Users\Tim\MultichartAI\results\hourly_search")
+OUTPUT_DIR = Path(r"C:\Users\Tim\MultichartAI\results\daily_maxobj_search")
 INSAMPLE   = DateRange("2019/01/01", "2026/01/01")
 
 DEFAULT_STP = 1.5
 DEFAULT_LMT = 6.0
 
-LE_LO, LE_HI   = 5, 300
-SE_LO, SE_HI   = 5, 300
-STP_LO, STP_HI = 0.5, 8.0   # start from 0.5 to avoid boundary trap
-LMT_LO, LMT_HI = 2.0, 24.0  # start from 2.0 to avoid boundary trap
+LE_LO, LE_HI   = 2, 100
+SE_LO, SE_HI   = 2, 100
+STP_LO, STP_HI = 0.5, 8.0
+LMT_LO, LMT_HI = 2.0, 24.0
 
-_LOG_FILE = OUTPUT_DIR / f"search_hourly_{int(time.time())}.log"
+_LOG_FILE = OUTPUT_DIR / f"search_daily_maxobj_{int(time.time())}.log"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -116,10 +117,10 @@ def _cfg(name: str,
          stp: Tuple[float, float, float],
          lmt: Tuple[float, float, float]) -> StrategyConfig:
     return StrategyConfig(
-        name=f"BH_{name}",
+        name=f"BDO_{name}",
         mc_signal_name=SIGNAL,
-        timeframe="hourly",
-        bar_period=60,
+        timeframe="daily",
+        bar_period=1440,
         params=[
             ParamAxis("LE",  *le),
             ParamAxis("SE",  *se),
@@ -137,7 +138,7 @@ def _cfg(name: str,
 # ─────────────────────────────────────────────────────────────────────────────
 
 def csv_for(name: str) -> Path:
-    return OUTPUT_DIR / f"BH_{name}_raw.csv"
+    return OUTPUT_DIR / f"BDO_{name}_raw.csv"
 
 
 def run_or_load(name: str, cfg: StrategyConfig,
@@ -168,85 +169,64 @@ def run_or_load(name: str, cfg: StrategyConfig,
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Plateau helpers — return (best_val1, best_val2, plateau_score)
+# Objective-based champion selectors
 # ─────────────────────────────────────────────────────────────────────────────
 
-def best_le_se(df: pd.DataFrame) -> Tuple[float, float, float]:
-    """Return (LE, SE, plateau_score) of the plateau champion."""
+def best_le_se_obj(df: pd.DataFrame,
+                   fallback_le: float, fallback_se: float
+                   ) -> Tuple[float, float, float]:
+    """Return (LE, SE, best_objective) — argmax of objective.
+
+    Falls back to (fallback_le, fallback_se, 0) when no row has objective>0,
+    which prevents boundary-trap caused by argmax(all_zeros)=first_element.
+    """
     df = df.copy()
     df["Objective"] = plateau_mod.compute_objective(df)
-    le_vals = np.sort(df["LE"].unique())
-    se_vals = np.sort(df["SE"].unique())
-    grid = np.full((len(le_vals), len(se_vals)), 0.0)
-    le_idx = {v: i for i, v in enumerate(le_vals)}
-    se_idx = {v: j for j, v in enumerate(se_vals)}
-    for _, row in df.iterrows():
-        i, j = le_idx.get(row["LE"]), se_idx.get(row["SE"])
-        if i is not None and j is not None:
-            grid[i, j] = max(grid[i, j], row["Objective"])
-    r = PLATEAU_NEIGHBORHOOD_RADIUS
-    scores = minimum_filter(np.clip(grid, 0, None), size=2*r+1, mode="nearest")
-    fi, fj = np.unravel_index(np.argmax(scores), scores.shape)
-    le_best, se_best = float(le_vals[fi]), float(se_vals[fj])
-    ps = float(scores[fi, fj])
-    log.info("  LE×SE plateau champion: LE=%.4g  SE=%.4g  (plateau_score=%.0f)",
-             le_best, se_best, ps)
-    return le_best, se_best, ps
+    best_row = df.loc[df["Objective"].idxmax()]
+    obj_best = float(best_row["Objective"])
+    if obj_best <= 0:
+        log.info("  LE×SE: no profitable row — keeping fallback LE=%.4g SE=%.4g",
+                 fallback_le, fallback_se)
+        return fallback_le, fallback_se, 0.0
+    le_best = float(best_row["LE"])
+    se_best = float(best_row["SE"])
+    log.info("  LE×SE best obj: LE=%.4g  SE=%.4g  (objective=%.0f)",
+             le_best, se_best, obj_best)
+    return le_best, se_best, obj_best
 
 
-def best_stp_lmt(df: pd.DataFrame) -> Tuple[float, float, float]:
-    """Return (STP, LMT, plateau_score) of the plateau champion."""
+def best_stp_lmt_obj(df: pd.DataFrame,
+                     fallback_stp: float, fallback_lmt: float
+                     ) -> Tuple[float, float, float]:
+    """Return (STP, LMT, best_objective) — argmax of objective."""
     df = df.copy()
     df["Objective"] = plateau_mod.compute_objective(df)
-    stp_vals = np.sort(df["STP"].unique())
-    lmt_vals = np.sort(df["LMT"].unique())
-    grid = np.full((len(stp_vals), len(lmt_vals)), 0.0)
-    si = {v: i for i, v in enumerate(stp_vals)}
-    li = {v: j for j, v in enumerate(lmt_vals)}
-    for _, row in df.iterrows():
-        i, j = si.get(row["STP"]), li.get(row["LMT"])
-        if i is not None and j is not None:
-            grid[i, j] = max(grid[i, j], row["Objective"])
-    r = PLATEAU_NEIGHBORHOOD_RADIUS
-    scores = minimum_filter(np.clip(grid, 0, None), size=2*r+1, mode="nearest")
-    fi, fj = np.unravel_index(np.argmax(scores), scores.shape)
-    stp_best, lmt_best = float(stp_vals[fi]), float(lmt_vals[fj])
-    ps = float(scores[fi, fj])
-    log.info("  STP×LMT plateau champion: STP=%.4g  LMT=%.4g  (plateau_score=%.0f)",
-             stp_best, lmt_best, ps)
-    return stp_best, lmt_best, ps
+    best_row = df.loc[df["Objective"].idxmax()]
+    obj_best = float(best_row["Objective"])
+    if obj_best <= 0:
+        log.info("  STP×LMT: no profitable row — keeping fallback STP=%.4g LMT=%.4g",
+                 fallback_stp, fallback_lmt)
+        return fallback_stp, fallback_lmt, 0.0
+    stp_best = float(best_row["STP"])
+    lmt_best = float(best_row["LMT"])
+    log.info("  STP×LMT best obj: STP=%.4g  LMT=%.4g  (objective=%.0f)",
+             stp_best, lmt_best, obj_best)
+    return stp_best, lmt_best, obj_best
 
 
-def best_4d(df: pd.DataFrame) -> Tuple[float, float, float, float, float, float]:
-    """Return (LE, SE, STP, LMT, objective, plateau_score) of 4D champion."""
+def best_4d_obj(df: pd.DataFrame) -> Tuple[float, float, float, float, float]:
+    """Return (LE, SE, STP, LMT, best_objective) — argmax of objective."""
     df = df.copy()
     df["Objective"] = plateau_mod.compute_objective(df)
-    def _uniq(col): return np.sort(df[col].unique())
-    LEs, SEs, STPs, LMTs = _uniq("LE"), _uniq("SE"), _uniq("STP"), _uniq("LMT")
-    idx = {
-        "LE":  {v: i for i, v in enumerate(LEs)},
-        "SE":  {v: i for i, v in enumerate(SEs)},
-        "STP": {v: i for i, v in enumerate(STPs)},
-        "LMT": {v: i for i, v in enumerate(LMTs)},
-    }
-    shape = (len(LEs), len(SEs), len(STPs), len(LMTs))
-    grid = np.zeros(shape)
-    for _, row in df.iterrows():
-        try:
-            i = idx["LE"][row["LE"]];  j = idx["SE"][row["SE"]]
-            k = idx["STP"][row["STP"]]; l = idx["LMT"][row["LMT"]]
-            grid[i, j, k, l] = max(grid[i, j, k, l], row["Objective"])
-        except Exception:
-            pass
-    r = PLATEAU_NEIGHBORHOOD_RADIUS
-    scores = minimum_filter(np.clip(grid, 0, None), size=2*r+1, mode="nearest")
-    fi = np.argmax(scores)
-    i, j, k, l = np.unravel_index(fi, shape)
-    le_v, se_v = float(LEs[i]), float(SEs[j])
-    stp_v, lmt_v = float(STPs[k]), float(LMTs[l])
-    log.info("  4D champion: LE=%.4g SE=%.4g STP=%.4g LMT=%.4g  obj=%.0f  plateau=%.0f",
-             le_v, se_v, stp_v, lmt_v, float(grid[i,j,k,l]), float(scores.flat[fi]))
-    return le_v, se_v, stp_v, lmt_v, float(grid[i,j,k,l]), float(scores.flat[fi])
+    best_row = df.loc[df["Objective"].idxmax()]
+    le_v   = float(best_row["LE"])
+    se_v   = float(best_row["SE"])
+    stp_v  = float(best_row["STP"])
+    lmt_v  = float(best_row["LMT"])
+    obj_v  = float(best_row["Objective"])
+    log.info("  4D best obj: LE=%.4g SE=%.4g STP=%.4g LMT=%.4g  obj=%.0f",
+             le_v, se_v, stp_v, lmt_v, obj_v)
+    return le_v, se_v, stp_v, lmt_v, obj_v
 
 
 def merge_le_se_dfs(dfs: List[pd.DataFrame]) -> pd.DataFrame:
@@ -270,7 +250,7 @@ def _row_metrics(df: pd.DataFrame, **params) -> Dict:
         if col not in df.columns:
             continue
         if df[col].nunique() <= 1:
-            continue  # fixed param — all rows share this value, no need to filter
+            continue
         mask &= np.isclose(df[col].astype(float), float(val), atol=0.01)
     rows = df[mask]
     if rows.empty:
@@ -290,29 +270,28 @@ def _row_metrics(df: pd.DataFrame, **params) -> Dict:
 # Save results
 # ─────────────────────────────────────────────────────────────────────────────
 
-def save_json(le, se, stp, lmt, obj, plateau_score, np_, mdd, trades,
+def save_json(le, se, stp, lmt, obj, np_, mdd, trades,
               attempt_log: List[dict]) -> Path:
-    best_attempt = max(attempt_log, key=lambda x: x.get("plateau_score", 0), default=None)
+    best_attempt = max(attempt_log, key=lambda x: x.get("objective", 0), default=None)
     payload = {
-        "strategy": "Breakout_Hourly  (adaptive 10-attempt)",
+        "strategy": "Breakout_Daily  (adaptive 10-attempt, max-objective mode)",
         "symbol": SYMBOL,
-        "timeframe": "Hourly (60 min)",
+        "timeframe": "Daily (1440 min)",
         "insample": f"{INSAMPLE.from_date} - {INSAMPLE.to_date}",
         "objective_function": "NetProfit² / |MaxDrawdown|  [NetProfit>0 AND MaxDrawdown<0]",
+        "selection_mode": "max_objective  (argmax — best single point, not plateau stability)",
         "generated_at": datetime.now().isoformat(timespec="seconds"),
-        "plateau_radius": PLATEAU_NEIGHBORHOOD_RADIUS,
         "best_params": {
             "LE": le, "SE": se, "STP": stp, "LMT": lmt,
-            "net_profit":    round(np_, 0),
-            "max_drawdown":  round(mdd, 0),
-            "objective":     round(obj, 0),
-            "plateau_score": round(plateau_score, 0),
-            "total_trades":  trades,
+            "net_profit":   round(np_, 0),
+            "max_drawdown": round(mdd, 0),
+            "objective":    round(obj, 0),
+            "total_trades": trades,
         },
-        "best_plateau_attempt": best_attempt,
+        "best_objective_attempt": best_attempt,
         "attempt_log": attempt_log,
     }
-    out = OUTPUT_DIR / "final_params_hourly.json"
+    out = OUTPUT_DIR / "final_params_daily_maxobj.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     log.info("Saved: %s", out)
@@ -327,28 +306,25 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                from_csv: bool, start_attempt: int) -> int:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    best_le,  best_se  = 20.0, 20.0
+    best_le,  best_se  = 20.0, 20.0   # start near centre to avoid boundary trap
     best_stp, best_lmt = DEFAULT_STP, DEFAULT_LMT
     attempt_log: List[dict] = []
     le_se_dfs:   List[pd.DataFrame] = []
 
     def _record(attempt_num: int, name: str, df: Optional[pd.DataFrame],
-                le: float, se: float, stp: float, lmt: float,
-                plateau_score: float) -> None:
+                le: float, se: float, stp: float, lmt: float) -> None:
         metrics = _row_metrics(df, LE=le, SE=se, STP=stp, LMT=lmt) if df is not None else {}
         entry = {
-            "attempt":       attempt_num,
-            "name":          name,
-            "rows":          len(df) if df is not None else 0,
+            "attempt":  attempt_num,
+            "name":     name,
+            "rows":     len(df) if df is not None else 0,
             "LE": le, "SE": se, "STP": stp, "LMT": lmt,
-            "plateau_score": round(plateau_score, 0),
             **metrics,
         }
         attempt_log.append(entry)
         log.info("  [Attempt %d] LE=%.4g SE=%.4g STP=%.4g LMT=%.4g  "
-                 "plateau=%.0f  obj=%.0f  NP=%.0f  MDD=%.0f  trades=%d",
+                 "obj=%.0f  NP=%.0f  MDD=%.0f  trades=%d",
                  attempt_num, le, se, stp, lmt,
-                 plateau_score,
                  metrics.get("objective", 0),
                  metrics.get("net_profit", 0),
                  metrics.get("max_drawdown", 0),
@@ -358,100 +334,99 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     A = 1
     _name = "01_wide"
     if start_attempt <= A:
-        _cfg1 = _cfg(_name,
-                     le=(5, 200, 10), se=(5, 200, 10),
+        _cfg1 = _cfg(_name, le=(2, 80, 4), se=(2, 80, 4),
                      stp=fixed(DEFAULT_STP), lmt=fixed(DEFAULT_LMT))
         df1 = run_or_load(_name, _cfg1, conn, from_csv)
         if df1 is not None:
             le_se_dfs.append(df1)
-            best_le, best_se, ps1 = best_le_se(df1)
-            _record(A, _name, df1, best_le, best_se, DEFAULT_STP, DEFAULT_LMT, ps1)
+            best_le, best_se, _ = best_le_se_obj(df1, best_le, best_se)
+            _record(A, _name, df1, best_le, best_se, DEFAULT_STP, DEFAULT_LMT)
     else:
         p = csv_for(_name)
         if p.exists():
-            df1 = mc.load_results_csv(str(p), _cfg(_name,(5,200,10),(5,200,10),
+            df1 = mc.load_results_csv(str(p), _cfg(_name,(2,80,4),(2,80,4),
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df1 is not None:
                 le_se_dfs.append(df1)
-                best_le, best_se, _ = best_le_se(df1)
+                best_le, best_se, _ = best_le_se_obj(df1, best_le, best_se)
     log.info("After Attempt 1 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 2: Zoom-in ±40 step 5  ───────────────────────────────────────
+    # ── Attempt 2: Zoom-in ±12 step 2  ───────────────────────────────────────
     A = 2
     _name = "02_zoom"
     if start_attempt <= A:
-        _le2 = zoom(best_le, 40, 5, LE_LO, LE_HI)
-        _se2 = zoom(best_se, 40, 5, SE_LO, SE_HI)
+        _le2 = zoom(best_le, 12, 2, LE_LO, LE_HI)
+        _se2 = zoom(best_se, 12, 2, SE_LO, SE_HI)
         _cfg2 = _cfg(_name, _le2, _se2, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df2 = run_or_load(_name, _cfg2, conn, from_csv)
         if df2 is not None:
             le_se_dfs.append(df2)
             merged = merge_le_se_dfs(le_se_dfs)
-            best_le, best_se, ps2 = best_le_se(merged)
-            _record(A, _name, df2, best_le, best_se, DEFAULT_STP, DEFAULT_LMT, ps2)
+            best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
+            _record(A, _name, df2, best_le, best_se, DEFAULT_STP, DEFAULT_LMT)
     else:
         p = csv_for(_name)
         if p.exists():
-            _le2 = zoom(best_le, 40, 5, LE_LO, LE_HI)
-            _se2 = zoom(best_se, 40, 5, SE_LO, SE_HI)
+            _le2 = zoom(best_le, 12, 2, LE_LO, LE_HI)
+            _se2 = zoom(best_se, 12, 2, SE_LO, SE_HI)
             df2 = mc.load_results_csv(str(p), _cfg(_name,_le2,_se2,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df2 is not None:
                 le_se_dfs.append(df2)
                 merged = merge_le_se_dfs(le_se_dfs)
-                best_le, best_se, _ = best_le_se(merged)
+                best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
     log.info("After Attempt 2 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 3: Expand-out ±60 step 6  ────────────────────────────────────
+    # ── Attempt 3: Expand-out ±24 step 3  ────────────────────────────────────
     A = 3
     _name = "03_expand"
     if start_attempt <= A:
-        _le3 = zoom(best_le, 60, 6, LE_LO, LE_HI)
-        _se3 = zoom(best_se, 60, 6, SE_LO, SE_HI)
+        _le3 = zoom(best_le, 24, 3, LE_LO, LE_HI)
+        _se3 = zoom(best_se, 24, 3, SE_LO, SE_HI)
         _cfg3 = _cfg(_name, _le3, _se3, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df3 = run_or_load(_name, _cfg3, conn, from_csv)
         if df3 is not None:
             le_se_dfs.append(df3)
             merged = merge_le_se_dfs(le_se_dfs)
-            best_le, best_se, ps3 = best_le_se(merged)
-            _record(A, _name, df3, best_le, best_se, DEFAULT_STP, DEFAULT_LMT, ps3)
+            best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
+            _record(A, _name, df3, best_le, best_se, DEFAULT_STP, DEFAULT_LMT)
     else:
         p = csv_for(_name)
         if p.exists():
-            _le3 = zoom(best_le, 60, 6, LE_LO, LE_HI)
-            _se3 = zoom(best_se, 60, 6, SE_LO, SE_HI)
+            _le3 = zoom(best_le, 24, 3, LE_LO, LE_HI)
+            _se3 = zoom(best_se, 24, 3, SE_LO, SE_HI)
             df3 = mc.load_results_csv(str(p), _cfg(_name,_le3,_se3,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df3 is not None:
                 le_se_dfs.append(df3)
                 merged = merge_le_se_dfs(le_se_dfs)
-                best_le, best_se, _ = best_le_se(merged)
+                best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
     log.info("After Attempt 3 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 4: Fine zoom ±20 step 2  ─────────────────────────────────────
+    # ── Attempt 4: Fine zoom ±8 step 1  ──────────────────────────────────────
     A = 4
     _name = "04_fine"
     if start_attempt <= A:
-        _le4 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-        _se4 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+        _le4 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+        _se4 = zoom(best_se, 8, 1, SE_LO, SE_HI)
         _cfg4 = _cfg(_name, _le4, _se4, fixed(DEFAULT_STP), fixed(DEFAULT_LMT))
         df4 = run_or_load(_name, _cfg4, conn, from_csv)
         if df4 is not None:
             le_se_dfs.append(df4)
             merged = merge_le_se_dfs(le_se_dfs)
-            best_le, best_se, ps4 = best_le_se(merged)
-            _record(A, _name, df4, best_le, best_se, DEFAULT_STP, DEFAULT_LMT, ps4)
+            best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
+            _record(A, _name, df4, best_le, best_se, DEFAULT_STP, DEFAULT_LMT)
     else:
         p = csv_for(_name)
         if p.exists():
-            _le4 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-            _se4 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+            _le4 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+            _se4 = zoom(best_se, 8, 1, SE_LO, SE_HI)
             df4 = mc.load_results_csv(str(p), _cfg(_name,_le4,_se4,
                                                     fixed(DEFAULT_STP),fixed(DEFAULT_LMT)))
             if df4 is not None:
                 le_se_dfs.append(df4)
                 merged = merge_le_se_dfs(le_se_dfs)
-                best_le, best_se, _ = best_le_se(merged)
+                best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
     log.info("After Attempt 4 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
     # ── Attempt 5: Wide STP×LMT  ─────────────────────────────────────────────
@@ -459,14 +434,13 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     _name = "05_stp_lmt_wide"
     stp_lmt_dfs: List[pd.DataFrame] = []
     if start_attempt <= A:
-        _cfg5 = _cfg(_name,
-                     fixed(best_le), fixed(best_se),
+        _cfg5 = _cfg(_name, fixed(best_le), fixed(best_se),
                      stp=(0.5, 6.0, 0.5), lmt=(2.0, 20.0, 1.0))
         df5 = run_or_load(_name, _cfg5, conn, from_csv)
         if df5 is not None:
             stp_lmt_dfs.append(df5)
-            best_stp, best_lmt, ps5 = best_stp_lmt(df5)
-            _record(A, _name, df5, best_le, best_se, best_stp, best_lmt, ps5)
+            best_stp, best_lmt, _ = best_stp_lmt_obj(df5, best_stp, best_lmt)
+            _record(A, _name, df5, best_le, best_se, best_stp, best_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
@@ -474,7 +448,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                                                     (0.5,6.0,0.5),(2.0,20.0,1.0)))
             if df5 is not None:
                 stp_lmt_dfs.append(df5)
-                best_stp, best_lmt, _ = best_stp_lmt(df5)
+                best_stp, best_lmt, _ = best_stp_lmt_obj(df5, best_stp, best_lmt)
     log.info("After Attempt 5 — best STP=%.4g  LMT=%.4g", best_stp, best_lmt)
 
     # ── Attempt 6: Zoom STP ±2.0 ×0.25 / LMT ±5 ×0.5  ───────────────────────
@@ -490,8 +464,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
             merged_sl = pd.concat(stp_lmt_dfs, ignore_index=True)
             merged_sl["Objective"] = plateau_mod.compute_objective(merged_sl)
             merged_sl.drop_duplicates(subset=["STP","LMT"], keep="first", inplace=True)
-            best_stp, best_lmt, ps6 = best_stp_lmt(merged_sl)
-            _record(A, _name, df6, best_le, best_se, best_stp, best_lmt, ps6)
+            best_stp, best_lmt, _ = best_stp_lmt_obj(merged_sl, best_stp, best_lmt)
+            _record(A, _name, df6, best_le, best_se, best_stp, best_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
@@ -504,7 +478,7 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                 merged_sl = pd.concat(stp_lmt_dfs, ignore_index=True)
                 merged_sl["Objective"] = plateau_mod.compute_objective(merged_sl)
                 merged_sl.drop_duplicates(subset=["STP","LMT"], keep="first", inplace=True)
-                best_stp, best_lmt, _ = best_stp_lmt(merged_sl)
+                best_stp, best_lmt, _ = best_stp_lmt_obj(merged_sl, best_stp, best_lmt)
     log.info("After Attempt 6 — best STP=%.4g  LMT=%.4g", best_stp, best_lmt)
 
     # ── Attempt 7: Fine STP ±0.75 ×0.1 / LMT ±3 ×0.25  ─────────────────────
@@ -520,8 +494,8 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
             merged_sl = pd.concat(stp_lmt_dfs, ignore_index=True)
             merged_sl["Objective"] = plateau_mod.compute_objective(merged_sl)
             merged_sl.drop_duplicates(subset=["STP","LMT"], keep="first", inplace=True)
-            best_stp, best_lmt, ps7 = best_stp_lmt(merged_sl)
-            _record(A, _name, df7, best_le, best_se, best_stp, best_lmt, ps7)
+            best_stp, best_lmt, _ = best_stp_lmt_obj(merged_sl, best_stp, best_lmt)
+            _record(A, _name, df7, best_le, best_se, best_stp, best_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
@@ -534,70 +508,70 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
                 merged_sl = pd.concat(stp_lmt_dfs, ignore_index=True)
                 merged_sl["Objective"] = plateau_mod.compute_objective(merged_sl)
                 merged_sl.drop_duplicates(subset=["STP","LMT"], keep="first", inplace=True)
-                best_stp, best_lmt, _ = best_stp_lmt(merged_sl)
+                best_stp, best_lmt, _ = best_stp_lmt_obj(merged_sl, best_stp, best_lmt)
     log.info("After Attempt 7 — best STP=%.4g  LMT=%.4g", best_stp, best_lmt)
 
     # ── Attempt 8: Re-verify LE×SE with refined STP/LMT  ────────────────────
     A = 8
     _name = "08_re_verify_le_se"
     if start_attempt <= A:
-        _le8 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-        _se8 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+        _le8 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+        _se8 = zoom(best_se, 8, 1, SE_LO, SE_HI)
         _cfg8 = _cfg(_name, _le8, _se8, fixed(best_stp), fixed(best_lmt))
         df8 = run_or_load(_name, _cfg8, conn, from_csv)
         if df8 is not None:
             le_se_dfs.append(df8)
             merged = merge_le_se_dfs(le_se_dfs)
-            best_le, best_se, ps8 = best_le_se(merged)
-            _record(A, _name, df8, best_le, best_se, best_stp, best_lmt, ps8)
+            best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
+            _record(A, _name, df8, best_le, best_se, best_stp, best_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
-            _le8 = zoom(best_le, 20, 2, LE_LO, LE_HI)
-            _se8 = zoom(best_se, 20, 2, SE_LO, SE_HI)
+            _le8 = zoom(best_le, 8, 1, LE_LO, LE_HI)
+            _se8 = zoom(best_se, 8, 1, SE_LO, SE_HI)
             df8 = mc.load_results_csv(str(p), _cfg(_name,_le8,_se8,
                                                     fixed(best_stp),fixed(best_lmt)))
             if df8 is not None:
                 le_se_dfs.append(df8)
                 merged = merge_le_se_dfs(le_se_dfs)
-                best_le, best_se, _ = best_le_se(merged)
+                best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
     log.info("After Attempt 8 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
-    # ── Attempt 9: Wide boundary check ±70 step 7  ───────────────────────────
+    # ── Attempt 9: Wide boundary check ±30 step 4  ───────────────────────────
     A = 9
     _name = "09_boundary"
     if start_attempt <= A:
-        _le9 = zoom(best_le, 70, 7, LE_LO, LE_HI)
-        _se9 = zoom(best_se, 70, 7, SE_LO, SE_HI)
+        _le9 = zoom(best_le, 30, 4, LE_LO, LE_HI)
+        _se9 = zoom(best_se, 30, 4, SE_LO, SE_HI)
         _cfg9 = _cfg(_name, _le9, _se9, fixed(best_stp), fixed(best_lmt))
         df9 = run_or_load(_name, _cfg9, conn, from_csv)
         if df9 is not None:
             le_se_dfs.append(df9)
             merged = merge_le_se_dfs(le_se_dfs)
-            best_le, best_se, ps9 = best_le_se(merged)
-            _record(A, _name, df9, best_le, best_se, best_stp, best_lmt, ps9)
+            best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
+            _record(A, _name, df9, best_le, best_se, best_stp, best_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
-            _le9 = zoom(best_le, 70, 7, LE_LO, LE_HI)
-            _se9 = zoom(best_se, 70, 7, SE_LO, SE_HI)
+            _le9 = zoom(best_le, 30, 4, LE_LO, LE_HI)
+            _se9 = zoom(best_se, 30, 4, SE_LO, SE_HI)
             df9 = mc.load_results_csv(str(p), _cfg(_name,_le9,_se9,
                                                     fixed(best_stp),fixed(best_lmt)))
             if df9 is not None:
                 le_se_dfs.append(df9)
                 merged = merge_le_se_dfs(le_se_dfs)
-                best_le, best_se, _ = best_le_se(merged)
+                best_le, best_se, _ = best_le_se_obj(merged, best_le, best_se)
     log.info("After Attempt 9 — best LE=%.4g  SE=%.4g", best_le, best_se)
 
     # ── Attempt 10: 4D grid  ─────────────────────────────────────────────────
     A = 10
     _name = "10_4d"
     final_le, final_se, final_stp, final_lmt = best_le, best_se, best_stp, best_lmt
-    final_obj, final_plateau = 0.0, 0.0
+    final_obj = 0.0
     final_np, final_mdd, final_trades = 0.0, 0.0, 0
 
-    _le10  = zoom(best_le,  4, 2,    LE_LO,  LE_HI)
-    _se10  = zoom(best_se,  4, 2,    SE_LO,  SE_HI)
+    _le10  = zoom(best_le,  3, 1,    LE_LO,  LE_HI)
+    _se10  = zoom(best_se,  3, 1,    SE_LO,  SE_HI)
     _stp10 = zoom(best_stp, 0.5, 0.25, STP_LO, STP_HI)
     _lmt10 = zoom(best_lmt, 2.0, 1.0,  LMT_LO, LMT_HI)
     _cfg10 = _cfg(_name, _le10, _se10, _stp10, _lmt10)
@@ -607,25 +581,28 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
     if start_attempt <= A:
         df10 = run_or_load(_name, _cfg10, conn, from_csv)
         if df10 is not None:
-            final_le, final_se, final_stp, final_lmt, final_obj, final_plateau = best_4d(df10)
-            mask = ((df10["LE"] == final_le) & (df10["SE"] == final_se) &
-                    (df10["STP"] == final_stp) & (df10["LMT"] == final_lmt))
+            final_le, final_se, final_stp, final_lmt, final_obj = best_4d_obj(df10)
+            mask = (np.isclose(df10["LE"],  final_le,  atol=0.01) &
+                    np.isclose(df10["SE"],  final_se,  atol=0.01) &
+                    np.isclose(df10["STP"], final_stp, atol=0.01) &
+                    np.isclose(df10["LMT"], final_lmt, atol=0.01))
             row = df10[mask]
             if not row.empty:
                 r = row.iloc[0]
                 final_np    = float(r["NetProfit"])
                 final_mdd   = float(r["MaxDrawdown"])
                 final_trades = int(r.get("TotalTrades", 0))
-            _record(A, _name, df10,
-                    final_le, final_se, final_stp, final_lmt, final_plateau)
+            _record(A, _name, df10, final_le, final_se, final_stp, final_lmt)
     else:
         p = csv_for(_name)
         if p.exists():
             df10 = mc.load_results_csv(str(p), _cfg10)
             if df10 is not None:
-                final_le, final_se, final_stp, final_lmt, final_obj, final_plateau = best_4d(df10)
-                mask = ((df10["LE"] == final_le) & (df10["SE"] == final_se) &
-                        (df10["STP"] == final_stp) & (df10["LMT"] == final_lmt))
+                final_le, final_se, final_stp, final_lmt, final_obj = best_4d_obj(df10)
+                mask = (np.isclose(df10["LE"],  final_le,  atol=0.01) &
+                        np.isclose(df10["SE"],  final_se,  atol=0.01) &
+                        np.isclose(df10["STP"], final_stp, atol=0.01) &
+                        np.isclose(df10["LMT"], final_lmt, atol=0.01))
                 row = df10[mask]
                 if not row.empty:
                     r = row.iloc[0]
@@ -635,17 +612,17 @@ def run_search(conn: Optional[mc.MultiChartsConnection],
 
     # ── Final summary  ───────────────────────────────────────────────────────
     log.info("")
-    log.info("══════════════════════════════════════════")
-    log.info("  FINAL RECOMMENDATION  (Breakout Hourly)")
-    log.info("══════════════════════════════════════════")
+    log.info("══════════════════════════════════════════════════")
+    log.info("  FINAL RECOMMENDATION  (Breakout Daily, Max Obj)")
+    log.info("══════════════════════════════════════════════════")
     log.info("  LE=%.4g  SE=%.4g  STP=%.4g  LMT=%.4g",
              final_le, final_se, final_stp, final_lmt)
     log.info("  NetProfit=%.0f  MaxDD=%.0f  Trades=%d",
              final_np, final_mdd, final_trades)
-    log.info("  Objective=%.0f  PlateauScore=%.0f", final_obj, final_plateau)
+    log.info("  Objective=%.0f", final_obj)
 
     out = save_json(final_le, final_se, final_stp, final_lmt,
-                    final_obj, final_plateau, final_np, final_mdd, final_trades,
+                    final_obj, final_np, final_mdd, final_trades,
                     attempt_log)
     print(f"\nDone — results at: {out}")
     return 0
@@ -663,7 +640,8 @@ def _is_admin() -> bool:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Adaptive 10-attempt Breakout Hourly search")
+    ap = argparse.ArgumentParser(
+        description="Adaptive 10-attempt Breakout Daily search — max objective mode")
     ap.add_argument("--from-csv", action="store_true",
                     help="Re-analyze existing CSVs; do not launch MC automation")
     ap.add_argument("--attempt", type=int, default=1, metavar="N",

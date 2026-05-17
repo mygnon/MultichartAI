@@ -1,0 +1,906 @@
+02:18:31 WARNING  — Not running as Administrator — will attempt anyway (MC64 may run at same level)
+02:18:31 WARNING  — Script is NOT running as Administrator. UI automation may fail. Please relaunch as Administrator.
+02:18:31 INFO     — Open MultiCharts windows (3):
+02:18:31 INFO     —   [0x51bf4] MultiCharts - 20260508_SFJ_BASIC_BREAK_AI
+02:18:31 INFO     —   [0x828f8] MultiCharts Study Editor - [_2021Basic_Break_NQ]
+02:18:31 INFO     —   [0x162532] MultiCharts64 QuoteManager
+C:\Users\Tim\AppData\Local\Programs\Python\Python311\Lib\site-packages\pywinauto\application.py:1010: UserWarning: Python process has no rights to make changes in the target GUI (run the script as Administrator)
+  warnings.warn(warning_text, UserWarning)
+02:18:31 INFO     — Connected to MC: 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI'
+02:18:31 INFO     — Round-4 seed: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  OBJ=31389205
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Tim\AppData\Local\Programs\Python\Python311\Lib\logging\__init__.py", line 1113, in emit
+    stream.write(msg + self.terminator)
+UnicodeEncodeError: 'cp950' codec can't encode character '\u2265' in position 47: illegal multibyte sequence
+Call stack:
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 666, in <module>
+    sys.exit(main())
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 662, in main
+    return run_search(conn, args.from_csv, args.attempt)
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 314, in run_search
+    log.info("Rule: every attempt varies \u22652 params (prevents column-mapping bug)")
+Message: 'Rule: every attempt varies \u22652 params (prevents column-mapping bug)'
+Arguments: ()
+02:18:31 INFO     — A01 SE×STP 2D — LE=5 LMT=17, SE (30.0, 200.0, 10.0) STP (1.25, 5.5, 0.25) (324 combos)
+02:18:31 INFO     — === Attempt 01_se_stp_2d                   (324 combos) ===
+02:18:31 INFO     — === Starting BDT4_01_se_stp_2d (324 runs) ===
+02:18:32 INFO     — _focus_window: MC focused via taskbar button click
+02:18:33 INFO     — Chart ready for: BDT4_01_se_stp_2d
+02:18:33 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:18:33 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:18:33 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:18:37 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:18:37 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:18:37 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:18:37 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:18:37 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:18:37 INFO     — Left-click at (374,218) to activate chart child
+02:18:38 INFO     — Right-clicking at (374, 218)
+02:18:41 INFO     — No popup (#32768) after right-click. New windows: []
+02:18:45 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_01_se_stp_2d_1778869125.png
+02:18:45 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:18:45 WARNING  —   Retrying after 20s pause...
+02:19:05 INFO     — === Starting BDT4_01_se_stp_2d (324 runs) ===
+02:19:06 INFO     — _focus_window: MC focused via taskbar button click
+02:19:06 INFO     — Chart ready for: BDT4_01_se_stp_2d
+02:19:07 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:19:07 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:19:07 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:19:11 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:19:11 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:19:11 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:19:11 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:19:11 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:19:11 INFO     — Left-click at (374,218) to activate chart child
+02:19:12 INFO     — Right-clicking at (374, 218)
+02:19:15 INFO     — No popup (#32768) after right-click. New windows: []
+02:19:18 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_01_se_stp_2d_1778869158.png
+02:19:18 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:19:18 INFO     — After A01 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:19:18 INFO     — A02 SE×LMT 2D — LE=5 STP=2.1, SE (20.0, 180.0, 10.0) LMT (5.0, 40.0, 2.0) (323 combos)
+02:19:18 INFO     — === Attempt 02_se_lmt_2d                   (323 combos) ===
+02:19:18 INFO     — === Starting BDT4_02_se_lmt_2d (323 runs) ===
+02:19:19 INFO     — Chart ready for: BDT4_02_se_lmt_2d
+02:19:19 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:19:20 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:19:20 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:19:23 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:19:23 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:19:25 INFO     — _focus_window: MC focused via taskbar button click
+02:19:25 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:19:25 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:19:25 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:19:25 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:19:25 INFO     — Left-click at (374,218) to activate chart child
+02:19:26 INFO     — Right-clicking at (374, 218)
+02:19:29 INFO     — No popup (#32768) after right-click. New windows: []
+02:19:33 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_02_se_lmt_2d_1778869172.png
+02:19:33 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:19:33 WARNING  —   Retrying after 20s pause...
+02:19:53 INFO     — === Starting BDT4_02_se_lmt_2d (323 runs) ===
+02:19:54 INFO     — _focus_window: MC focused via taskbar button click
+02:19:54 INFO     — Chart ready for: BDT4_02_se_lmt_2d
+02:19:55 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:19:55 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:19:55 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:19:59 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:19:59 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:20:01 INFO     — _focus_window: MC focused via taskbar button click
+02:20:01 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:20:01 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:20:01 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:20:01 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:20:01 INFO     — Left-click at (374,218) to activate chart child
+02:20:01 INFO     — Right-clicking at (374, 218)
+02:20:05 INFO     — No popup (#32768) after right-click. New windows: []
+02:20:08 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_02_se_lmt_2d_1778869208.png
+02:20:08 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:20:08 INFO     — After A02 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:20:08 INFO     — A03 LE×SE 2D — STP=2.1 LMT=17, LE (1.0, 20.0, 1.0) SE (20.0, 200.0, 10.0) (380 combos)
+02:20:08 INFO     — === Attempt 03_le_se_2d                    (380 combos) ===
+02:20:08 INFO     — === Starting BDT4_03_le_se_2d (380 runs) ===
+02:20:09 INFO     — _focus_window: MC focused via taskbar button click
+02:20:10 INFO     — Chart ready for: BDT4_03_le_se_2d
+02:20:10 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:20:11 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:20:11 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:20:14 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:20:14 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:20:16 INFO     — _focus_window: MC focused via taskbar button click
+02:20:16 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:20:16 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:20:16 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:20:16 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:20:16 INFO     — Left-click at (374,218) to activate chart child
+02:20:17 INFO     — Right-clicking at (374, 218)
+02:20:20 INFO     — No popup (#32768) after right-click. New windows: []
+02:20:23 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_03_le_se_2d_1778869223.png
+02:20:23 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:20:23 WARNING  —   Retrying after 20s pause...
+02:20:43 INFO     — === Starting BDT4_03_le_se_2d (380 runs) ===
+02:20:45 INFO     — _focus_window: MC focused via taskbar button click
+02:20:45 INFO     — Chart ready for: BDT4_03_le_se_2d
+02:20:46 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:20:46 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:20:46 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:20:49 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:20:50 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:20:50 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:20:50 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:20:50 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:20:50 INFO     — Left-click at (374,218) to activate chart child
+02:20:50 INFO     — Right-clicking at (374, 218)
+02:20:53 INFO     — No popup (#32768) after right-click. New windows: []
+02:20:57 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_03_le_se_2d_1778869257.png
+02:20:57 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:20:57 INFO     — After A03 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:20:57 INFO     — A04 SE×STP fine — LE=5 LMT=17, SE (30, 70, 2) STP (1.1, 3.1, 0.1) (441 combos)
+02:20:57 INFO     — === Attempt 04_se_stp_fine                 (441 combos) ===
+02:20:57 INFO     — === Starting BDT4_04_se_stp_fine (441 runs) ===
+02:20:58 INFO     — _focus_window: MC focused via taskbar button click
+02:20:59 INFO     — Chart ready for: BDT4_04_se_stp_fine
+02:20:59 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:21:00 INFO     — _focus_window: MC focused via taskbar button click
+02:21:01 INFO     — Foreground after _focus_window: hwnd=0xa2880 'Claude Code - Visual Studio Code' (MC=0x51bf4, match=False)
+02:21:01 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:21:04 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:21:04 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:21:06 INFO     — _focus_window: MC focused via taskbar button click
+02:21:06 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:21:06 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:21:06 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:21:06 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:21:06 INFO     — Left-click at (374,218) to activate chart child
+02:21:07 INFO     — Right-clicking at (374, 218)
+02:21:10 INFO     — No popup (#32768) after right-click. New windows: []
+02:21:14 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_04_se_stp_fine_1778869273.png
+02:21:14 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:21:14 WARNING  —   Retrying after 20s pause...
+02:21:34 INFO     — === Starting BDT4_04_se_stp_fine (441 runs) ===
+02:21:35 INFO     — _focus_window: MC focused via taskbar button click
+02:21:35 INFO     — Chart ready for: BDT4_04_se_stp_fine
+02:21:36 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:21:36 INFO     — Foreground after _focus_window: hwnd=0xa2880 'Claude Code - Visual Studio Code' (MC=0x51bf4, match=False)
+02:21:36 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:21:40 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:21:40 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:21:41 INFO     — _focus_window: MC focused via taskbar button click
+02:21:42 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:21:42 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:21:42 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:21:42 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:21:42 INFO     — Left-click at (374,218) to activate chart child
+02:21:42 INFO     — Right-clicking at (374, 218)
+02:21:45 INFO     — No popup (#32768) after right-click. New windows: []
+02:21:49 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_04_se_stp_fine_1778869309.png
+02:21:49 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:21:49 INFO     — After A04 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:21:49 INFO     — A05 SE-high × STP — LE=5 LMT=17, SE (200.0, 400.0, 10.0) STP (1.5, 4.0, 0.5) (126 combos)
+02:21:49 INFO     — === Attempt 05_se_high_stp                 (126 combos) ===
+02:21:49 INFO     — === Starting BDT4_05_se_high_stp (126 runs) ===
+02:21:50 INFO     — Chart ready for: BDT4_05_se_high_stp
+02:21:50 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:21:50 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:21:50 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:21:54 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:21:54 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:21:55 INFO     — _focus_window: MC focused via taskbar button click
+02:21:56 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:21:56 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:21:56 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:21:56 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:21:56 INFO     — Left-click at (374,218) to activate chart child
+02:21:56 INFO     — Right-clicking at (374, 218)
+02:22:00 INFO     — No popup (#32768) after right-click. New windows: []
+02:22:03 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_05_se_high_stp_1778869323.png
+02:22:03 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:22:03 WARNING  —   Retrying after 20s pause...
+02:22:23 INFO     — === Starting BDT4_05_se_high_stp (126 runs) ===
+02:22:24 INFO     — _focus_window: MC focused via taskbar button click
+02:22:25 INFO     — Chart ready for: BDT4_05_se_high_stp
+02:22:25 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:22:26 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:22:26 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:22:29 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:22:29 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:22:31 WARNING  — _focus_window: MC hwnd=0x51bf4 still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:22:32 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:22:32 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,193)
+02:22:32 INFO     — Foreground before right-click: hwnd=0xa2880 'Claude Code - Visual Studio Code' (MC=0x51bf4)
+02:22:32 INFO     — WindowFromPoint(374,193) = hwnd=0xb284c cls='Chrome_RenderWidgetHostHWND' txt='Chrome Legacy Window'
+02:22:32 INFO     — Left-click at (374,193) to activate chart child
+02:22:32 INFO     — Right-clicking at (374, 193)
+02:22:36 INFO     — No popup (#32768) after right-click. New windows: []
+02:22:39 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_05_se_high_stp_1778869359.png
+02:22:39 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:22:39 INFO     — After A05 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:22:39 INFO     — A06 LE×LMT 2D — SE=50 STP=2.1, LE (1.0, 20.0, 1.0) LMT (2.0, 32, 1) (620 combos)
+02:22:39 INFO     — === Attempt 06_le_lmt_2d                   (620 combos) ===
+02:22:39 INFO     — === Starting BDT4_06_le_lmt_2d (620 runs) ===
+02:22:41 INFO     — _focus_window: MC focused via taskbar button click
+02:22:41 INFO     — Chart ready for: BDT4_06_le_lmt_2d
+02:22:42 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:22:42 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:22:42 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:22:46 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:22:46 INFO     — MC lost focus before right-click (fg=0xa2880) — re-focusing
+02:22:47 INFO     — _focus_window: MC focused via taskbar button click
+02:22:47 INFO     — MC descendants (236 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', ''), ('0x80a00', 'ATL_MCVolumeScale', '')]
+02:22:47 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x609e2 rect=(52, 160, 696, 326) click=(374,218)
+02:22:47 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4)
+02:22:47 INFO     — WindowFromPoint(374,218) = hwnd=0x609e2 cls='ATL_MCGraphPanel' txt=''
+02:22:47 INFO     — Left-click at (374,218) to activate chart child
+02:22:48 INFO     — Right-clicking at (374, 218)
+02:22:51 INFO     — No popup (#32768) after right-click. New windows: []
+02:22:55 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_06_le_lmt_2d_1778869375.png
+02:22:55 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:22:55 WARNING  —   Retrying after 20s pause...
+02:23:15 INFO     — === Starting BDT4_06_le_lmt_2d (620 runs) ===
+02:23:16 INFO     — _focus_window: MC focused via taskbar button click
+02:23:17 INFO     — Chart ready for: BDT4_06_le_lmt_2d
+02:23:17 INFO     — MC window rect: hwnd=0x51bf4  left=0 top=6 right=1105 bottom=906
+02:23:17 INFO     — Foreground after _focus_window: hwnd=0x51bf4 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0x51bf4, match=True)
+02:23:17 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:23:21 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:23:21 INFO     — MC descendants (237 total): [('0x416ca', 'WTLControls::Tabbed::TabControl::Window', ''), ('0x192570', 'MDIClient', 'ATL_MDIClient'), ('0x80c04', 'MDIClient', 'ATL_MDIClient'), ('0xe1bb0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0x90a4a', 'ATL:0000000031CC0140', ''), ('0x91644', 'Button', ''), ('0x80a3c', '#32770', ''), ('0x20279e', 'ATL_MCChartManager', ''), ('0x70a26', 'ScrollBar', ''), ('0x70a10', 'ATL_MCTimeScale', ''), ('0x809e4', 'Button', ''), ('0x609f2', 'ATL_MCPriceScale', 'RPriceScale'), ('0x609e0', 'ATL_MCPriceScale', 'LPriceScale'), ('0x609e2', 'ATL_MCGraphPanel', ''), ('0x71cb4', 'ATL_MCStatusLine', '')]
+02:23:21 INFO     — Foreground before right-click: hwnd=0x51bf4 'MultiCharts - Untitled Desktop' (MC=0x51bf4)
+02:23:21 INFO     — WindowFromPoint(552,366) = hwnd=0x192570 cls='MDIClient' txt='ATL_MDIClient'
+02:23:21 INFO     — Left-click at (552,366) to activate chart child
+02:23:22 INFO     — Right-clicking at (552, 366)
+02:23:25 INFO     — No popup (#32768) after right-click. New windows: []
+02:23:29 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_06_le_lmt_2d_1778869409.png
+02:23:29 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:23:29 INFO     — After A06 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:23:29 INFO     — A07 4D wide — LE=(1.0, 9, 2) SE=(25, 75, 10) STP=(1.0, 3.0, 0.25) LMT=(9, 25, 1) (4590 combos)
+02:23:29 INFO     — === Attempt 07_4d_wide                     (4590 combos) ===
+02:23:29 INFO     — === Starting BDT4_07_4d_wide (4590 runs) ===
+02:23:30 WARNING  — Workspace window not found for: 20260508_SFJ_BASIC_BREAK_AI
+02:23:30 INFO     — Workspace not open, attempting to open: C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp
+02:23:40 WARNING  — Open dialog didn't appear. Please open the workspace manually and re-run the script.
+02:23:40 WARNING  — Workspace window not found for: 20260508_SFJ_BASIC_BREAK_AI
+02:23:40 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_07_4d_wide_1778869420.png
+02:23:40 ERROR    —   FAILED: Workspace '20260508_SFJ_BASIC_BREAK_AI' could not be opened.
+Please open it manually in MultiCharts64 before running the script:
+  C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp
+02:23:40 WARNING  —   Retrying after 20s pause...
+02:24:00 INFO     — === Starting BDT4_07_4d_wide (4590 runs) ===
+02:24:04 WARNING  — Workspace window not found for: 20260508_SFJ_BASIC_BREAK_AI
+02:24:04 INFO     — Workspace not open, attempting to open: C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp
+02:24:04 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_07_4d_wide_1778869444.png
+02:24:04 ERROR    —   Retry also FAILED: max() arg is an empty sequence
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2803, in run_optimization_for_strategy
+    ensure_chart_ready(conn, cfg)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 617, in ensure_chart_ready
+    raise MCUIError(
+mc_automation.MCUIError: Workspace '20260508_SFJ_BASIC_BREAK_AI' could not be opened.
+Please open it manually in MultiCharts64 before running the script:
+  C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2803, in run_optimization_for_strategy
+    ensure_chart_ready(conn, cfg)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 613, in ensure_chart_ready
+    _open_workspace_file(conn, cfg.chart_workspace)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 631, in _open_workspace_file
+    main = conn.main_window()
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 290, in main_window
+    return max(wins, key=_window_area)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: max() arg is an empty sequence
+02:24:04 INFO     — After A07 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:24:04 INFO     — A08 STP-low × SE — LE=5 LMT=17, SE (30.0, 150.0, 10.0) STP (0.25, 1.5, 0.125) (143 combos)
+02:24:04 INFO     — === Attempt 08_stp_low_se                  (143 combos) ===
+02:24:04 INFO     — === Starting BDT4_08_stp_low_se (143 runs) ===
+02:24:04 WARNING  — Workspace window not found for: 20260508_SFJ_BASIC_BREAK_AI
+02:24:04 INFO     — Workspace not open, attempting to open: C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp
+02:24:04 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_08_stp_low_se_1778869444.png
+02:24:04 ERROR    —   FAILED: max() arg is an empty sequence
+02:24:04 WARNING  —   Retrying after 20s pause...
+02:24:24 INFO     — === Starting BDT4_08_stp_low_se (143 runs) ===
+C:\Users\Tim\AppData\Local\Programs\Python\Python311\Lib\site-packages\pywinauto\application.py:1010: UserWarning: Python process has no rights to make changes in the target GUI (run the script as Administrator)
+  warnings.warn(warning_text, UserWarning)
+02:24:24 INFO     — Switched to workspace: 20260508_SFJ_BASIC_BREAK_AI (hwnd=0xa16bc)
+02:24:25 INFO     — _focus_window: MC focused via taskbar button click
+02:24:26 INFO     — Chart ready for: BDT4_08_stp_low_se
+02:24:26 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:24:27 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:24:27 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:24:30 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:24:30 INFO     — MC descendants (223 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', ''), ('0x7125a2', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 60 Minutes ')]
+02:24:30 INFO     — Chart child: cls=ATL_MCMDIChildFrame hwnd=0x3828d0 rect=(47, 131, 748, 358) click=(397,356)
+02:24:30 INFO     — Foreground before right-click: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc)
+02:24:30 INFO     — WindowFromPoint(397,356) = hwnd=0x3828d0 cls='ATL_MCMDIChildFrame' txt='TWF.TXF HOT - 1 Day - TOUCHANC'
+02:24:30 INFO     — Left-click at (397,356) to activate chart child
+02:24:31 INFO     — Right-clicking at (397, 356)
+02:24:34 INFO     — No popup (#32768) after right-click. New windows: []
+02:24:38 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_08_stp_low_se_1778869478.png
+02:24:38 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2803, in run_optimization_for_strategy
+    ensure_chart_ready(conn, cfg)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 613, in ensure_chart_ready
+    _open_workspace_file(conn, cfg.chart_workspace)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 631, in _open_workspace_file
+    main = conn.main_window()
+           ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 290, in main_window
+    return max(wins, key=_window_area)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: max() arg is an empty sequence
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:24:38 INFO     — After A08 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:24:38 INFO     — A09 LE-low × SE — STP=2.1 LMT=17, LE (1.0, 8.0, 1.0) SE (30.0, 200.0, 10.0) (144 combos)
+02:24:38 INFO     — === Attempt 09_le_low_se                   (144 combos) ===
+02:24:38 INFO     — === Starting BDT4_09_le_low_se (144 runs) ===
+02:24:41 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:24:41 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:24:42 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:24:43 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:24:43 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:24:44 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:24:44 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:24:45 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:24:45 INFO     — Chart ready for: BDT4_09_le_low_se
+02:24:48 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:24:49 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:24:49 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:24:50 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:24:50 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:24:51 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:24:51 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:24:52 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:24:52 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:24:55 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:24:55 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:24:56 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:24:56 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:24:57 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:24:57 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:24:58 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:24:58 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:24:59 INFO     — Foreground after _focus_window: hwnd=0x410f74 'Visual Studio Code' (MC=0xa16bc, match=False)
+02:24:59 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:25:02 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:25:02 INFO     — MC lost focus before right-click (fg=0x62308) — re-focusing
+02:25:05 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:25:05 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:25:06 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:25:06 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:25:07 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:25:07 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:25:08 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:25:09 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:25:09 INFO     — MC descendants (223 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', ''), ('0x7125a2', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 60 Minutes ')]
+02:25:09 INFO     — Chart child: cls=ATL_MCMDIChildFrame hwnd=0x3828d0 rect=(47, 131, 748, 358) click=(397,356)
+02:25:09 INFO     — Foreground before right-click: hwnd=0x62308 '工作管理員' (MC=0xa16bc)
+02:25:09 INFO     — WindowFromPoint(397,356) = hwnd=0x3828d0 cls='ATL_MCMDIChildFrame' txt='TWF.TXF HOT - 1 Day - TOUCHANC'
+02:25:09 INFO     — Left-click at (397,356) to activate chart child
+02:25:10 INFO     — Right-clicking at (397, 356)
+02:25:13 INFO     — No popup (#32768) after right-click. New windows: []
+02:25:16 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_09_le_low_se_1778869516.png
+02:25:16 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:25:16 WARNING  —   Retrying after 20s pause...
+02:25:36 INFO     — === Starting BDT4_09_le_low_se (144 runs) ===
+02:25:39 INFO     — _focus_window: MC focused via taskbar button click
+02:25:40 INFO     — Chart ready for: BDT4_09_le_low_se
+02:25:40 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:25:40 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:25:40 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:25:41 INFO     — Keyboard menu approach failed: Handle 332784 is not a vaild window handle
+02:25:41 INFO     — MC lost focus before right-click (fg=0x1a0cd8) — re-focusing
+02:25:44 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:25:44 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:25:45 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:25:45 INFO     — MC descendants (224 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x7125a2', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 60 Minutes '), ('0x6276e', 'ATL:0000000031DE0140', ''), ('0x422454', '#32770', ''), ('0x360a94', 'ATL_MCChartManager', ''), ('0x615fc', 'ScrollBar', ''), ('0x70c08', 'ATL_MCTimeScale', ''), ('0x51a04', 'Button', ''), ('0x9a16e8', 'ATL_MCPriceScale', 'RPriceScale'), ('0x51d88', 'ATL_MCPriceScale', 'LPriceScale'), ('0x3f062c', 'ATL_MCGraphPanel', ''), ('0xf0a2e', 'ATL_MCStatusLine', ''), ('0x11086e', 'ATL_MCVolumeScale', ''), ('0x9204a', 'ATL_MCVolumeScale', ''), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU')]
+02:25:45 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,193)
+02:25:45 INFO     — Foreground before right-click: hwnd=0x1a0cd8 'Format Instrument' (MC=0xa16bc)
+02:25:45 INFO     — WindowFromPoint(374,193) = hwnd=0x3509c0 cls='#32770' txt=''
+02:25:45 INFO     — Left-click at (374,193) to activate chart child
+02:25:46 INFO     — Right-clicking at (374, 193)
+02:25:49 INFO     — No popup (#32768) after right-click. New windows: []
+02:25:52 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_09_le_low_se_1778869552.png
+02:25:52 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:25:52 INFO     — After A09 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:25:52 INFO     — A10 LE×SE boundary — STP=2.1 LMT=17, LE (1.0, 61.0, 4.0) SE (10.0, 305.0, 15.0) (336 combos)
+02:25:52 INFO     — === Attempt 10_le_se_boundary              (336 combos) ===
+02:25:52 INFO     — === Starting BDT4_10_le_se_boundary (336 runs) ===
+02:25:54 INFO     — _focus_window: MC focused via taskbar button click
+02:25:55 INFO     — Chart ready for: BDT4_10_le_se_boundary
+02:25:55 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:25:56 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:25:56 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:25:59 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:25:59 INFO     — MC lost focus before right-click (fg=0x9b173e) — re-focusing
+02:26:01 INFO     — _focus_window: MC focused via taskbar button click
+02:26:02 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:26:02 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,218)
+02:26:02 INFO     — Foreground before right-click: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc)
+02:26:02 INFO     — WindowFromPoint(374,218) = hwnd=0x515e4 cls='ATL_MCGraphPanel' txt=''
+02:26:02 INFO     — Left-click at (374,218) to activate chart child
+02:26:02 INFO     — Right-clicking at (374, 218)
+02:26:05 INFO     — No popup (#32768) after right-click. New windows: []
+02:26:09 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_10_le_se_boundary_1778869569.png
+02:26:09 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:26:09 WARNING  —   Retrying after 20s pause...
+02:26:29 INFO     — === Starting BDT4_10_le_se_boundary (336 runs) ===
+02:26:30 INFO     — _focus_window: MC focused via taskbar button click
+02:26:31 INFO     — Chart ready for: BDT4_10_le_se_boundary
+02:26:31 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:26:31 INFO     — Foreground after _focus_window: hwnd=0x9b173e 'Claude Code - Visual Studio Code' (MC=0xa16bc, match=False)
+02:26:31 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:26:35 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:26:35 INFO     — MC lost focus before right-click (fg=0x9b173e) — re-focusing
+02:26:37 INFO     — _focus_window: MC focused via taskbar button click
+02:26:37 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:26:37 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,218)
+02:26:37 INFO     — Foreground before right-click: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc)
+02:26:37 INFO     — WindowFromPoint(374,218) = hwnd=0x515e4 cls='ATL_MCGraphPanel' txt=''
+02:26:37 INFO     — Left-click at (374,218) to activate chart child
+02:26:38 INFO     — Right-clicking at (374, 218)
+02:26:41 INFO     — No popup (#32768) after right-click. New windows: []
+02:26:44 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_10_le_se_boundary_1778869604.png
+02:26:44 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:26:44 INFO     — After A10 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:26:44 INFO     — A11 4D micro — LE=(3, 7, 1) SE=(40, 60, 4) STP=(1.6, 2.6, 0.2) LMT=(13.0, 21.0, 1.5) (1080 combos)
+02:26:44 INFO     — === Attempt 11_4d_micro                    (1080 combos) ===
+02:26:44 INFO     — === Starting BDT4_11_4d_micro (1080 runs) ===
+02:26:46 INFO     — _focus_window: MC focused via taskbar button click
+02:26:47 INFO     — Chart ready for: BDT4_11_4d_micro
+02:26:48 INFO     — _focus_window: MC focused via taskbar button click
+02:26:49 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:26:49 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:26:49 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:26:53 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:26:53 INFO     — MC lost focus before right-click (fg=0x9b173e) — re-focusing
+02:26:56 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:26:56 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:26:57 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:26:57 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,193)
+02:26:57 INFO     — Foreground before right-click: hwnd=0x9b173e 'Claude Code - Visual Studio Code' (MC=0xa16bc)
+02:26:57 INFO     — WindowFromPoint(374,193) = hwnd=0x5f15b2 cls='Chrome_RenderWidgetHostHWND' txt='Chrome Legacy Window'
+02:26:57 INFO     — Left-click at (374,193) to activate chart child
+02:26:57 INFO     — Right-clicking at (374, 193)
+02:27:01 INFO     — No popup (#32768) after right-click. New windows: []
+02:27:04 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_11_4d_micro_1778869624.png
+02:27:04 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:27:04 WARNING  —   Retrying after 20s pause...
+02:27:24 INFO     — === Starting BDT4_11_4d_micro (1080 runs) ===
+02:27:25 INFO     — _focus_window: MC focused via taskbar button click
+02:27:26 INFO     — Chart ready for: BDT4_11_4d_micro
+02:27:26 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:27:27 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:27:27 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:27:30 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:27:30 INFO     — MC lost focus before right-click (fg=0x9b173e) — re-focusing
+02:27:32 INFO     — _focus_window: MC focused via taskbar button click
+02:27:32 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:27:32 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,218)
+02:27:32 INFO     — Foreground before right-click: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc)
+02:27:32 INFO     — WindowFromPoint(374,218) = hwnd=0x515e4 cls='ATL_MCGraphPanel' txt=''
+02:27:32 INFO     — Left-click at (374,218) to activate chart child
+02:27:33 INFO     — Right-clicking at (374, 218)
+02:27:36 INFO     — No popup (#32768) after right-click. New windows: []
+02:27:40 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_11_4d_micro_1778869660.png
+02:27:40 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:27:40 INFO     — After A11 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:27:40 INFO     — A12 4D dense — LE=(2, 8, 2) SE=(36, 66, 6) STP=(1.5, 2.7, 0.1) LMT=(12, 22, 1) (3432 combos)
+02:27:40 INFO     — === Attempt 12_4d_dense                    (3432 combos) ===
+02:27:40 INFO     — === Starting BDT4_12_4d_dense (3432 runs) ===
+02:27:42 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:27:43 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:27:43 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:27:44 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:27:44 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:27:45 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:27:45 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:27:46 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:27:46 INFO     — Chart ready for: BDT4_12_4d_dense
+02:27:49 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:27:49 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:27:50 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:27:50 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:27:51 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:27:51 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:27:52 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:27:52 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:27:53 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:27:55 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:27:56 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:27:56 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:27:57 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:27:58 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:27:58 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:27:59 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:27:59 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:28:00 INFO     — Foreground after _focus_window: hwnd=0x62308 '工作管理員' (MC=0xa16bc, match=False)
+02:28:00 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:28:03 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:28:03 INFO     — MC lost focus before right-click (fg=0x62308) — re-focusing
+02:28:08 INFO     — _focus_window: clicking MC at (55,231) x_frac=0.05 y_frac=0.25
+02:28:08 INFO     — _focus_window: clicking MC at (110,231) x_frac=0.10 y_frac=0.25
+02:28:09 INFO     — _focus_window: clicking MC at (165,231) x_frac=0.15 y_frac=0.25
+02:28:09 INFO     — _focus_window: clicking MC at (221,231) x_frac=0.20 y_frac=0.25
+02:28:10 INFO     — _focus_window: clicking MC at (331,231) x_frac=0.30 y_frac=0.25
+02:28:10 INFO     — _focus_window: clicking MC at (552,231) x_frac=0.50 y_frac=0.25
+02:28:11 INFO     — _focus_window: clicking MC at (773,96) x_frac=0.70 y_frac=0.10
+02:28:11 WARNING  — _focus_window: MC hwnd=0xa16bc still not foreground after UIA SetFocus + click scan. Run this script as Administrator to fix cross-privilege focus.
+02:28:12 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:28:12 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,218)
+02:28:12 INFO     — Foreground before right-click: hwnd=0x62308 '工作管理員' (MC=0xa16bc)
+02:28:12 INFO     — WindowFromPoint(374,218) = hwnd=0x515e4 cls='ATL_MCGraphPanel' txt=''
+02:28:12 INFO     — Left-click at (374,218) to activate chart child
+02:28:12 INFO     — Right-clicking at (374, 218)
+02:28:16 INFO     — No popup (#32768) after right-click. New windows: []
+02:28:19 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_12_4d_dense_1778869699.png
+02:28:19 ERROR    —   FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:28:19 WARNING  —   Retrying after 20s pause...
+02:28:39 INFO     — === Starting BDT4_12_4d_dense (3432 runs) ===
+02:28:41 INFO     — _focus_window: MC focused via taskbar button click
+02:28:41 INFO     — Chart ready for: BDT4_12_4d_dense
+02:28:42 INFO     — MC window rect: hwnd=0xa16bc  left=0 top=6 right=1105 bottom=906
+02:28:42 INFO     — Foreground after _focus_window: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc, match=True)
+02:28:42 INFO     — ctypes menu: GetMenu=NULL count=-1
+02:28:45 INFO     — Alt+F: no popup found — pressing Escape to reset
+02:28:46 INFO     — MC lost focus before right-click (fg=0x9b173e) — re-focusing
+02:28:47 INFO     — _focus_window: MC focused via taskbar button click
+02:28:47 INFO     — MC descendants (225 total): [('0x9416e4', 'MDIClient', 'ATL_MDIClient'), ('0x3828d0', 'ATL_MCMDIChildFrame', 'TWF.TXF HOT - 1 Day - TOU'), ('0xf28d2', 'ATL:0000000031DE0140', ''), ('0x5615ce', 'Button', ''), ('0xb2414', '#32770', ''), ('0x492900', 'ATL_MCChartManager', ''), ('0x81038c', 'ScrollBar', ''), ('0xf2344', 'ATL_MCTimeScale', ''), ('0xbc260e', 'Button', ''), ('0x623ca', 'ATL_MCPriceScale', 'RPriceScale'), ('0x70bf4', 'ATL_MCPriceScale', 'LPriceScale'), ('0x515e4', 'ATL_MCGraphPanel', ''), ('0x62448', 'ATL_MCStatusLine', ''), ('0x8157a', 'ATL_MCVolumeScale', ''), ('0x6232a', 'ATL_MCVolumeScale', '')]
+02:28:47 INFO     — Chart child: cls=ATL_MCGraphPanel hwnd=0x515e4 rect=(52, 160, 696, 326) click=(374,218)
+02:28:47 INFO     — Foreground before right-click: hwnd=0xa16bc 'MultiCharts - 20260508_SFJ_BASIC_BREAK_AI' (MC=0xa16bc)
+02:28:47 INFO     — WindowFromPoint(374,218) = hwnd=0x515e4 cls='ATL_MCGraphPanel' txt=''
+02:28:47 INFO     — Left-click at (374,218) to activate chart child
+02:28:48 INFO     — Right-clicking at (374, 218)
+02:28:51 INFO     — No popup (#32768) after right-click. New windows: []
+02:28:55 INFO     — Screenshot: C:\Users\Tim\MultichartAI\results\daily_target4_search\FAILURE_BDT4_12_4d_dense_1778869735.png
+02:28:55 ERROR    —   Retry also FAILED: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 197, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Tim\MultichartAI\optimizer\search_daily_target4.py", line 206, in run_or_load
+    raw_csv = mc.run_optimization_for_strategy(conn, cfg, str(OUTPUT_DIR))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 2804, in run_optimization_for_strategy
+    configure_optimization(conn, cfg, date_range=cfg.insample)
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1667, in configure_optimization
+    format_dlg = _open_format_signals(conn)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Tim\MultichartAI\optimizer\mc_automation.py", line 1303, in _open_format_signals
+    raise WindowNotFoundError(
+mc_automation.WindowNotFoundError: Could not open Format Signals/Objects dialog.
+Ensure the chart is visible, has a strategy applied, and MC is in the foreground.
+02:28:55 INFO     — After A12 — best: LE=5 SE=50 STP=2.1 LMT=17  NP=4908600  obj=31389205
+02:28:55 INFO     — 
+02:28:55 INFO     — ══════════════════════════════════════════════════════
+02:28:55 INFO     —   FINAL (Round-4, Breakout Daily NP>6M search)
+02:28:55 INFO     — ══════════════════════════════════════════════════════
+02:28:55 INFO     —   LE=5  SE=50  STP=2.1  LMT=17
+02:28:55 INFO     —   NetProfit=4908600  MaxDD=0
+02:28:55 INFO     —   Objective=31389205  TargetMet=NO — best NP was 4908600
+02:28:55 INFO     — Saved: C:\Users\Tim\MultichartAI\results\daily_target4_search\final_params_daily_target4.json
+
+Done — results at: C:\Users\Tim\MultichartAI\results\daily_target4_search\final_params_daily_target4.json
+Target (NP>6M): NOT MET — best NP=4908600

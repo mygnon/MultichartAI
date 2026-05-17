@@ -1946,7 +1946,46 @@ def configure_optimization(
         #   [5]=[6]=Step Value  (two UIA refs for same WPF TextBox — use [5])
         # Tab navigation: click at Start position → Tab → End → Tab → Step → Tab commit
         _all_items = list(_wiz_uia.descendants(control_type="DataItem"))
-        logger.info("Wizard DataGrid: %d rows", len(_all_items))
+        logger.info("Wizard DataGrid: %d rows (total)", len(_all_items))
+
+        # Step 0: uncheck ALL rows first — clears stale settings from previous
+        # sessions that would leave extra params checked and inflate combo count.
+        for _item0 in _all_items:
+            try:
+                _txts0 = [d.window_text() for d in _item0.descendants(control_type="Text")]
+                _row_nm0 = next((t for t in _txts0 if t), "?")
+                _cbs0 = list(_item0.descendants(control_type="CheckBox"))
+                if not _cbs0:
+                    continue
+                _cb0 = _cbs0[0]
+                _chk0 = False
+                try:
+                    _chk0 = (_cb0.iface_toggle.CurrentToggleState == 1)
+                except Exception:
+                    try:
+                        _chk0 = _cb0.is_checked()
+                    except Exception:
+                        pass
+                if _chk0:
+                    try:
+                        _cb0.invoke()
+                        time.sleep(0.25)
+                        logger.info("  Step0 unchecked row: '%s'", _row_nm0)
+                    except Exception as _ue0:
+                        logger.warning("  Step0 invoke() failed for '%s': %s — trying pyautogui", _row_nm0, _ue0)
+                        try:
+                            _cbr0 = _cb0.rectangle()
+                            _cbx0 = int((_cbr0.left + _cbr0.right) / 2 / _dpi_scale)
+                            _cby0 = int((_cbr0.top + _cbr0.bottom) / 2 / _dpi_scale)
+                            pyautogui.click(_cbx0, _cby0)
+                            time.sleep(0.4)
+                            pyautogui.click(_cbx0, _cby0)
+                            time.sleep(0.5)
+                            logger.info("  Step0 two-click fallback unchecked row: '%s'", _row_nm0)
+                        except Exception as _fe0:
+                            logger.warning("  Step0 fallback also failed for '%s': %s", _row_nm0, _fe0)
+            except Exception:
+                pass
 
         for _pi, _param in enumerate(cfg.params):
             # Find the row containing this param's input name
@@ -1955,7 +1994,7 @@ def configure_optimization(
             for _item in _all_items_cur:
                 try:
                     _txts = [d.window_text() for d in _item.descendants(control_type="Text")]
-                    if _param.name in _txts:
+                    if _param.name in _txts and any(t == cfg.mc_signal_name for t in _txts):
                         _target_row = _item
                         break
                 except Exception:
@@ -2041,7 +2080,7 @@ def configure_optimization(
                     for _ib in _all_items_b:
                         try:
                             _txts_b = [d.window_text() for d in _ib.descendants(control_type="Text")]
-                            if _param.name in _txts_b:
+                            if _param.name in _txts_b and any(t == cfg.mc_signal_name for t in _txts_b):
                                 _target_row = _ib
                                 break
                         except Exception:
@@ -2708,10 +2747,22 @@ def load_results_csv(csv_path: str, cfg: StrategyConfig) -> pd.DataFrame:
         rename[col] = MC_COLUMN_MAP.get(stripped, stripped)
     df.rename(columns=rename, inplace=True)
 
-    for required in ["NetProfit", "MaxDrawdown"]:
-        if required not in df.columns:
+    if "NetProfit" not in df.columns:
+        raise ValueError(
+            f"Column 'NetProfit' not found in {csv_path}. "
+            f"Columns: {list(df.columns)}. Update MC_COLUMN_MAP in config.py."
+        )
+    if "MaxDrawdown" not in df.columns:
+        # MCReport for some timeframes only exports 12 metric columns (no Max Intraday Drawdown).
+        # Fall back to Gross Loss (always ≤0) as a signed proxy so optimization can continue.
+        if "Gross Loss" in df.columns:
+            logger.warning(
+                "MaxDrawdown column missing in %s — using 'Gross Loss' as proxy", csv_path
+            )
+            df["MaxDrawdown"] = pd.to_numeric(df["Gross Loss"], errors="coerce")
+        else:
             raise ValueError(
-                f"Column '{required}' not found in {csv_path}. "
+                f"Column 'MaxDrawdown' not found in {csv_path} and no 'Gross Loss' fallback available. "
                 f"Columns: {list(df.columns)}. Update MC_COLUMN_MAP in config.py."
             )
 
