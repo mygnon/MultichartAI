@@ -1205,20 +1205,27 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
                     _ch = _cr[3] - _cr[1]
                     if _cw > 50 and _ch > 50:
                         _chart_hwnd = _h
-                        # Scan downward from panel top to find a pixel that actually
-                        # belongs to this window (avoids status line and price scale
-                        # child windows that may overlay parts of the panel).
-                        _best_x = _cr[0] + _cw // 2
-                        _best_y = _cr[1] + max(15, _ch // 5)  # start 20% from top
-                        for _dy in range(0, _ch - 10, 5):
-                            _ty = _cr[1] + max(15, _ch // 5) + _dy
-                            try:
-                                _wfp_h = _w32fg.WindowFromPoint((_best_x, _ty))
-                                if _wfp_h == _h:
-                                    _best_y = _ty
-                                    break
-                            except Exception:
+                        # Find a click position that is visually blank (no price bars).
+                        # Strategy: try right-edge x first (the "future" area after the
+                        # last bar is always empty), then fall back to center x.
+                        # For y: scan from near the top (blank space above price range)
+                        # rather than 20% down (which may land on a price bar).
+                        _y_start = _cr[1] + 8  # start 8px from panel top
+                        _best_x, _best_y = _cr[0] + _cw // 2, _y_start
+                        _pos_found = False
+                        for _try_x in [_cr[2] - 35, _cr[0] + _cw // 2]:
+                            if _pos_found:
                                 break
+                            for _dy in range(0, _ch - 10, 5):
+                                _ty = _y_start + _dy
+                                try:
+                                    _wfp_h = _w32fg.WindowFromPoint((_try_x, _ty))
+                                    if _wfp_h == _h:
+                                        _best_x, _best_y = _try_x, _ty
+                                        _pos_found = True
+                                        break
+                                except Exception:
+                                    break
                         _rclick_x, _rclick_y = _best_x, _best_y
                         logger.info("Chart child: cls=%s hwnd=%s rect=%s click=(%d,%d)",
                                     _cls, hex(_h), _cr, _rclick_x, _rclick_y)
@@ -1803,16 +1810,24 @@ def configure_optimization(
 
         if _gp_hwnd:
             _gpr = _win32_get_rect(_gp_hwnd)
-            _gpx = (_gpr[0] + _gpr[2]) // 2
-            _gpy = _gpr[1] + max(15, (_gpr[3] - _gpr[1]) // 5)
-            for _dy in range(0, _gpr[3] - _gpr[1] - 10, 5):
-                _ty = _gpr[1] + max(15, (_gpr[3] - _gpr[1]) // 5) + _dy
-                try:
-                    if _w32fg.WindowFromPoint((_gpx, _ty)) == _gp_hwnd:
-                        _gpy = _ty
-                        break
-                except Exception:
+            _gh = _gpr[3] - _gpr[1]
+            # Try right-edge x (future blank area) before center x, and scan y
+            # from near the top (blank space above price range) rather than 20% down.
+            _gy_start = _gpr[1] + 8
+            _gpx, _gpy = (_gpr[0] + _gpr[2]) // 2, _gy_start
+            _gp_found = False
+            for _try_gx in [_gpr[2] - 35, (_gpr[0] + _gpr[2]) // 2]:
+                if _gp_found:
                     break
+                for _dy in range(0, _gh - 10, 5):
+                    _ty = _gy_start + _dy
+                    try:
+                        if _w32fg.WindowFromPoint((_try_gx, _ty)) == _gp_hwnd:
+                            _gpx, _gpy = _try_gx, _ty
+                            _gp_found = True
+                            break
+                    except Exception:
+                        break
             logger.info("Right-click for Optimize Strategy at (%d,%d)", _gpx, _gpy)
             pyautogui.click(_gpx, _gpy)
             time.sleep(0.4)

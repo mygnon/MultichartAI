@@ -6,7 +6,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **parameter plateau optimizer** for MultiCharts64 (MC64) trading strategies. It automates MC64's built-in optimizer via Windows UI automation, exports results as CSV, and applies a **plateau detection algorithm** to find parameter combinations that are stable (robust to small parameter perturbations) rather than just peak performers. Results include IS/OOS validation and heatmap visualizations.
 
-The target strategies are breakout and SuperTrend systems trading TWF.TXF (Taiwan Futures) on daily and hourly timeframes.
+The target strategy is `_2021Basic_Break_NQ` (breakout system) running on four instrument/timeframe combinations:
+
+| Instrument | Timeframe | Target NP | Status |
+|------------|-----------|-----------|--------|
+| TWF.TXF HOT | Daily | > 6,000,000 TWD | Not met (-32%) |
+| TWF.TXF HOT | Hourly | > 6,000,000 TWD | **✅ MET** |
+| CME.NQ HOT | Hourly | > 700,000 USD | Not met (-6.2%) |
+| CME.NQ HOT | Daily | > 700,000 USD | Not met (-50%) |
+| CME.GC HOT | Hourly | > 700,000 USD | Not met (-58%) |
+| CME.GC HOT | Daily | > 700,000 USD | Not met (-55%) |
+| CME.CL HOT | Hourly | > 700,000 USD | Not met (-85%) |
+| CBOT.ZW HOT | Hourly | > 700,000 USD | Not met (all neg, R3 script ready) |
 
 ## Running the Optimizer
 
@@ -27,14 +38,35 @@ py main.py --strategies all --from-csv ..\results
 py main.py --strategies breakout_daily --dry-run
 
 # Adaptive multi-attempt search scripts (more thorough, strategy-specific):
-py search_hourly.py
-py search_hourly.py --from-csv        # re-analyze only
-py search_hourly.py --attempt 5       # resume from attempt 5
+# TWF Hourly — COMPLETED (NP=6,043,200 TWD ✅)
+py search_hourly_target2.py --from-csv
 
-# Breakout Daily NP>6M adaptive search (latest version):
-py search_daily_target6.py
-py search_daily_target6.py --from-csv        # re-analyze only
-py search_daily_target6.py --attempt 6       # resume from attempt 6
+# TWF Daily NP>6M (latest rounds — R8 is current):
+py search_daily_target8.py
+py search_daily_target8.py --from-csv        # re-analyze only
+py search_daily_target8.py --attempt 6       # resume from attempt 6
+
+# NQ Hourly NP>700K (latest round):
+py search_nq_hourly3.py
+py search_nq_hourly3.py --from-csv
+
+# NQ Daily NP>700K (latest round):
+py search_nq_daily3.py
+py search_nq_daily3.py --from-csv
+py search_nq_daily3.py --attempt 6           # resume from attempt 6
+
+# GC Hourly NP>700K (latest round — R5 is current):
+py search_gc_hourly5.py
+py search_gc_hourly5.py --from-csv
+
+# GC Daily NP>700K (latest round — R4 is current):
+py search_gc_daily4.py
+py search_gc_daily4.py --from-csv
+
+# ZW Hourly NP>700K (R4 — latest round; R3 all UI-failed, zero data):
+py search_zw_hourly4.py
+py search_zw_hourly4.py --from-csv
+py search_zw_hourly4.py --attempt 6          # resume from attempt 6
 ```
 
 ## Install Dependencies
@@ -62,7 +94,7 @@ All strategies are defined as `StrategyConfig` objects with:
 
 `STRATEGY_MAP` maps lowercase/underscore-normalized names to configs. Adding a new strategy requires adding a `StrategyConfig` and updating `ALL_STRATEGIES` and `STRATEGY_MAP`.
 
-### Adaptive search scripts (`search_hourly.py`, `search_daily*.py`)
+### Adaptive search scripts
 
 These are standalone multi-phase scripts that perform sequential zooming:
 - Phase 1: Wide LE×SE sweep to find stable region
@@ -79,24 +111,31 @@ MC64 exports different column headers across versions. `MC_COLUMN_MAP` in `confi
 
 ```
 results/
-  <StrategyName>_raw.csv              # raw MC64 optimization export
-  <StrategyName>_plateau.json         # plateau candidates
-  <StrategyName>_oos.json             # OOS validation results
-  <StrategyName>_heatmap.png          # dual-panel heatmap
-  report_<timestamp>.html             # full HTML report
-  run_<timestamp>.log                 # run log
-  hourly_search/
-    BH_<attempt>_raw.csv              # per-attempt CSVs
-    final_params_hourly.json          # best params from adaptive search
-  daily_target6_search/               # latest Breakout Daily NP>6M search
-    BD6_<attempt>_raw.csv             # per-attempt CSVs
-    final_params_daily_target6.json   # best params (current champion)
-    search_daily_target6_*.log        # run log
+  hourly_target2_search/           # TWF Hourly ✅ COMPLETED
+  daily_target6_search/            # TWF Daily (R6, best so far)
+  nq_hourly3_search/               # NQ Hourly (R3 latest)
+  nq_daily3_search/                # NQ Daily (R3 latest)
+  gc_hourly_search/                # GC Hourly R1
+  gc_hourly2_search/               # GC Hourly R2
+  gc_hourly3_search/               # GC Hourly R3
+  gc_hourly4_search/               # GC Hourly R4 (latest completed)
+  gc_daily_search/                 # GC Daily R1
+  gc_daily2_search/                # GC Daily R2
+  gc_daily3_search/                # GC Daily R3 (latest completed)
+  cl_hourly4_search/               # CL Hourly R4 (latest)
+  cl_daily3_search/                # CL Daily R3 (latest)
+  zw_hourly3_search/               # ZW Hourly R3 (all UI-failed, no CSVs)
+  zw_hourly4_search/               # ZW Hourly R4 (latest)
 ```
+
+Each search directory holds:
+- `<PREFIX>_<attempt>_raw.csv` — raw MC export for each attempt
+- `final_params_<name>.json` — champion parameters
+- `search_<name>_*.log` — run log (where present)
 
 ## Key Constraints
 
-- **Must run as Administrator** — MC64 runs elevated; UI automation fails otherwise. `search_daily_target6.py` (and all `search_*.py`) auto-elevate via UAC using `ctypes.windll.shell32.ShellExecuteW(None, "runas", ...)`. Never skip this.
+- **Must run as Administrator** — MC64 runs elevated; UI automation fails otherwise. All `search_*.py` scripts auto-elevate via UAC using `ctypes.windll.shell32.ShellExecuteW(None, "runas", ...)`. Never skip this.
 - **MC64 workspace must be open** before running — the automation finds the chart window by matching `chart_symbol` against open window titles.
 - **pywinauto limitation** — never use process-scoped `Application(process=pid)` to reach MC64 dialogs; use `Desktop(backend="uia")` + ctypes window enumeration instead. This is the core UIPI workaround.
 - **`ParamAxis.name` must match MC exactly** — case-sensitive; the automation types these names into the Inputs dialog.
@@ -156,36 +195,160 @@ assert combos <= 5000
 
 ### 5. NP numbers are not stable across days
 
-TWF.TXF HOT price data can be updated overnight. The same parameters may give different NP values on different run dates. Always re-run the seed params in the same session to get a valid baseline before comparing across attempts.
+Price data can be updated overnight. The same parameters may give different NP values on different run dates. Always re-run the seed params in the same session to get a valid baseline before comparing across attempts.
 
-## Breakout Daily Search — Current State (as of 2026-05-17)
+### 6. champion() zoom seed must use NP-max, not Obj-max
 
-- **Strategy:** `_2021Basic_Break_NQ`
-- **Symbol:** `TWF.TXF HOT`
-- **Workspace:** `C:\Users\Tim\Downloads\Multichartx86\Tim\20260508_SFJ_BASIC_BREAK_AI.wsp`
-- **Insample:** 2019/01/01 – 2026/01/01
-- **Objective:** `NP² / |MaxDrawdown|`
-- **Target:** NP > 6,000,000 (not yet met)
-- **Latest script:** `optimizer/search_daily_target6.py`
-- **Detailed reference:** `optimizer/OPTIMIZATION_SKILLS.md`
+When chasing a target NP, zoom toward the highest NP row, not the highest Objective row. High Objective can come from low MDD with mediocre NP, which leads the search away from the target.
 
-### Best result so far (Round-6, A11)
+```python
+# Target-chasing mode: NP-max as zoom seed
+best = pos.loc[pos["NetProfit"].idxmax()]
+```
 
-| LE | SE | STP | LMT | NP | MDD | Objective | Trades |
-|-----|-----|------|------|-----------|-----------|------------|--------|
+---
+
+## Current Best Results (as of 2026-05-19)
+
+### TWF Hourly — **TARGET MET ✅**
+
+| LE | SE | STP | LMT | NP (TWD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 3 | 76 | 4 | 32 | **6,043,200** | -1,087,800 | 33,572,593 | 886 |
+
+Script: `search_hourly_target2.py` · Result: `results/hourly_target2_search/final_params_hourly_target2.json`
+
+---
+
+### TWF Daily — Not met (best 4,089,800 TWD, gap −32%)
+
+| LE | SE | STP | LMT | NP (TWD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
 | 5 | 49 | 0.2 | 16 | 4,074,200 | -634,200 | 26,173,298 | 53 |
 
-Gap to target: −1,925,800 (−32%)
+Scripts: `search_daily_target6.py` (R6) → `search_daily_target8.py` (R8 current — exploring STP 0.3–5 gap)
+Result: `results/daily_target6_search/final_params_daily_target6.json`
 
-### Key parameter findings
+Key findings: STP 0.2–0.5 is the ONLY region producing NP>4M; LMT 14–17 best; SE 45–55 best; LE 5–7 stable. R7 deep-dived STP 0.02–0.5. R8 explores STP 0.3–5 (gap between R7 and original R5 territory, which used STP 2.1 with old data). NP ceiling appears firm at ~4.09M TWD across R6–R8.
 
-| Region | Verdict |
-|--------|---------|
-| STP 0.2–0.5 | ✅ Best zone — more trades, smaller MDD, highest NP |
-| STP > 2.0 | ❌ NP significantly lower |
-| LMT 14–17 | ✅ Optimal |
-| LMT > 20 | ❌ NP declines consistently |
-| SE 45–55 | ✅ Highest NP |
-| SE 80–110 | ⚠️ Smaller MDD but NP capped at ~3.5M |
-| LE 5–7 | ✅ Stable |
-| LE < 4 | ❌ MDD worsens |
+---
+
+### NQ Hourly — Not met 700K (best 656,575 USD, gap −6.2%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 1 | 9 | 2.0 | 14 | 656,575 | -89,130 | 4,836,651 | 6,168 |
+
+Also worth noting — highest Objective (risk-adjusted): LE=1, SE=10, STP=0.9, LMT=14, NP=595,905, MDD=−59,855, Obj=5,932,717
+
+Script: `search_nq_hourly3.py` · Result: `results/nq_hourly3_search/final_params_nq_hourly3.json`
+
+Key findings: LE=1 only; SE=9–11 (ultra-short); LMT=14 beats LMT=8; NP ceiling ~657K across 3 rounds.
+
+---
+
+### NQ Daily — Not met 700K (best 350,220 USD, gap −50%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 1 | 78 | 5.5 | 3.9 | 350,220 | -72,655 | 1,688,171 | 28 |
+
+Script: `search_nq_daily3.py` · Result: `results/nq_daily3_search/final_params_nq_daily3.json`
+
+Key findings: SE=75–85 is the only productive zone; LMT=3.9 tight; **STP is a dead parameter above 5–6** (STP=8 and STP=25 give identical results — stop is never hit); only ~4 trades/year; NP ceiling ~350K.
+
+---
+
+### GC Hourly — Not met 700K (best 292,030 USD, gap −58%)
+
+**Best NP** (unchanged through R4):
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 2 | 35 | 3.2 | 20 | 292,030 | -62,570 | 1,362,978 | 2109 |
+
+**Best Obj** (R4 new record — high LE regime):
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 17 | 90 | 4.5 | 22 | 289,380 | -43,160 | 1,940,241 | 1138 |
+
+Scripts: `search_gc_hourly.py` (R1) → `search_gc_hourly4.py` (R4 completed); `search_gc_hourly5.py` (R5 ready — probing SE>90 with LE=17)
+Results: `results/gc_hourly4_search/final_params_gc_hourly4.json`
+
+Key findings: SE=35 + LE=2 is NP-max zone; LE=17 + SE=90 discovered as separate high-Obj regime in R3/R4; SE≥50 hard wall in low-LE regime only; STP=3.2 (LE=2) or STP=4.5 (LE=17); LMT=20 (LE=2) or LMT=22 (LE=17); NP ceiling at 292K for LE=2; LE=17 regime still rising at SE=90 boundary (R5 will probe SE=90–200).
+
+---
+
+### GC Daily — Not met 700K (best 312,520 USD, gap −55%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 4 | 49 | 0.9 | 7 | 312,520 | -38,660 | 2,526,352 | 33 |
+
+Scripts: `search_gc_daily.py` (R1) → `search_gc_daily3.py` (R3 completed); `search_gc_daily4.py` (R4 ready — probing unexplored SE/LE territory)
+Results: `results/gc_daily3_search/final_params_gc_daily3.json`
+
+Key findings: LMT=7 is a sharp unique integer spike (LMT=6.5→277K, LMT=7.5→247K); STP=0.9 is precise sweet spot (STP<0.7 or >1.1 worse); SE=45–53 flat plateau at 312K; LE=4 best in low-LE regime; very low STP (0.2–0.5) unexplored; high LE (7–50) unexplored; SE>55 unexplored.
+
+---
+
+### CL Hourly — Not met 700K (best 103,190 USD, gap −85%)
+
+**Best NP:** LE=1, SE=54, STP=5.3, LMT=22, NP=103,190, MDD=-49,990, Obj=213,006, trades=2128
+
+**Best Obj (risk-adjusted):**
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 1 | 55 | 1.2 | 36 | 99,120 | -32,700 | 300,452 | 2310 |
+
+Script: `search_cl_hourly4.py` · Result: `results/cl_hourly4_search/final_params_cl_hourly4.json`
+
+Key findings: LE=1 only (direct LE=1–8 sweep confirmed); SE=54–55 only productive zone (SE=2–20 useless, SE>60 drops); LMT dead above 22; three STP local peaks (~1.2, ~3.0, ~5.3) all within 3K NP; NP ceiling $103,190 — absolute, confirmed across 4 rounds / 48 attempts.
+
+---
+
+### CL Daily — Not met 700K (best 15,510 USD, gap −97.8%)
+
+**Best NP:** LE=2, SE=17, STP=1.5, LMT=1, NP=15,510, MDD=-39,830, Obj=6,040, trades=169
+
+**Best Obj (risk-adjusted):**
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 4 | 6 | 2.0 | 1 | 13,930 | -27,760 | 6,990 | 177 |
+
+Scripts: `search_cl_daily.py` (R1), `search_cl_daily2.py` (R2), `search_cl_daily3.py` (R3)
+Results: `results/cl_daily_search/`, `results/cl_daily2_search/`, `results/cl_daily3_search/`
+
+Key findings: LMT=1 is the only profitable profit target (LMT≥2 loses money); SE=17 or SE=6 are the only two productive zones; LE=2 is extremely precise (LE=1 and LE≥3 all lose at SE=17); STP=1.5 is a narrow peak (STP=3.5 gives only $8,860); large STP (>5) and extreme STP (50–200) are completely unproductive; NP ceiling **$15,510** — absolute, confirmed across 3 rounds / ~30 attempts; strategy does not work on CL daily bars.
+
+---
+
+### ZW Hourly — Not met 700K (R1–R3: all negative or UI-failed; R4 ready)
+
+**R1/R2 best (least negative):** LE=1, SE=150, STP=25, LMT=30, NP=−19,418
+
+- R1: SE=5–150, 12 attempts (~14K combos) — **zero profitable combinations**
+- R2: SE=150–500, 12 attempts (~17K combos) — **zero profitable combinations**; 4 attempts UI-failed (A06/A07/A08/A09)
+- R3: ALL 12 ATTEMPTS UI-FAILED — root cause: ZW chart's strategy subchart not visible in workspace; zero data collected
+
+Scripts: `search_zw_hourly.py` (R1), `search_zw_hourly2.py` (R2), `search_zw_hourly3.py` (R3); `search_zw_hourly4.py` (R4 ready)
+Results: `results/zw_hourly_search/`, `results/zw_hourly2_search/`, `results/zw_hourly3_search/` (no CSVs — all FAILURE screenshots)
+
+Key findings: SE=5–500 + LE=1–8 + STP=2–50 + LMT=5–200 all negative. R4 covers R3's unexplored regions (mini-LMT=1–4¢, micro-STP=0.25–2¢, wide-STP=100–500¢, ultra-SE=500–2000, large-LE=10–40, R2 UI-failure retries) plus tiny-LMT=0.25–1¢, SE-fine-100–300, global boundary.
+
+**Workspace fix required before running R4:** In MC64, confirm the CBOT.ZW HOT - 60 Minutes chart has `_2021Basic_Break_NQ` applied and the strategy subchart (equity curve panel) is visible and not collapsed. Save the workspace after fixing.
+
+---
+
+## Detailed Reference
+
+For full parameter findings, cross-instrument comparisons, and code patterns, see:
+
+```
+optimizer/OPTIMIZATION_SKILLS.md
+```
+
+Note: `OPTIMIZATION_SKILLS.md` is written in Traditional Chinese (繁體中文). It covers objective function details, parameter range tables, and per-instrument round history in deeper detail than this file.

@@ -21,3 +21,7 @@ results/**/FAILURE_*.png
 # OS
 Thumbs.db
 .DS_Store
+desktop.ini
+
+# Synology NAS sync marker
+.SynologyWorkingDirectory/
