@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **parameter plateau optimizer** for MultiCharts64 (MC64) trading strategies. It automates MC64's built-in optimizer via Windows UI automation, exports results as CSV, and applies a **plateau detection algorithm** to find parameter combinations that are stable (robust to small parameter perturbations) rather than just peak performers. Results include IS/OOS validation and heatmap visualizations.
 
-The target strategy is `_2021Basic_Break_NQ` (breakout system) running on four instrument/timeframe combinations:
+The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second strategy `_2021Basic_Break_CL` (CL ATR-based, with LenLE parameter) has also been tested on CL and ZW daily bars.
+
+### `_2021Basic_Break_NQ` search status
 
 | Instrument | Timeframe | Target NP | Status |
 |------------|-----------|-----------|--------|
@@ -17,7 +19,16 @@ The target strategy is `_2021Basic_Break_NQ` (breakout system) running on four i
 | CME.GC HOT | Hourly | > 700,000 USD | Not met (-58%) |
 | CME.GC HOT | Daily | > 700,000 USD | Not met (-55%) |
 | CME.CL HOT | Hourly | > 700,000 USD | Not met (-85%) |
-| CBOT.ZW HOT | Hourly | > 700,000 USD | Not met (all neg, R3 script ready) |
+| CME.CL HOT | Daily | > 700,000 USD | **Ceiling $15,510 (−97.8%) — strategy does not work** |
+| CBOT.ZW HOT | Hourly | > 700,000 USD | Not met (all neg; R5 ready) |
+| CBOT.ZW HOT | Daily | > 700,000 USD | **Ceiling $26K (−96%) — strategy does not work** |
+
+### `_2021Basic_Break_CL` search status
+
+| Instrument | Timeframe | Target NP | Status |
+|------------|-----------|-----------|--------|
+| CME.CL HOT | Daily | > 700,000 USD | **Ceiling $91K (−87%) — strategy does not work** |
+| CBOT.ZW HOT | Daily | > 700,000 USD | **Ceiling $55K (−92%) — strategy does not work** |
 
 ## Running the Optimizer
 
@@ -63,10 +74,19 @@ py search_gc_hourly5.py --from-csv
 py search_gc_daily4.py
 py search_gc_daily4.py --from-csv
 
-# ZW Hourly NP>700K (R4 — latest round; R3 all UI-failed, zero data):
-py search_zw_hourly4.py
-py search_zw_hourly4.py --from-csv
-py search_zw_hourly4.py --attempt 6          # resume from attempt 6
+# ZW Hourly NP>700K (R5 — latest round; R3 all UI-failed):
+py search_zw_hourly5.py
+py search_zw_hourly5.py --from-csv
+py search_zw_hourly5.py --attempt 6          # resume from attempt 6
+
+# ZW Daily NP>700K (R2 complete — ceiling $26K confirmed):
+py search_zw_daily2.py --from-csv
+
+# CL Daily (_2021Basic_Break_CL, R1+R2 complete — ceiling $91K confirmed):
+py search_cl_cl_daily2.py --from-csv
+
+# ZW Daily (_2021Basic_Break_CL, R3 complete — ceiling $55K confirmed):
+py search_zw_cl_daily4.py --from-csv
 ```
 
 ## Install Dependencies
@@ -112,20 +132,22 @@ MC64 exports different column headers across versions. `MC_COLUMN_MAP` in `confi
 ```
 results/
   hourly_target2_search/           # TWF Hourly ✅ COMPLETED
-  daily_target6_search/            # TWF Daily (R6, best so far)
+  daily_target6_search/            # TWF Daily (R6, best NP)
+  daily_target8_search/            # TWF Daily (R8 latest)
   nq_hourly3_search/               # NQ Hourly (R3 latest)
   nq_daily3_search/                # NQ Daily (R3 latest)
-  gc_hourly_search/                # GC Hourly R1
-  gc_hourly2_search/               # GC Hourly R2
-  gc_hourly3_search/               # GC Hourly R3
   gc_hourly4_search/               # GC Hourly R4 (latest completed)
-  gc_daily_search/                 # GC Daily R1
-  gc_daily2_search/                # GC Daily R2
   gc_daily3_search/                # GC Daily R3 (latest completed)
   cl_hourly4_search/               # CL Hourly R4 (latest)
-  cl_daily3_search/                # CL Daily R3 (latest)
-  zw_hourly3_search/               # ZW Hourly R3 (all UI-failed, no CSVs)
-  zw_hourly4_search/               # ZW Hourly R4 (latest)
+  cl_daily3_search/                # CL Daily (_2021Basic_Break_NQ) R3 — ceiling $15K
+  zw_hourly4_search/               # ZW Hourly R4 (latest completed)
+  zw_daily_search/                 # ZW Daily (_2021Basic_Break_NQ) R1
+  zw_daily2_search/                # ZW Daily (_2021Basic_Break_NQ) R2 — ceiling $26K confirmed
+  cl_cl_daily_search/              # CL Daily (_2021Basic_Break_CL) R1
+  cl_cl_daily2_search/             # CL Daily (_2021Basic_Break_CL) R2 — ceiling $91K confirmed
+  zw_cl_daily2_search/             # ZW Daily (_2021Basic_Break_CL) R1
+  zw_cl_daily3_search/             # ZW Daily (_2021Basic_Break_CL) R2
+  zw_cl_daily4_search/             # ZW Daily (_2021Basic_Break_CL) R3 — ceiling $55K confirmed
 ```
 
 Each search directory holds:
@@ -144,9 +166,9 @@ Each search directory holds:
 
 These rules were learned through multiple failed rounds. Violating them silently corrupts results.
 
-### 1. ALL 4 parameters MUST vary in every attempt
+### 1. ALL parameters MUST vary in every attempt
 
-When any parameter is fixed (`start == stop`), MC64's MCReport export packs multiple metric sets per row. `pandas` misreads the columns — LE/SE/STP/LMT values appear completely wrong. Always call `_safe()` on every range before building a `StrategyConfig`:
+When any parameter is fixed (`start == stop`), MC64's MCReport export packs multiple metric sets per row. `pandas` misreads the columns — parameter values appear completely wrong. Always call `_safe()` on every range before building a `StrategyConfig`:
 
 ```python
 def _safe(t):
@@ -156,6 +178,10 @@ def _safe(t):
     return t
 le, se, stp, lmt = _safe(le), _safe(se), _safe(stp), _safe(lmt)
 ```
+
+For `_2021Basic_Break_CL` (5-param strategy with LenLE): apply `_safe()` to LenLE too, using `(95, 105, 5)` as token range. MC64 never actually varies LenLE (always stays at 100), but the range must be non-degenerate to keep the CSV column layout correct.
+
+**Exhaustive checkbox index is dynamic**: for N params, the Exhaustive option checkbox is at index `N+1` (not hardcoded 5). For 4-param strategies index=5, for 5-param strategies index=6. `mc_automation.py` uses `len(cfg.params) + 1` — never hardcode this.
 
 ### 2. Validate every loaded CSV with `_validate_df()`
 
@@ -208,7 +234,7 @@ best = pos.loc[pos["NetProfit"].idxmax()]
 
 ---
 
-## Current Best Results (as of 2026-05-19)
+## Current Best Results (as of 2026-05-21)
 
 ### TWF Hourly — **TARGET MET ✅**
 
@@ -309,7 +335,7 @@ Key findings: LE=1 only (direct LE=1–8 sweep confirmed); SE=54–55 only produ
 
 ---
 
-### CL Daily — Not met 700K (best 15,510 USD, gap −97.8%)
+### CL Daily (_2021Basic_Break_NQ) — Ceiling $15K (−97.8%)
 
 **Best NP:** LE=2, SE=17, STP=1.5, LMT=1, NP=15,510, MDD=-39,830, Obj=6,040, trades=169
 
@@ -326,20 +352,56 @@ Key findings: LMT=1 is the only profitable profit target (LMT≥2 loses money); 
 
 ---
 
-### ZW Hourly — Not met 700K (R1–R3: all negative or UI-failed; R4 ready)
+### ZW Hourly — Not met 700K (R1–R4 complete; R5 ready)
 
 **R1/R2 best (least negative):** LE=1, SE=150, STP=25, LMT=30, NP=−19,418
 
 - R1: SE=5–150, 12 attempts (~14K combos) — **zero profitable combinations**
-- R2: SE=150–500, 12 attempts (~17K combos) — **zero profitable combinations**; 4 attempts UI-failed (A06/A07/A08/A09)
-- R3: ALL 12 ATTEMPTS UI-FAILED — root cause: ZW chart's strategy subchart not visible in workspace; zero data collected
+- R2: SE=150–500, 12 attempts (~17K combos) — **zero profitable combinations**; 4 attempts UI-failed
+- R3: ALL 12 ATTEMPTS UI-FAILED — ZW chart's strategy subchart not visible in workspace; zero data
+- R4: Extended exploration (mini-LMT, micro-STP, wide-STP, ultra-SE, large-LE)
 
-Scripts: `search_zw_hourly.py` (R1), `search_zw_hourly2.py` (R2), `search_zw_hourly3.py` (R3); `search_zw_hourly4.py` (R4 ready)
-Results: `results/zw_hourly_search/`, `results/zw_hourly2_search/`, `results/zw_hourly3_search/` (no CSVs — all FAILURE screenshots)
+Scripts: `search_zw_hourly.py` (R1) → `search_zw_hourly4.py` (R4 completed); `search_zw_hourly5.py` (R5 ready)
+Results: `results/zw_hourly4_search/`
 
-Key findings: SE=5–500 + LE=1–8 + STP=2–50 + LMT=5–200 all negative. R4 covers R3's unexplored regions (mini-LMT=1–4¢, micro-STP=0.25–2¢, wide-STP=100–500¢, ultra-SE=500–2000, large-LE=10–40, R2 UI-failure retries) plus tiny-LMT=0.25–1¢, SE-fine-100–300, global boundary.
+---
 
-**Workspace fix required before running R4:** In MC64, confirm the CBOT.ZW HOT - 60 Minutes chart has `_2021Basic_Break_NQ` applied and the strategy subchart (equity curve panel) is visible and not collapsed. Save the workspace after fixing.
+### ZW Daily (_2021Basic_Break_NQ) — Ceiling $26K (−96%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 25 | 2 | 4 | 4 | **25,938** | -6,845 | 98,284 | 30 |
+
+Scripts: `search_zw_daily.py` (R1), `search_zw_daily2.py` (R2 — ceiling confirmed)
+Result: `results/zw_daily2_search/`
+
+Key findings: LE=25 is uniquely optimal (LE=30 or LE=13 both ~17K); SE=1–2; STP=LMT≈4¢; only ~5 trades/year; wide STP never hit; **strategy does not work on ZW daily**.
+
+---
+
+### CL Daily (_2021Basic_Break_CL) — Ceiling $91K (−87%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 1 | 1 | 4 | 5 | **90,950** | -62,710 | 131,907 | 34 |
+
+Scripts: `search_cl_cl_daily.py` (R1), `search_cl_cl_daily2.py` (R2 — ceiling confirmed)
+Result: `results/cl_cl_daily2_search/final_params_cl_cl_daily2.json`
+
+Key findings: LE=1, SE=1 is extremely precise; STP=4 is narrow sweet spot; LMT=5; LenLE always 100 (MC64 ignores automation); only ~34 trades in 7yr; explored LE=1–30, SE=1–70, STP=0.1–18, LMT=1–50 across 24 attempts; **strategy does not work on CL daily**.
+
+---
+
+### ZW Daily (_2021Basic_Break_CL) — Ceiling $55K (−92%)
+
+| LE | SE | STP | LMT | NP (USD) | MDD | Objective | Trades |
+|----|-----|-----|-----|---------|-----|-----------|--------|
+| 23 | 3 | 8 | 2 | **54,698** | -15,638 | — | ~30 |
+
+Scripts: `search_zw_cl_daily2.py` (R1), `search_zw_cl_daily3.py` (R2), `search_zw_cl_daily4.py` (R3 — ceiling confirmed)
+Result: `results/zw_cl_daily4_search/`
+
+Key findings: LE=23–26 flat plateau; LMT=2 critical (LMT≥3 all worse); STP=7–10 plateau (stop never hit); MDD fixed at −$15,638 across all top results (same worst-drawdown trade regardless of params); **strategy does not work on ZW daily**.
 
 ---
 

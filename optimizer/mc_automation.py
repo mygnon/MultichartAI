@@ -339,7 +339,7 @@ def _focus_window(hwnd: int) -> None:
     # Clicking the Shell taskbar button activates the window cross-privilege because
     # the Shell (not our process) issues the SetForegroundWindow call.
     _click_taskbar_button_for_hwnd(hwnd)
-    time.sleep(0.8)
+    time.sleep(0.4)
     try:
         rect = win32gui.GetWindowRect(hwnd)
         win_w = rect[2] - rect[0]
@@ -388,7 +388,7 @@ def _focus_window(hwnd: int) -> None:
                 logger.info("_focus_window: clicking MC at (%d,%d) x_frac=%.2f y_frac=%.2f",
                             cx, cy, x_frac, y_frac)
                 pyautogui.click(cx, cy)
-                time.sleep(0.5)
+                time.sleep(0.3)
             except Exception as e:
                 logger.debug("_focus_window click failed: %s", e)
                 continue
@@ -480,7 +480,53 @@ def _pg_hotkey(*keys) -> None:
     time.sleep(0.3)
 
 
+def _ensure_english_ime() -> None:
+    """Force the active window's IME into English/alphanumeric mode.
+
+    Chinese IMEs (e.g. Microsoft New Phonetic / Zhuyin) intercept numeric key
+    presses when in Chinese-conversion mode, breaking parameter value entry.
+    This function attaches to the foreground thread's input, reads the current
+    IME conversion status, and if non-zero (CJK mode) resets it to 0
+    (IME_CMODE_ALPHANUMERIC = English half-width). As a belt-and-suspenders
+    fallback it also fires a Shift keypress, which toggles most CJK IMEs from
+    Chinese→English mode.
+    """
+    try:
+        user32   = ctypes.windll.user32
+        imm32    = ctypes.windll.imm32
+        kernel32 = ctypes.windll.kernel32
+        hwnd     = user32.GetForegroundWindow()
+        if not hwnd:
+            return
+
+        our_tid    = kernel32.GetCurrentThreadId()
+        target_tid = user32.GetWindowThreadProcessId(hwnd, None)
+        attached   = False
+        if target_tid and target_tid != our_tid:
+            attached = bool(user32.AttachThreadInput(our_tid, target_tid, True))
+        try:
+            focused = user32.GetFocus() or hwnd
+            himc = imm32.ImmGetContext(focused)
+            if himc:
+                conv = ctypes.c_ulong(0)
+                sent = ctypes.c_ulong(0)
+                if imm32.ImmGetConversionStatus(himc, ctypes.byref(conv),
+                                                ctypes.byref(sent)):
+                    if conv.value != 0:
+                        # CJK conversion mode active — force alphanumeric
+                        imm32.ImmSetConversionStatus(himc, 0, sent.value)
+                        logger.debug("_ensure_english_ime: conv %d→0 (alphanumeric)", conv.value)
+                        time.sleep(0.05)
+                imm32.ImmReleaseContext(focused, himc)
+        finally:
+            if attached:
+                user32.AttachThreadInput(our_tid, target_tid, False)
+    except Exception as _e:
+        logger.debug("_ensure_english_ime failed: %s", _e)
+
+
 def _pg_type(text: str, interval: float = 0.05) -> None:
+    _ensure_english_ime()
     pyautogui.typewrite(text, interval=interval)
     time.sleep(0.1)
 
@@ -574,30 +620,46 @@ def _save_screenshot(name: str, output_dir: str) -> None:
 def _close_optimization_report() -> None:
     """Close any open Optimization Report / ORVisualizer windows before the next run.
 
-    These windows interfere with subsequent right-click → Optimize Strategy because
-    they may overlap the chart or hold keyboard focus.
+    Uses ctypes EnumWindows (bypasses UIPI) instead of pywinauto Desktop so it
+    works even when MC64 is running at a different privilege level.
     """
-    _REPORT_PATTERNS = [
-        r".*Optimization Report.*",
-        r".*ORVisualizer.*",
-        r".*優化報告.*",
-        r".*最佳化報告.*",
-    ]
-    import re as _re
-    closed = 0
-    for hwnd, title, _ in _find_all_mc_windows():
-        for pat in _REPORT_PATTERNS:
-            if _re.search(pat, title, _re.IGNORECASE):
-                try:
-                    _user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE
-                    time.sleep(0.3)
-                    closed += 1
-                    logger.info("Closed optimization report window: '%s'", title)
-                except Exception as _ce:
-                    logger.debug("Could not close '%s': %s", title, _ce)
-                break
-    if closed:
+    _KEYWORDS = ["Optimization Report", "ORVisualizer", "優化報告", "最佳化報告"]
+
+    _closed_hwnds: list = []
+
+    def _enum_cb(hwnd, _):
+        try:
+            length = _user32.GetWindowTextLengthW(hwnd)
+            if length <= 0:
+                return True
+            buf = ctypes.create_unicode_buffer(length + 1)
+            _user32.GetWindowTextW(hwnd, buf, length + 1)
+            title = buf.value
+            if any(kw.lower() in title.lower() for kw in _KEYWORDS):
+                if _user32.IsWindowVisible(hwnd):
+                    _closed_hwnds.append((hwnd, title))
+        except Exception:
+            pass
+        return True
+
+    _WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_int, ctypes.c_int)
+    try:
+        _user32.EnumWindows(_WNDENUMPROC(_enum_cb), 0)
+    except Exception as _ee:
+        logger.debug("EnumWindows error in _close_optimization_report: %s", _ee)
+
+    for hwnd, title in _closed_hwnds:
+        try:
+            _user32.PostMessageW(hwnd, 0x0010, 0, 0)  # WM_CLOSE
+            time.sleep(0.4)
+            logger.info("Closed optimization report window: '%s'", title)
+        except Exception as _ce:
+            logger.debug("Could not close '%s': %s", title, _ce)
+
+    if _closed_hwnds:
         time.sleep(0.5)
+    else:
+        logger.debug("_close_optimization_report: no report window found")
 
 
 def ensure_chart_ready(conn: MultiChartsConnection, cfg: StrategyConfig) -> None:
@@ -619,10 +681,28 @@ def ensure_chart_ready(conn: MultiChartsConnection, cfg: StrategyConfig) -> None
                 f"Please open it manually in MultiCharts64 before running the script:\n"
                 f"  {cfg.chart_workspace}"
             )
-    # Bring to foreground
+    # Bring to foreground. If Optimization Report is blocking focus, close it first.
     if conn._hwnd:
-        _focus_window(conn._hwnd)
-        time.sleep(0.5)
+        import win32gui as _w32g
+        for _focus_try in range(3):
+            _focus_window(conn._hwnd)
+            time.sleep(0.5)
+            try:
+                _fg = _w32g.GetForegroundWindow()
+                if _fg == conn._hwnd:
+                    break
+                # Check if the foreground window is an Optimization Report
+                _fg_len = _user32.GetWindowTextLengthW(_fg)
+                _fg_buf = ctypes.create_unicode_buffer(_fg_len + 1)
+                _user32.GetWindowTextW(_fg, _fg_buf, _fg_len + 1)
+                _fg_title = _fg_buf.value
+                _REPORT_KW = ["Optimization Report", "ORVisualizer", "優化報告", "最佳化報告"]
+                if any(kw.lower() in _fg_title.lower() for kw in _REPORT_KW):
+                    logger.info("ensure_chart_ready: closing blocking report '%s'", _fg_title)
+                    _user32.PostMessageW(_fg, 0x0010, 0, 0)  # WM_CLOSE
+                    time.sleep(0.8)
+            except Exception:
+                break
     logger.info("Chart ready for: %s", cfg.name)
 
 
@@ -809,12 +889,14 @@ def _set_date_field(
             pyautogui.click((dl + dr) // 2, (dt + db) // 2)
             time.sleep(0.2)
             _pg_hotkey("ctrl", "a")
+            _ensure_english_ime()
             pyautogui.typewrite(date_str.replace("/", ""), interval=0.05)
             return True
         # Fallback: type into whatever is focused after clicking checkbox
         pyautogui.press("tab")
         time.sleep(0.1)
         _pg_hotkey("ctrl", "a")
+        _ensure_english_ime()
         pyautogui.typewrite(date_str.replace("/", ""), interval=0.05)
         return True
 
@@ -844,6 +926,7 @@ def _set_date_field(
                                 dp.click_input()
                                 time.sleep(0.2)
                                 _pg_hotkey("ctrl", "a")
+                                _ensure_english_ime()
                                 pyautogui.typewrite(date_str.replace("/", ""),
                                                     interval=0.05)
                         except Exception:
@@ -870,6 +953,7 @@ def _set_date_field(
                                     (edit_rect.top + edit_rect.bottom) // 2)
                     time.sleep(0.2)
                     _pg_hotkey("ctrl", "a")
+                    _ensure_english_ime()
                     pyautogui.typewrite(date_str.replace("/", ""), interval=0.05)
                 except Exception:
                     pass
@@ -917,44 +1001,86 @@ def _find_popup_hwnd(timeout: float = 3.0) -> Optional[int]:
 def _pyautogui_click_popup_item(app: Application, item_titles: List[str]) -> bool:
     """
     Locate a popup menu item and click it with pyautogui.
-    Uses Desktop() (no process constraint) so it works when MC is admin.
+    Pure-ctypes implementation — avoids pywinauto Desktop/menu() which can
+    crash the process at the C level after repeated calls.
     Returns True if an item was found and clicked.
     """
-    popup_hwnd = _find_popup_hwnd(timeout=3.0)
+    popup_hwnd = _find_popup_hwnd(timeout=1.5)
     if popup_hwnd is None:
-        logger.debug("No #32768 popup found within timeout")
+        logger.info("_pyautogui_click_popup_item: no #32768 popup found within timeout")
         return False
 
-    # Primary: enumerate via the pywinauto menu() API on the popup hwnd.
-    # This reads HMENU data — works cross-privilege (no SendMessage needed).
+    logger.info("_pyautogui_click_popup_item: popup=0x%x searching for %s", popup_hwnd, item_titles)
+
+    # Primary: ctypes MN_GETHMENU + GetMenuItemInfo (avoids pywinauto crash).
+    # MN_GETHMENU is the undocumented but well-known message (0x01E1) that
+    # returns the HMENU handle for a #32768 popup-menu window.
+    # IMPORTANT: dwTypeData must be c_void_p (raw address) so that
+    # ctypes.addressof(buf) is stored correctly — c_wchar_p would let ctypes
+    # copy the string internally, breaking the pointer passed to GetMenuItemInfoW.
     try:
-        popup_spec = Desktop(backend="win32").window(handle=popup_hwnd)
-        menu = popup_spec.menu()
-        for i in range(menu.item_count()):
-            try:
-                item = menu.item(i)
-                text = item.text()
-                if any(t.lower() in text.lower() for t in item_titles):
-                    r = item.rectangle()
-                    pyautogui.click((r.left + r.right) // 2, (r.top + r.bottom) // 2)
+        _u32 = ctypes.windll.user32
+        _MN_GETHMENU      = 0x01E1
+        _MF_BYPOSITION    = 0x0400
+        _MIIM_STRING      = 0x0040
+        _MIIM_FTYPE       = 0x0100
+
+        class _MENUITEMINFOW(ctypes.Structure):
+            _fields_ = [
+                ("cbSize",        ctypes.c_uint),
+                ("fMask",         ctypes.c_uint),
+                ("fType",         ctypes.c_uint),
+                ("fState",        ctypes.c_uint),
+                ("wID",           ctypes.c_uint),
+                ("hSubMenu",      ctypes.c_void_p),
+                ("hbmpChecked",   ctypes.c_void_p),
+                ("hbmpUnchecked", ctypes.c_void_p),
+                ("dwItemData",    ctypes.c_size_t),   # ULONG_PTR (pointer-sized int)
+                ("dwTypeData",    ctypes.c_void_p),   # LPWSTR stored as raw address
+                ("cch",           ctypes.c_uint),
+                ("hbmpItem",      ctypes.c_void_p),
+            ]
+
+        hmenu = _u32.SendMessageW(popup_hwnd, _MN_GETHMENU, 0, 0)
+        logger.info("popup hmenu=0x%x", hmenu)
+        if hmenu:
+            count = _u32.GetMenuItemCount(hmenu)
+            logger.info("popup item count=%d", count)
+            _all_texts = []
+            for i in range(count):
+                buf = ctypes.create_unicode_buffer(512)
+                mii = _MENUITEMINFOW()
+                mii.cbSize = ctypes.sizeof(_MENUITEMINFOW)
+                mii.fMask = _MIIM_STRING | _MIIM_FTYPE
+                mii.dwTypeData = ctypes.addressof(buf)   # explicit address — not c_wchar_p copy
+                mii.cch = 512
+                ok = _u32.GetMenuItemInfoW(hmenu, i, _MF_BYPOSITION, ctypes.byref(mii))
+                text = buf.value if ok else ""
+                _all_texts.append(text)
+                if text and any(t.lower() in text.lower() for t in item_titles):
+                    rect = _RECT()   # must use module-level _RECT (matches argtypes prototype)
+                    _u32.GetMenuItemRect(popup_hwnd, hmenu, i, ctypes.byref(rect))
+                    x = (rect.left + rect.right) // 2
+                    y = (rect.top + rect.bottom) // 2
+                    logger.info("ctypes menu click [%d] '%s' at (%d,%d)", i, text, x, y)
+                    pyautogui.click(x, y)
                     time.sleep(0.3)
-                    logger.debug("Clicked popup item: '%s'", text)
                     return True
-            except Exception:
-                pass
-    except Exception as e:
-        logger.debug("Popup menu() enumeration failed: %s", e)
+            logger.info("No match in popup items: %s", _all_texts)
+    except Exception as _mge:
+        logger.info("ctypes MN_GETHMENU enum failed: %s", _mge)
 
     # Fallback: enumerate child windows of the popup via ctypes
+    _child_texts = []
     for h, cls, txt in _win32_enum_children(popup_hwnd):
+        _child_texts.append(txt)
         if any(t.lower() in txt.lower() for t in item_titles) and _win32_is_visible(h):
             l, t_, r_, b = _win32_get_rect(h)
             pyautogui.click((l + r_) // 2, (t_ + b) // 2)
             time.sleep(0.3)
-            logger.debug("Ctypes popup click: '%s'", txt)
+            logger.info("Ctypes popup click child: '%s'", txt)
             return True
-
-    logger.debug("No matching popup item found for %s", item_titles)
+    logger.info("No match in child windows: %s", _child_texts[:20])
     return False
 
 
@@ -1146,7 +1272,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         # Press 'f' to open "Format" (or try arrow-key navigation)
         pyautogui.press('f')
         time.sleep(0.5)
-        popup_after_alt = _find_popup_hwnd(timeout=2.0)
+        popup_after_alt = _find_popup_hwnd(timeout=1.2)
         if not popup_after_alt:
             # Try finding any new popup-like window
             for _w in Desktop(backend="win32").windows():
@@ -1211,7 +1337,8 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
                         # For y: scan from near the top (blank space above price range)
                         # rather than 20% down (which may land on a price bar).
                         _y_start = _cr[1] + 8  # start 8px from panel top
-                        _best_x, _best_y = _cr[0] + _cw // 2, _y_start
+                        # Default fallback: vertical center of panel (more reliable than top edge)
+                        _best_x, _best_y = _cr[2] - 35, _cr[1] + _ch // 2
                         _pos_found = False
                         for _try_x in [_cr[2] - 35, _cr[0] + _cw // 2]:
                             if _pos_found:
@@ -1257,6 +1384,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         logger.debug("WindowFromPoint failed: %s", _e)
 
     # Left-click to activate the chart MDI child, then right-click.
+    # Attempt 1: pyautogui — may fail if ATL_MCGraphPanel is transparent to hit-testing.
     logger.info("Left-click at (%d,%d) to activate chart child", _rclick_x, _rclick_y)
     pyautogui.click(_rclick_x, _rclick_y)
     time.sleep(0.5)
@@ -1272,7 +1400,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         except Exception:
             pass
 
-    popup_hwnd_debug = _find_popup_hwnd(timeout=2.0)
+    popup_hwnd_debug = _find_popup_hwnd(timeout=1.5)
     _new_wins = []
     for _w in Desktop(backend="win32").windows():
         try:
@@ -1291,6 +1419,58 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
             logger.info("Popup hwnd=%x found but couldn't enumerate items", popup_hwnd_debug)
     else:
         logger.info("No popup (#32768) after right-click. New windows: %s", _new_wins)
+
+    # Attempt 2: PostMessage(WM_RBUTTONDOWN/UP) directly to the chart panel hwnd.
+    # ATL_MCGraphPanel may have WS_EX_TRANSPARENT so pyautogui clicks pass through
+    # to the parent frame. PostMessage bypasses WindowFromPoint entirely and
+    # delivers WM_RBUTTONDOWN straight to the child window's message queue.
+    # NOTE: use _p_u32 (not _user32) to avoid Python UnboundLocalError — assigning
+    # any name in a function makes Python treat ALL references to that name as local.
+    if not popup_hwnd_debug and _chart_hwnd:
+        try:
+            _WM_RBUTTONDOWN = 0x0204
+            _WM_RBUTTONUP   = 0x0205
+            _WM_CONTEXTMENU = 0x007B
+            _MK_RBUTTON     = 0x0002
+            _p_u32 = ctypes.windll.user32
+            _pcr = _win32_get_rect(_chart_hwnd)
+            _pw  = _pcr[2] - _pcr[0]   # panel width
+            _ph  = _pcr[3] - _pcr[1]   # panel height
+            # Use the same position as the pyautogui click: right-edge x (avoids
+            # price bars / indicator lines that trigger a different context menu),
+            # vertical center y.  Convert screen→client by subtracting panel origin.
+            _cli_x = _rclick_x - _pcr[0]   # matches pyautogui click x
+            _cli_y = _rclick_y - _pcr[1]   # matches pyautogui click y
+            # Clamp to [10, panel-10] just in case
+            _cli_x = max(10, min(_pw - 10, _cli_x))
+            _cli_y = max(10, min(_ph - 10, _cli_y))
+            _cli_lp = (_cli_y << 16) | (_cli_x & 0xFFFF)
+            # Screen coords for WM_CONTEXTMENU fallback
+            _scr_x = _pcr[0] + _cli_x
+            _scr_y = _pcr[1] + _cli_y
+            _scr_lp = (_scr_y << 16) | (_scr_x & 0xFFFF)
+            logger.info("PostMessage right-click: hwnd=0x%x client=(%d,%d) screen=(%d,%d)",
+                        _chart_hwnd, _cli_x, _cli_y, _scr_x, _scr_y)
+            # Activate the chart window first
+            _p_u32.SetForegroundWindow(_chart_hwnd)
+            time.sleep(0.3)
+            # Send WM_RBUTTONDOWN + WM_RBUTTONUP (triggers WM_CONTEXTMENU internally)
+            _p_u32.PostMessageW(_chart_hwnd, _WM_RBUTTONDOWN, _MK_RBUTTON, _cli_lp)
+            time.sleep(0.15)
+            _p_u32.PostMessageW(_chart_hwnd, _WM_RBUTTONUP,   0,           _cli_lp)
+            time.sleep(0.7)
+            popup_hwnd_debug = _find_popup_hwnd(timeout=1.5)
+            if popup_hwnd_debug:
+                logger.info("PostMessage WM_RBUTTON* → popup 0x%x", popup_hwnd_debug)
+            else:
+                # Fallback B: WM_CONTEXTMENU with screen coords
+                _p_u32.PostMessageW(_chart_hwnd, _WM_CONTEXTMENU, _chart_hwnd, _scr_lp)
+                time.sleep(0.7)
+                popup_hwnd_debug = _find_popup_hwnd(timeout=1.5)
+                logger.info("PostMessage WM_CONTEXTMENU → popup %s",
+                            hex(popup_hwnd_debug) if popup_hwnd_debug else None)
+        except Exception as _pme:
+            logger.warning("PostMessage right-click failed: %s", _pme)
 
     target_names = [
         "Format Signals...", "Format Objects...", "Format Strategies...",
@@ -1552,7 +1732,10 @@ def _wizard_on_param_page(dlg) -> bool:
         return False
     try:
         items = list(uia.descendants(control_type="DataItem"))
-        if items:
+        # Require at least 3 DataItems — Page 2 has one per parameter row.
+        # Page 1 (optimization type selection) may have 0–2 DataItems from its
+        # radio-button list, so a low count means we're still on Page 1.
+        if len(items) >= 3:
             return True
         grids = list(uia.descendants(control_type="DataGrid"))
         return bool(grids)
@@ -1565,6 +1748,7 @@ def _set_cell_value_at_coords(x: int, y: int, value: str) -> None:
     pyautogui.doubleClick(x, y)
     time.sleep(0.3)
     pyautogui.hotkey("ctrl", "a")
+    _ensure_english_ime()
     pyautogui.typewrite(str(value), interval=0.04)
     pyautogui.press("tab")
     time.sleep(0.2)
@@ -1664,9 +1848,22 @@ def configure_optimization(
             _st = _sw.window_text()
             if any(kw in _st for kw in _fs_patterns_kw):
                 logger.info("Dismissing stale Format dialog: '%s' hwnd=%x", _st, _sw.handle)
-                # WM_CLOSE is the safest — equivalent to clicking the × button
-                _user32.SendMessageW(_sw.handle, 0x0010, 0, 0)
-                time.sleep(0.4)
+                # Strategy: press Escape (= Cancel, no save prompt) rather than
+                # WM_CLOSE.  SendMessage(WM_CLOSE) deadlocks if MC64 shows a
+                # "Save changes?" modal — it blocks MC64's message pump and
+                # all subsequent GetWindowText calls hang indefinitely.
+                # Escape closes the dialog cleanly without any modal prompt.
+                try:
+                    _user32.SetForegroundWindow(_sw.handle)
+                    time.sleep(0.2)
+                    pyautogui.press('escape')
+                    time.sleep(0.4)
+                    logger.info("  Dismissed via Escape key")
+                except Exception as _esc_err:
+                    logger.debug("  Escape failed: %s — falling back to PostMessage WM_CLOSE", _esc_err)
+                    _user32.PostMessageW(_sw.handle, 0x0010, 0, 0)
+                    time.sleep(0.6)
+                    logger.info("  Dismissed via PostMessage WM_CLOSE")
         except Exception:
             pass
 
@@ -1832,8 +2029,46 @@ def configure_optimization(
             pyautogui.click(_gpx, _gpy)
             time.sleep(0.4)
             pyautogui.rightClick(_gpx, _gpy)
-            time.sleep(1.2)
-            _opt_popup = _find_popup_hwnd(timeout=3.0)
+            time.sleep(0.7)
+            _opt_popup = _find_popup_hwnd(timeout=1.5)
+            # PostMessage fallback — ATL_MCGraphPanel is transparent to WindowFromPoint
+            if not _opt_popup and _gp_hwnd:
+                try:
+                    _WM_RBUTTONDOWN = 0x0204
+                    _WM_RBUTTONUP   = 0x0205
+                    _WM_CONTEXTMENU = 0x007B
+                    _MK_RBUTTON     = 0x0002
+                    _opt_u32 = ctypes.windll.user32
+                    _op_pcr  = _win32_get_rect(_gp_hwnd)
+                    _op_pw = _op_pcr[2] - _op_pcr[0]
+                    _op_ph = _op_pcr[3] - _op_pcr[1]
+                    # Use right-edge / vertical-center (same as _open_format_signals)
+                    # to avoid price-bar area that may show a different context menu.
+                    _op_cli_x = max(10, min(_op_pw - 10, _op_pw - 35))
+                    _op_cli_y = max(10, min(_op_ph - 10, _op_ph // 2))
+                    _op_cli_lp = (_op_cli_y << 16) | (_op_cli_x & 0xFFFF)
+                    _op_scr_x  = _op_pcr[0] + _op_cli_x
+                    _op_scr_y  = _op_pcr[1] + _op_cli_y
+                    _op_scr_lp = (_op_scr_y << 16) | (_op_scr_x & 0xFFFF)
+                    logger.info("PostMessage Optimize right-click: hwnd=0x%x client=(%d,%d) screen=(%d,%d)",
+                                _gp_hwnd, _op_cli_x, _op_cli_y, _op_scr_x, _op_scr_y)
+                    _opt_u32.SetForegroundWindow(_gp_hwnd)
+                    time.sleep(0.3)
+                    _opt_u32.PostMessageW(_gp_hwnd, _WM_RBUTTONDOWN, _MK_RBUTTON, _op_cli_lp)
+                    time.sleep(0.15)
+                    _opt_u32.PostMessageW(_gp_hwnd, _WM_RBUTTONUP, 0, _op_cli_lp)
+                    time.sleep(0.7)
+                    _opt_popup = _find_popup_hwnd(timeout=1.5)
+                    if _opt_popup:
+                        logger.info("PostMessage WM_RBUTTON* → Optimize popup 0x%x", _opt_popup)
+                    else:
+                        _opt_u32.PostMessageW(_gp_hwnd, _WM_CONTEXTMENU, _gp_hwnd, _op_scr_lp)
+                        time.sleep(0.7)
+                        _opt_popup = _find_popup_hwnd(timeout=1.5)
+                        logger.info("PostMessage WM_CONTEXTMENU → Optimize popup %s",
+                                    hex(_opt_popup) if _opt_popup else None)
+                except Exception as _op_pme:
+                    logger.warning("PostMessage Optimize right-click failed: %s", _op_pme)
             if _opt_popup:
                 _clicked = _pyautogui_click_popup_item(conn.app, [
                     "Optimize Strategy", "最佳化策略", "Optimize...",
@@ -1845,7 +2080,7 @@ def configure_optimization(
         else:
             logger.warning("No chart child found for right-click optimization launch")
 
-    time.sleep(1.5)
+    time.sleep(0.8)
 
     # ── Step 4: Wait for optimization wizard ─────────────────────────────────
     # MC Traditional Chinese wizard title is "最佳化設定"; English is "Optimization".
@@ -1984,19 +2219,24 @@ def configure_optimization(
                 if _chk0:
                     try:
                         _cb0.invoke()
-                        time.sleep(0.25)
+                        time.sleep(0.15)
                         logger.info("  Step0 unchecked row: '%s'", _row_nm0)
                     except Exception as _ue0:
-                        logger.warning("  Step0 invoke() failed for '%s': %s — trying pyautogui", _row_nm0, _ue0)
+                        logger.warning("  Step0 invoke() failed for '%s': %s — trying click_input", _row_nm0, _ue0)
                         try:
                             _cbr0 = _cb0.rectangle()
                             _cbx0 = int((_cbr0.left + _cbr0.right) / 2 / _dpi_scale)
                             _cby0 = int((_cbr0.top + _cbr0.bottom) / 2 / _dpi_scale)
-                            pyautogui.click(_cbx0, _cby0)
-                            time.sleep(0.4)
-                            pyautogui.click(_cbx0, _cby0)
-                            time.sleep(0.5)
-                            logger.info("  Step0 two-click fallback unchecked row: '%s'", _row_nm0)
+                            # SINGLE click only — double-click would toggle twice and
+                            # leave the checkbox still checked (no net change).
+                            try:
+                                _cb0.click_input()
+                                time.sleep(0.25)
+                                logger.info("  Step0 click_input fallback unchecked row: '%s'", _row_nm0)
+                            except Exception:
+                                pyautogui.click(_cbx0, _cby0)
+                                time.sleep(0.3)
+                                logger.info("  Step0 pyautogui single-click unchecked row: '%s'", _row_nm0)
                         except Exception as _fe0:
                             logger.warning("  Step0 fallback also failed for '%s': %s", _row_nm0, _fe0)
             except Exception:
@@ -2035,48 +2275,78 @@ def configure_optimization(
                 _cbx = int((_cbr.left + _cbr.right) / 2 / _dpi_scale)
                 _cby = int((_cbr.top + _cbr.bottom) / 2 / _dpi_scale)
 
-                # Read current toggle state (0=Off, 1=On, 2=Indeterminate)
-                _already_checked = False
-                try:
-                    _ts = _row_cb.iface_toggle.CurrentToggleState
-                    _already_checked = (_ts == 1)
-                except Exception:
+                # Helper: read toggle state → True=checked, False=unchecked, None=unknown
+                def _cb_state(cb):
                     try:
-                        _already_checked = _row_cb.is_checked()
+                        return cb.iface_toggle.CurrentToggleState == 1
                     except Exception:
                         pass
+                    try:
+                        return cb.is_checked()
+                    except Exception:
+                        return None
 
-                logger.info("  Param '%s': checkbox physical(%d,%d) logical(%d,%d) checked=%s",
+                _cur = _cb_state(_row_cb)
+                logger.info("  Param '%s': checkbox physical(%d,%d) logical(%d,%d) state=%s",
                             _param.name,
                             (_cbr.left + _cbr.right) // 2, (_cbr.top + _cbr.bottom) // 2,
-                            _cbx, _cby, _already_checked)
+                            _cbx, _cby, _cur)
 
-                if not _already_checked:
-                    # Try UIA invoke() first (most reliable for WPF CheckBox)
-                    _cb_toggled = False
-                    try:
-                        _row_cb.invoke()
-                        time.sleep(0.5)
-                        # Verify it's now checked
-                        try:
-                            _ts2 = _row_cb.iface_toggle.CurrentToggleState
-                            if _ts2 == 1:
-                                _cb_toggled = True
-                        except Exception:
-                            _cb_toggled = True  # assume success if can't verify
-                        logger.info("  Param '%s': invoke() checkbox → checked=%s",
-                                    _param.name, _cb_toggled)
-                    except Exception as _inv_e:
-                        logger.debug("  invoke() failed: %s", _inv_e)
+                # MUST be checked for Start/End/Step fields to become editable.
+                # Only skip if we are CERTAIN it is already checked (True).
+                if _cur is not True:
+                    _ck_ok = False
+                    for _ck_try in range(3):
+                        if _ck_try == 0:
+                            # Attempt 1: UIA invoke() — fires WPF Click event directly
+                            try:
+                                _row_cb.invoke()
+                                time.sleep(0.2)
+                                logger.info("  Param '%s': invoke() to check (try 1)", _param.name)
+                            except Exception as _ie:
+                                logger.debug("  invoke() failed: %s", _ie)
+                                # Sub-fallback: click_input() sends mouse event to the
+                                # CheckBox control directly (bypasses DataGrid row selection)
+                                try:
+                                    _row_cb.click_input()
+                                    time.sleep(0.25)
+                                    logger.info("  Param '%s': click_input() to check", _param.name)
+                                except Exception:
+                                    pass
+                        else:
+                            # Attempt 2/3: click row body first (selects the row WITHOUT
+                            # toggling checkbox), then single-click on checkbox area.
+                            # Using row_body_x = _cbx + 40 = parameter-name column area.
+                            _body_x = min(_cbx + 40, int(_cbr.right / _dpi_scale) + 60)
+                            pyautogui.click(_body_x, _cby)
+                            time.sleep(0.2)
+                            pyautogui.click(_cbx, _cby)
+                            time.sleep(0.3)
+                            logger.info("  Param '%s': row+checkbox click (try %d)",
+                                        _param.name, _ck_try + 1)
 
-                    if not _cb_toggled:
-                        # Fallback: pyautogui click (WPF DataGrid: first click selects row,
-                        # second click on already-selected row toggles the checkbox)
-                        pyautogui.click(_cbx, _cby)
-                        time.sleep(0.4)
-                        pyautogui.click(_cbx, _cby)
-                        time.sleep(0.8)
-                        logger.info("  Param '%s': two-click fallback for checkbox", _param.name)
+                        # Verify state after this attempt
+                        _new = _cb_state(_row_cb)
+                        if _new is True:
+                            logger.info("  Param '%s': checkbox confirmed CHECKED", _param.name)
+                            _ck_ok = True
+                            break
+                        elif _new is False:
+                            logger.warning("  Param '%s': still unchecked after try %d",
+                                           _param.name, _ck_try + 1)
+                        else:
+                            # State unknown — assume success and proceed
+                            logger.info("  Param '%s': checkbox state unknown → assuming checked",
+                                        _param.name)
+                            _ck_ok = True
+                            break
+
+                    if not _ck_ok:
+                        logger.warning("  Param '%s': checkbox may NOT be checked — "
+                                       "Start/End/Step fields may be read-only!", _param.name)
+
+                # Wait for edit fields to become enabled after checkbox is checked
+                time.sleep(0.3)
 
             except Exception as _ce:
                 logger.warning("  Param '%s' checkbox step failed: %s", _param.name, _ce)
@@ -2090,7 +2360,7 @@ def configure_optimization(
             try:
                 # Poll until at least 3 Edit fields are visible (row expanded)
                 _row_edits = []
-                for _exp_try in range(7):   # 7 × 0.5 s = 3.5 s max
+                for _exp_try in range(7):   # 7 × 0.25 s = 1.75 s max
                     _all_items_b = list(_wiz_uia.descendants(control_type="DataItem"))
                     for _ib in _all_items_b:
                         try:
@@ -2105,7 +2375,7 @@ def configure_optimization(
                         break
                     logger.debug("  Param '%s': only %d edit(s) — waiting for expansion (try %d)",
                                  _param.name, len(_row_edits), _exp_try + 1)
-                    time.sleep(0.5)
+                    time.sleep(0.25)
 
                 # Log edit field positions for diagnosis
                 _edit_rects = []
@@ -2147,6 +2417,7 @@ def configure_optimization(
                     def _set_field(val_str: str, label: str) -> None:
                         pyautogui.hotkey('ctrl', 'a')
                         time.sleep(0.08)
+                        _ensure_english_ime()
                         pyautogui.typewrite(val_str, interval=0.06)
                         time.sleep(0.1)
                         logger.info("  Set '%s'.%s = %s", _param.name, label, val_str)
@@ -2154,13 +2425,13 @@ def configure_optimization(
                     try:
                         # Focus Start field
                         pyautogui.click(_sx, _sy)
-                        time.sleep(0.25)
+                        time.sleep(0.15)
                         _set_field(str(_param.start), "Start")
-                        pyautogui.press('tab');  time.sleep(0.2)  # → End
+                        pyautogui.press('tab');  time.sleep(0.12)  # → End
                         _set_field(str(_param.stop),  "End")
-                        pyautogui.press('tab');  time.sleep(0.2)  # → Step
+                        pyautogui.press('tab');  time.sleep(0.12)  # → Step
                         _set_field(str(_param.step),  "Step")
-                        pyautogui.press('tab');  time.sleep(0.15)  # commit
+                        pyautogui.press('tab');  time.sleep(0.10)  # commit
                     except Exception as _ee:
                         logger.warning("  '%s' Start/End/Step entry failed: %s",
                                        _param.name, _ee)
@@ -2180,15 +2451,20 @@ def configure_optimization(
                     len(_all_uia_btns),
                     [((b.window_text() or "")[:20], b.rectangle()) for b in _all_uia_btns])
 
-        # Select Exhaustive via the CB at position 5 in the flat CheckBox list
-        # (confirmed from previous runs: CB[0]=header, CB[1-4]=DataGrid rows, CB[5]=Exhaustive)
+        # Select Exhaustive via the CB after all DataGrid rows.
+        # Layout: CB[0]=header select-all, CB[1..N]=one per DataGrid row, CB[N+1]=Exhaustive.
+        # N = len(cfg.params), so Exhaustive index = len(cfg.params) + 1.
+        # (Previously hardcoded as 5, which was correct for 4-param strategies but
+        # wrong for 5-param strategies like CL daily that include LenLE — clicking
+        # CB[5] would uncheck LenLE instead of selecting Exhaustive.)
         try:
             _ecbs = list(_wiz_uia2.descendants(control_type="CheckBox"))
-            if len(_ecbs) > 5:
-                _ecbr = _ecbs[5].rectangle()
+            _exhaustive_idx = len(cfg.params) + 1
+            if len(_ecbs) > _exhaustive_idx:
+                _ecbr = _ecbs[_exhaustive_idx].rectangle()
                 _ecbx = int((_ecbr.left + _ecbr.right) / 2 / _dpi_scale)
                 _ecby = int((_ecbr.top + _ecbr.bottom) / 2 / _dpi_scale)
-                logger.info("Clicking Exhaustive option CB[5] at (%d,%d)", _ecbx, _ecby)
+                logger.info("Clicking Exhaustive option CB[%d] at (%d,%d)", _exhaustive_idx, _ecbx, _ecby)
                 pyautogui.click(_ecbx, _ecby)
                 time.sleep(0.4)
         except Exception as _exhe:
@@ -2205,6 +2481,7 @@ def configure_optimization(
             "開始最佳化",
             "開始優化",
             "start optim",
+            "apply",           # MC64 EN wizard: "Apply" button starts optimization
             "執行",            # Execute
             "開始",            # Start
             "run",
@@ -2212,7 +2489,7 @@ def configure_optimization(
             "確定",
         ]
         _skip_kws = ["close", "關閉", "cancel", "取消", "next", "下一步",
-                     "back", "上一步", "finish", "完成"]
+                     "back", "上一步", "finish", "完成", "previous", "< previous"]
 
         for _ub in _all_uia_btns:
             _ubt = (_ub.window_text() or "").strip()
@@ -2474,9 +2751,23 @@ def wait_for_optimization_complete(
     logger.info("Waiting for optimization (timeout=%ds)...", timeout)
     deadline = time.time() + timeout
     while time.time() < deadline:
-        _dismiss_error_dialogs(conn.app)
+        # Method 0: fast MCReport check BEFORE anything else so a quick
+        # optimization (< poll_interval) is caught on the very first iteration.
+        for _f in _glob.glob(os.path.join(_docs, "*.MCReport")):
+            try:
+                if os.path.getmtime(_f) >= _t0 - 2:
+                    logger.info("Optimization complete — new MCReport: %s", os.path.basename(_f))
+                    return True
+            except OSError:
+                pass
 
-        # Method 1: new .MCReport in Documents
+        try:
+            _dismiss_error_dialogs(conn.app)
+        except BaseException as _ded_err:
+            logger.warning("_dismiss_error_dialogs raised %s: %s — continuing poll",
+                           type(_ded_err).__name__, _ded_err)
+
+        # Method 1: new .MCReport in Documents (second pass after dismiss)
         for _f in _glob.glob(os.path.join(_docs, "*.MCReport")):
             try:
                 if os.path.getmtime(_f) >= _t0 - 2:
@@ -2508,7 +2799,19 @@ def wait_for_optimization_complete(
         elapsed = timeout - (deadline - time.time())
         if int(elapsed) % 60 < poll_interval:
             logger.info("Still optimizing... (%.0f min elapsed)", elapsed / 60)
-        time.sleep(poll_interval)
+        # Sleep in 1-second increments so MCReport detection responds within 1 s.
+        _sleep_end = time.time() + poll_interval
+        while time.time() < _sleep_end:
+            time.sleep(1)
+            # Quick MCReport check during sleep so we don't miss fast completions.
+            for _f in _glob.glob(os.path.join(_docs, "*.MCReport")):
+                try:
+                    if os.path.getmtime(_f) >= _t0 - 2:
+                        logger.info("Optimization complete (during sleep) — new MCReport: %s",
+                                    os.path.basename(_f))
+                        return True
+                except OSError:
+                    pass
 
     logger.warning("Optimization timed out after %d seconds", timeout)
     return False
@@ -2585,24 +2888,58 @@ def _decode_mcreport_to_csv(mcreport_path: str, cfg: StrategyConfig, out_csv: st
         return False
 
     _n_params_total = len(_inp_raw) // 8
-    _n_runs = _n_params_total // len(cfg.params)
-    _n_vals = len(_vals_raw) // 8
-    _n_cols = _n_vals // _n_runs if _n_runs else 0
+    _n_vals_total   = len(_vals_raw) // 8
 
-    logger.info("MCReport decode: %d runs x %d param inputs, %d output cols",
-                _n_runs, len(cfg.params), _n_cols)
+    # Auto-detect actual param count: MC64 may omit fixed params (e.g. LenLE) from
+    # the Inp block even when they are checked in the wizard.  Try len(cfg.params)
+    # first; if that yields garbled values (any param column out of its declared
+    # range), fall back to len(cfg.params)-1, then -2, etc.
+    _param_cols = len(cfg.params)
+    _n_runs = 0
+    for _try_p in range(len(cfg.params), 0, -1):
+        if _n_params_total % _try_p != 0:
+            continue
+        _try_runs = _n_params_total // _try_p
+        if _try_runs < 1:
+            continue
+        if _n_vals_total % _try_runs != 0:
+            continue
+        # Validate first 200 rows' param values against expected ranges
+        _try_data = _struct.unpack(f"<{_n_params_total}d", _inp_raw)
+        _ok = True
+        for _pi, _p in enumerate(cfg.params[:_try_p]):
+            _lo = min(_p.start, _p.stop) - abs(_p.step) * 4
+            _hi = max(_p.start, _p.stop) + abs(_p.step) * 4
+            for _ri in range(min(200, _try_runs)):
+                _v = _try_data[_ri * _try_p + _pi]
+                if not (_lo <= _v <= _hi):
+                    _ok = False
+                    break
+            if not _ok:
+                break
+        if _ok:
+            _param_cols = _try_p
+            _n_runs = _try_runs
+            break
 
-    if _n_runs < 1 or _n_cols < 1:
+    if _n_runs < 1:
         logger.warning("MCReport decode: unexpected sizes inp=%d vals=%d", len(_inp_raw), len(_vals_raw))
         return False
 
+    _n_cols = _n_vals_total // _n_runs if _n_runs else 0
+    if _n_cols < 1:
+        logger.warning("MCReport decode: no output cols inp=%d vals=%d runs=%d", len(_inp_raw), len(_vals_raw), _n_runs)
+        return False
+
+    logger.info("MCReport decode: %d runs x %d param inputs, %d output cols",
+                _n_runs, _param_cols, _n_cols)
+
     # Param values per run
     _param_data = _struct.unpack(f"<{_n_params_total}d", _inp_raw)
-    _param_cols = len(cfg.params)
 
     # Metrics column names from Caption order (up to n_cols)
     _stat_names = _CAPTION_ORDER[:_n_cols]
-    _headers = [p.name for p in cfg.params] + _stat_names
+    _headers = [p.name for p in cfg.params[:_param_cols]] + _stat_names
 
     os.makedirs(os.path.dirname(out_csv) if os.path.dirname(out_csv) else ".", exist_ok=True)
     with open(out_csv, "w", newline="", encoding="utf-8") as _fcsv:
