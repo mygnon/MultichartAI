@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **parameter plateau optimizer** for MultiCharts64 (MC64) trading strategies. It automates MC64's built-in optimizer via Windows UI automation, exports results as CSV, and applies a **plateau detection algorithm** to find parameter combinations that are stable (robust to small parameter perturbations) rather than just peak performers. Results include IS/OOS validation and heatmap visualizations.
 
-The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second strategy `_2021Basic_Break_CL` (CL ATR-based, with LenLE parameter) has also been tested on CL and ZW daily bars. A third strategy `SFJ_15Dworkshop_lesson5_countertrend_LS` (BB counter-trend reversal, no STP/LMT exits) is being tested on NQ hourly.
+The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second strategy `_2021Basic_Break_CL` (CL ATR-based, with LenLE parameter) has also been tested on CL and ZW daily bars. A third strategy `SFJ_15Dworkshop_lesson5_countertrend_LS` (BB counter-trend reversal, no STP/LMT exits) has been tested on NQ hourly (target met) and NQ daily (ceiling confirmed).
 
 ### `_2021Basic_Break_NQ` search status
 
@@ -38,6 +38,7 @@ Params: LENGTH_LONG, STDDEV_LONG (long BB), LENGTH_SHORT, STDDEV_SHORT (short BB
 | Instrument | Timeframe | Target NP | Status |
 |------------|-----------|-----------|--------|
 | CME.NQ HOT | Hourly | > 700,000 USD | **✅ MET** (R3: NP=$751,230, LL=17 SL=0.2 LS=45 SS=1.4) |
+| CME.NQ HOT | Daily | > 700,000 USD | **Ceiling $460,770 (−34.2%) — R4 confirmed** |
 
 ## Running the Optimizer
 
@@ -71,10 +72,15 @@ py search_nq_hourly3.py
 py search_nq_hourly3.py --from-csv
 
 # NQ Hourly NP>700K — countertrend (SFJ_15Dworkshop_lesson5_countertrend_LS):
-py search_nq_ct_hourly3.py          # R3 (current — tight-SL regime)
-py search_nq_ct_hourly3.py --from-csv
+py search_nq_ct_hourly3.py --from-csv  # R3 completed — TARGET MET NP=751K
 py search_nq_ct_hourly2.py --from-csv  # R2 completed
 py search_nq_ct_hourly.py --from-csv   # R1 completed
+
+# NQ Daily NP>700K — countertrend (ceiling $461K confirmed after R4):
+py search_nq_ct_daily4.py --from-csv   # R4 completed — ceiling $460,770 confirmed
+py search_nq_ct_daily3.py --from-csv   # R3 completed
+py search_nq_ct_daily2.py --from-csv   # R2 completed
+py search_nq_ct_daily.py --from-csv    # R1 completed
 
 # NQ Daily NP>700K (latest round):
 py search_nq_daily3.py
@@ -171,6 +177,10 @@ results/
   nq_ct_hourly_search/             # NQ Hourly countertrend R1 (best NP=694,910)
   nq_ct_hourly2_search/            # NQ Hourly countertrend R2 (confirmed 694,910 ceiling)
   nq_ct_hourly3_search/            # NQ Hourly countertrend R3 ✅ TARGET MET NP=751,230
+  nq_ct_daily_search/              # NQ Daily countertrend R1 (best NP=387,590)
+  nq_ct_daily2_search/             # NQ Daily countertrend R2 (best NP=431,500)
+  nq_ct_daily3_search/             # NQ Daily countertrend R3 (best NP=456,050)
+  nq_ct_daily4_search/             # NQ Daily countertrend R4 — ceiling $460,770 confirmed
 ```
 
 Each search directory holds:
@@ -436,6 +446,34 @@ Key findings (36 attempts across R1–R3):
 - **Asymmetry remains required**: long entry ultra-tight bands (SL=0.2), short entry moderate bands (SS=1.4). Symmetric gives only ~447K.
 - **High-frequency is better**: 1614 trades vs 508 — more entries, lower per-trade risk, lower MDD (-$64,855 vs -$82,805).
 - R3 A09/A10 had no valid data (rows=0) — likely UI failure during those attempts.
+
+---
+
+### NQ Daily (countertrend) — Ceiling $460,770 (−34.2%)
+
+| LL | SL | LS | SS | NP (USD) | MDD | Objective | Trades |
+|----|----|----|-----|---------|-----|-----------|--------|
+| 8 | 0.7 | 47 | 1.86 | **460,770** | -81,535 | 2,603,900 | 40 |
+
+Also valid (LL=2 regime, better MDD):
+
+| LL | SL | LS | SS | NP (USD) | MDD | Objective | Trades |
+|----|----|----|-----|---------|-----|-----------|--------|
+| 2 | any | 12 | 1.9 | 422,335 | -75,690 | 2,356,544 | 78 |
+
+Scripts: `search_nq_ct_daily.py` (R1) → `search_nq_ct_daily2.py` (R2) → `search_nq_ct_daily3.py` (R3) → `search_nq_ct_daily4.py` (R4 — ceiling confirmed)
+Results: `results/nq_ct_daily4_search/final_params_nq_ct_daily4.json`
+
+Key findings (48 attempts across R1–R4, progression 387K→431K→456K→461K):
+- **Gain rate converged**: R1→R2 +11.3%, R2→R3 +5.7%, R3→R4 +1.0% — ceiling firmly at ~$461K
+- **SS=1.86 is the exact peak**: step=0.01 granularity required to find it (step=0.1 in R1/R2 missed it)
+- **SL inert range 0.68-0.73**: all give exactly NP=460,770 — strategy is robust to SL in this range
+- **MDD=-$81,535 structural floor**: 63%+ of profitable combos share this MDD (same worst trade); unavoidable with reversal-only exits
+- **Two regimes**: (1) main asymmetric (LL=8, tight SL, LS=47, SS=1.86, 40 trades, NP=461K); (2) LL=2 high-freq (LL=2, SL inert, LS=12, SS=1.9, 78 trades, NP=422K, better MDD=-75,690)
+- **Structural cap**: ~40 trades/7yr × avg $11.5K/trade = $461K; daily bar count limits entries beyond this
+- **Ultra-tight SL did NOT help daily** (unlike hourly where SL=0.2 was the breakthrough): SL≤0.3 gives ≤391K
+- **LL>8 worse**: LL=10-20 tops at 393K; only LL=6-9 competitive
+- **Long LS (>55) worse**: LS=100-500 tops at 329K; LS=47 is the sweet spot
 
 ---
 
