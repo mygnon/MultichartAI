@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **parameter plateau optimizer** for MultiCharts64 (MC64) trading strategies. It automates MC64's built-in optimizer via Windows UI automation, exports results as CSV, and applies a **plateau detection algorithm** to find parameter combinations that are stable (robust to small parameter perturbations) rather than just peak performers. Results include IS/OOS validation and heatmap visualizations.
 
-The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second strategy `_2021Basic_Break_CL` (CL ATR-based, with LenLE parameter) has also been tested on CL and ZW daily bars.
+The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second strategy `_2021Basic_Break_CL` (CL ATR-based, with LenLE parameter) has also been tested on CL and ZW daily bars. A third strategy `SFJ_15Dworkshop_lesson5_countertrend_LS` (BB counter-trend reversal, no STP/LMT exits) is being tested on NQ hourly.
 
 ### `_2021Basic_Break_NQ` search status
 
@@ -29,6 +29,15 @@ The primary strategy is `_2021Basic_Break_NQ` (NQ breakout system). A second str
 |------------|-----------|-----------|--------|
 | CME.CL HOT | Daily | > 700,000 USD | **Ceiling $91K (−87%) — strategy does not work** |
 | CBOT.ZW HOT | Daily | > 700,000 USD | **Ceiling $55K (−92%) — strategy does not work** |
+
+### `SFJ_15Dworkshop_lesson5_countertrend_LS` search status
+
+Strategy logic: BUY when Close crosses over lower BB; SELLSHORT when Close crosses under upper BB. Reversal exits only — no STP or LMT.
+Params: LENGTH_LONG, STDDEV_LONG (long BB), LENGTH_SHORT, STDDEV_SHORT (short BB). Workspace: `20260521SFJ_Bollinger_AI.wsp`.
+
+| Instrument | Timeframe | Target NP | Status |
+|------------|-----------|-----------|--------|
+| CME.NQ HOT | Hourly | > 700,000 USD | **✅ MET** (R3: NP=$751,230, LL=17 SL=0.2 LS=45 SS=1.4) |
 
 ## Running the Optimizer
 
@@ -57,9 +66,15 @@ py search_daily_target8.py
 py search_daily_target8.py --from-csv        # re-analyze only
 py search_daily_target8.py --attempt 6       # resume from attempt 6
 
-# NQ Hourly NP>700K (latest round):
+# NQ Hourly NP>700K — breakout (_2021Basic_Break_NQ, latest round):
 py search_nq_hourly3.py
 py search_nq_hourly3.py --from-csv
+
+# NQ Hourly NP>700K — countertrend (SFJ_15Dworkshop_lesson5_countertrend_LS):
+py search_nq_ct_hourly3.py          # R3 (current — tight-SL regime)
+py search_nq_ct_hourly3.py --from-csv
+py search_nq_ct_hourly2.py --from-csv  # R2 completed
+py search_nq_ct_hourly.py --from-csv   # R1 completed
 
 # NQ Daily NP>700K (latest round):
 py search_nq_daily3.py
@@ -100,6 +115,11 @@ pip install -r optimizer\requirements.txt
 ### Core pipeline (3 phases)
 
 1. **MC64 UI Automation** (`mc_automation.py`) — Controls MultiCharts64 via pywinauto + pyautogui to run parameter sweeps and export CSVs. Uses raw ctypes `EnumWindows`/`EnumChildWindows` to bypass UIPI (pywinauto process-scoped specs fail across privilege levels). Key entry point: `run_optimization_for_strategy(conn, cfg, output_dir)`.
+
+   **Speed optimizations applied** (saves ~21s per attempt after the first):
+   - *Date range cache* (`_configure_date_range_cache`): module-level cache skips step2 (~32s) when the date range is unchanged between attempts.
+   - *Step1+2 skip*: when date is cached, `_open_format_signals` is skipped entirely (~20s saved) — `format_dlg` stays `None` and the code takes the direct right-click path.
+   - *Step5a invoke() skip*: the WPF wizard CheckBox never responds to `invoke()` — always use `click_input()` directly (~1.5s saved).
 
 2. **Plateau detection** (`plateau.py`) — Reshapes the flat CSV into a 2D parameter grid. Objective = `NetProfit² / |MaxDrawdown|` (only where both are valid). Computes a sliding-minimum over a `(2r+1)×(2r+1)` neighborhood — a point's **plateau score** is the minimum objective of all its neighbors. High plateau score means the region is uniformly good, not just a spike. Radius defaults to 2 (configurable via `--radius`).
 
@@ -148,6 +168,9 @@ results/
   zw_cl_daily2_search/             # ZW Daily (_2021Basic_Break_CL) R1
   zw_cl_daily3_search/             # ZW Daily (_2021Basic_Break_CL) R2
   zw_cl_daily4_search/             # ZW Daily (_2021Basic_Break_CL) R3 — ceiling $55K confirmed
+  nq_ct_hourly_search/             # NQ Hourly countertrend R1 (best NP=694,910)
+  nq_ct_hourly2_search/            # NQ Hourly countertrend R2 (confirmed 694,910 ceiling)
+  nq_ct_hourly3_search/            # NQ Hourly countertrend R3 ✅ TARGET MET NP=751,230
 ```
 
 Each search directory holds:
@@ -389,6 +412,30 @@ Scripts: `search_cl_cl_daily.py` (R1), `search_cl_cl_daily2.py` (R2 — ceiling 
 Result: `results/cl_cl_daily2_search/final_params_cl_cl_daily2.json`
 
 Key findings: LE=1, SE=1 is extremely precise; STP=4 is narrow sweet spot; LMT=5; LenLE always 100 (MC64 ignores automation); only ~34 trades in 7yr; explored LE=1–30, SE=1–70, STP=0.1–18, LMT=1–50 across 24 attempts; **strategy does not work on CL daily**.
+
+---
+
+### NQ Hourly (countertrend) — **TARGET MET ✅** (R3: NP=$751,230)
+
+| LL | SL | LS | SS | NP (USD) | MDD | Objective | Trades |
+|----|----|----|-----|---------|-----|-----------|--------|
+| 17 | 0.2 | 45 | 1.4 | **751,230** | -64,855 | 8,701,665 | 1,614 |
+
+Also valid (R3 A04):
+
+| LL | SL | LS | SS | NP (USD) | MDD | Objective | Trades |
+|----|----|----|-----|---------|-----|-----------|--------|
+| 17 | 0.3 | 45 | 1.4 | 739,675 | -74,935 | 7,301,249 | 1,576 |
+
+Scripts: `search_nq_ct_hourly.py` (R1) → `search_nq_ct_hourly2.py` (R2) → `search_nq_ct_hourly3.py` (R3 — target met)
+Results: `results/nq_ct_hourly3_search/final_params_nq_ct_hourly3.json`
+
+Key findings (36 attempts across R1–R3):
+- **Two regimes exist**: (1) moderate-SL asymmetric (LL=21, SL=1.8, LS=49, SS=2.5, 508 trades, NP=694K); (2) ultra-tight-SL (LL=17, SL=0.2, LS=45, SS=1.4, 1614 trades, NP=751K). Regime 2 beats regime 1 in both NP and MDD.
+- **SL=0.2 is the breakthrough**: R1/R2 never probed below SL=1.7. R3 A01 fine-tuned the R2-A12 discovery (LL=15, SL=0.5) and found SL=0.2 with LL=17 gives NP=751K.
+- **Asymmetry remains required**: long entry ultra-tight bands (SL=0.2), short entry moderate bands (SS=1.4). Symmetric gives only ~447K.
+- **High-frequency is better**: 1614 trades vs 508 — more entries, lower per-trade risk, lower MDD (-$64,855 vs -$82,805).
+- R3 A09/A10 had no valid data (rows=0) — likely UI failure during those attempts.
 
 ---
 

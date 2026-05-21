@@ -25,6 +25,10 @@ from config import (
 
 logger = logging.getLogger(__name__)
 
+# Skip redundant date-range setting when the range hasn't changed between attempts.
+# Saves ~37s per attempt after the first one.
+_configure_date_range_cache: Optional[Tuple[str, str]] = None
+
 pyautogui.PAUSE = 0.05
 pyautogui.FAILSAFE = False
 
@@ -581,7 +585,7 @@ def _wait_for_any_window(
                     pass
         except Exception:
             pass
-        time.sleep(0.8)
+        time.sleep(0.2)
     raise WindowNotFoundError(f"None of {title_res} found after {timeout:.0f}s")
 
 
@@ -1114,7 +1118,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         pass
 
     _focus_window(conn._hwnd)
-    time.sleep(0.4)
+    time.sleep(0.2)
 
     # Use ctypes GetWindowRect (no process constraint) to get MC window bounds.
     import win32gui as _w32
@@ -1173,7 +1177,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
     # scans for an unobstructed pixel using WindowFromPoint, then verify.
     import win32gui as _w32fg
     _focus_window(conn._hwnd)
-    time.sleep(0.3)
+    time.sleep(0.15)
     _fg_after_focus = 0
     try:
         _fg_after_focus = _w32fg.GetForegroundWindow()
@@ -1198,7 +1202,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
                 logger.info("UIA menu item: '%s'", txt)
                 if "format" in txt.lower() or "格式" in txt.lower():
                     mi.click_input()
-                    time.sleep(0.6)
+                    time.sleep(0.3)
                     logger.info("UIA: clicked Format menu item '%s'", txt)
                     _found_format = True
                     break
@@ -1234,7 +1238,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
                 logger.info("ctypes Format menu rect: (%d,%d,%d,%d) → clicking (%d,%d)",
                             _mr.left, _mr.top, _mr.right, _mr.bottom, _mcx, _mcy)
                 pyautogui.click(_mcx, _mcy)
-                time.sleep(0.6)
+                time.sleep(0.3)
                 _pyautogui_click_popup_item(conn.app, _fmt_dropdown_items)
                 try:
                     return _wait_for_any_window(conn.app, [r".*Format.*", r".*格式.*"], timeout=8)
@@ -1260,7 +1264,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
             except Exception:
                 pass
         pyautogui.press('alt')
-        time.sleep(0.5)
+        time.sleep(0.2)
         # Log any new window that appeared (menu popup candidate)
         for _w in Desktop(backend="win32").windows():
             try:
@@ -1271,7 +1275,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
                 pass
         # Press 'f' to open "Format" (or try arrow-key navigation)
         pyautogui.press('f')
-        time.sleep(0.5)
+        time.sleep(0.2)
         popup_after_alt = _find_popup_hwnd(timeout=1.2)
         if not popup_after_alt:
             # Try finding any new popup-like window
@@ -1387,10 +1391,10 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
     # Attempt 1: pyautogui — may fail if ATL_MCGraphPanel is transparent to hit-testing.
     logger.info("Left-click at (%d,%d) to activate chart child", _rclick_x, _rclick_y)
     pyautogui.click(_rclick_x, _rclick_y)
-    time.sleep(0.5)
+    time.sleep(0.25)
     logger.info("Right-clicking at (%d, %d)", _rclick_x, _rclick_y)
     pyautogui.rightClick(_rclick_x, _rclick_y)
-    time.sleep(1.0)
+    time.sleep(0.5)
 
     # Snapshot all windows before/after to catch ANY new popup (MC may not use #32768)
     _snap_before = set()
@@ -1836,6 +1840,12 @@ def configure_optimization(
     the optimization wizard via right-click → Optimize Strategy.
     """
     import win32gui as _w32fg
+    _cfg_t0 = time.time()
+    def _cfg_lap(label: str) -> None:
+        logger.info("[TIMING] cfg.%s=%.2fs  (total_so_far=%.2fs)",
+                    label, time.time() - _cfg_lap._prev, time.time() - _cfg_t0)
+        _cfg_lap._prev = time.time()
+    _cfg_lap._prev = _cfg_t0
 
     # ── Step 0: Dismiss any stale Format Signals/Strategies dialog ────────────
     # A dialog left open from a previous run causes mis-clicks and wrong state.
@@ -1867,103 +1877,131 @@ def configure_optimization(
         except Exception:
             pass
 
-    # ── Step 1: Open Format Signals dialog and select the strategy ────────────
-    format_dlg = _open_format_signals(conn)
-    _select_signal_in_list(format_dlg, cfg.mc_signal_name)
-    time.sleep(0.2)
+    _cfg_lap("step0_dismiss_stale")
 
-    # Log all visible buttons for diagnostics (helps identify button labels)
-    try:
-        _btn_names = []
-        for _bh, _bc, _bt in _win32_enum_children(format_dlg.handle):
-            if _bc == "Button" and _bt and _win32_is_visible(_bh):
-                _btn_names.append(_bt)
-        logger.info("Format Signals dialog buttons: %s", _btn_names)
-    except Exception as _be:
-        logger.debug("Button enumeration failed: %s", _be)
+    # ── Step 1+2: Open Format Signals only when date range needs updating ─────
+    # When date range is already cached (every attempt after A01) skip opening
+    # Format Signals entirely and jump straight to right-click → Optimize
+    # Strategy.  Saves ~20 s per attempt.
+    global _configure_date_range_cache
+    _needs_date_set = (
+        date_range is not None and
+        _configure_date_range_cache != (date_range.from_date, date_range.to_date)
+    )
 
-    # ── Step 2: Set date range via Format/Properties button ───────────────────
-    if date_range is not None:
-        # Snapshot existing windows so we can detect the NEW signal-properties dialog
-        _pre_snap: set = set()
-        for _sw in Desktop(backend="win32").windows():
-            try:
-                if _sw.is_visible():
-                    _pre_snap.add(_sw.handle)
-            except Exception:
-                pass
-
-        # Dump Format dialog UIA descendants for diagnostics
-        _fmt_uia = _uia_dlg(format_dlg.handle)
-        if _fmt_uia:
-            try:
-                _fmt_desc = [(d.element_info.control_type,
-                              (d.element_info.name or "")[:25])
-                             for d in list(_fmt_uia.descendants())[:60]]
-                logger.info("Format dialog UIA descendants: %s", _fmt_desc)
-            except Exception as _fde:
-                logger.debug("Format dialog UIA dump: %s", _fde)
-
-        _fmt_btn_clicked = _click_button_in_dlg(
-            format_dlg, ["Format", "格式", "Properties", "屬性", "編輯",
-                         "Format Signal", "Edit", "Edit..."]
-        )
-        logger.info("Format/Properties button click: %s", _fmt_btn_clicked)
-
-        # Fallback: double-click selected signal list item to open its properties
-        if not _fmt_btn_clicked and _fmt_uia:
-            try:
-                for _ct in ["List", "DataGrid", "Table", "ListBox"]:
-                    _lv = _fmt_uia.child_window(control_type=_ct)
-                    if _lv.exists(timeout=1):
-                        _items = _lv.descendants(control_type="ListItem")
-                        if not _items:
-                            _items = _lv.descendants(control_type="DataItem")
-                        if _items:
-                            _items[0].double_click_input()
-                            logger.info("Double-clicked signal item to open properties")
-                            _fmt_btn_clicked = True
-                            break
-            except Exception as _dce:
-                logger.debug("Double-click signal failed: %s", _dce)
-
-        time.sleep(0.8)
-
-        # Wait for a NEW top-level window (not in pre-snapshot)
-        signal_dlg = None
-        _deadline = time.time() + 12.0
-        while time.time() < _deadline and signal_dlg is None:
-            for _sw in Desktop(backend="win32").windows():
-                try:
-                    if _sw.is_visible() and _sw.handle not in _pre_snap:
-                        _stitle = _sw.window_text()
-                        logger.info("Signal properties dialog: hwnd=%x title='%s'",
-                                    _sw.handle, _stitle)
-                        signal_dlg = _HwndWrapper(_sw.handle)
-                        break
-                except Exception:
-                    pass
-            if signal_dlg is None:
-                time.sleep(0.5)
-
-        if signal_dlg is not None:
-            _click_tab(signal_dlg, ["General", "一般"])
-            time.sleep(0.3)
-            _set_date_field(signal_dlg, conn.app,
-                            ["Begin date:", "Begin Date", "開始日期", "起始日期"],
-                            date_range.from_date)
-            _set_date_field(signal_dlg, conn.app,
-                            ["End date:", "End Date", "結束日期", "終止日期"],
-                            date_range.to_date)
-            _click_button_in_dlg(signal_dlg, ["OK", "確定"])
-            time.sleep(0.5)
-        else:
-            logger.warning("Signal properties dialog not found — date range NOT set")
-
-        # Re-open Format Signals and re-select after date change
+    format_dlg = None
+    if _needs_date_set or date_range is None:
         format_dlg = _open_format_signals(conn)
         _select_signal_in_list(format_dlg, cfg.mc_signal_name)
         time.sleep(0.2)
+
+        try:
+            _btn_names = []
+            for _bh, _bc, _bt in _win32_enum_children(format_dlg.handle):
+                if _bc == "Button" and _bt and _win32_is_visible(_bh):
+                    _btn_names.append(_bt)
+            logger.info("Format Signals dialog buttons: %s", _btn_names)
+        except Exception as _be:
+            logger.debug("Button enumeration failed: %s", _be)
+
+        _cfg_lap("step1_open_format_signals")
+
+        if _needs_date_set:
+            # Snapshot existing windows so we can detect the NEW signal-properties dialog
+            _pre_snap: set = set()
+            for _sw in Desktop(backend="win32").windows():
+                try:
+                    if _sw.is_visible():
+                        _pre_snap.add(_sw.handle)
+                except Exception:
+                    pass
+
+            # Dump Format dialog UIA descendants for diagnostics
+            _fmt_uia = _uia_dlg(format_dlg.handle)
+            if _fmt_uia:
+                try:
+                    _fmt_desc = [(d.element_info.control_type,
+                                  (d.element_info.name or "")[:25])
+                                 for d in list(_fmt_uia.descendants())[:60]]
+                    logger.info("Format dialog UIA descendants: %s", _fmt_desc)
+                except Exception as _fde:
+                    logger.debug("Format dialog UIA dump: %s", _fde)
+
+            _fmt_btn_clicked = _click_button_in_dlg(
+                format_dlg, ["Format", "格式", "Properties", "屬性", "編輯",
+                             "Format Signal", "Edit", "Edit..."]
+            )
+            logger.info("Format/Properties button click: %s", _fmt_btn_clicked)
+
+            # Fallback: double-click selected signal list item to open its properties
+            if not _fmt_btn_clicked and _fmt_uia:
+                try:
+                    for _ct in ["List", "DataGrid", "Table", "ListBox"]:
+                        _lv = _fmt_uia.child_window(control_type=_ct)
+                        if _lv.exists(timeout=1):
+                            _items = _lv.descendants(control_type="ListItem")
+                            if not _items:
+                                _items = _lv.descendants(control_type="DataItem")
+                            if _items:
+                                _items[0].double_click_input()
+                                logger.info("Double-clicked signal item to open properties")
+                                _fmt_btn_clicked = True
+                                break
+                except Exception as _dce:
+                    logger.debug("Double-click signal failed: %s", _dce)
+
+            time.sleep(0.3)
+
+            # Wait for a NEW top-level window (not in pre-snapshot)
+            signal_dlg = None
+            _deadline = time.time() + 12.0
+            while time.time() < _deadline and signal_dlg is None:
+                for _sw in Desktop(backend="win32").windows():
+                    try:
+                        if _sw.is_visible() and _sw.handle not in _pre_snap:
+                            _stitle = _sw.window_text()
+                            logger.info("Signal properties dialog: hwnd=%x title='%s'",
+                                        _sw.handle, _stitle)
+                            signal_dlg = _HwndWrapper(_sw.handle)
+                            break
+                    except Exception:
+                        pass
+                if signal_dlg is None:
+                    time.sleep(0.5)
+
+            if signal_dlg is not None:
+                _click_tab(signal_dlg, ["General", "一般"])
+                time.sleep(0.3)
+                _set_date_field(signal_dlg, conn.app,
+                                ["Begin date:", "Begin Date", "開始日期", "起始日期"],
+                                date_range.from_date)
+                _set_date_field(signal_dlg, conn.app,
+                                ["End date:", "End Date", "結束日期", "終止日期"],
+                                date_range.to_date)
+                _click_button_in_dlg(signal_dlg, ["OK", "確定"])
+                time.sleep(0.2)
+            else:
+                logger.warning("Signal properties dialog not found — date range NOT set")
+
+            # Re-open Format Signals and re-select after date change
+            format_dlg = _open_format_signals(conn)
+            _select_signal_in_list(format_dlg, cfg.mc_signal_name)
+            time.sleep(0.2)
+            _configure_date_range_cache = (date_range.from_date, date_range.to_date)
+            logger.info("Date range cached: %s ~ %s", date_range.from_date, date_range.to_date)
+
+        else:
+            # date_range is None — no date filtering requested
+            logger.info("[TIMING] step2: no date_range — skipped")
+
+        _cfg_lap("step2_set_date_range")
+
+    else:
+        # date_range is already cached: skip step1+step2 entirely
+        logger.info("[TIMING] step1+step2: SKIPPED — date cached (%s ~ %s)",
+                    date_range.from_date, date_range.to_date)
+        _cfg_lap("step1_open_format_signals")
+        _cfg_lap("step2_set_date_range")
 
     # ── Step 3: Launch optimization wizard ───────────────────────────────────
     # Primary path A: click the "最佳化" / "Optimize" button INSIDE the
@@ -1973,24 +2011,28 @@ def configure_optimization(
         "最佳化...", "Optimize...", "優化...",
         "最佳化設定", "Optimization Settings",
     ]
-    _opt_from_dlg = _click_button_in_dlg(format_dlg, _OPT_BTN_LABELS)
-    logger.info("Optimize button in Format Signals dialog: clicked=%s", _opt_from_dlg)
+    _opt_from_dlg = False
+    if format_dlg is not None:
+        _opt_from_dlg = _click_button_in_dlg(format_dlg, _OPT_BTN_LABELS)
+        logger.info("Optimize button in Format Signals dialog: clicked=%s", _opt_from_dlg)
 
     if not _opt_from_dlg:
-        # Primary path B: close dialog, right-click chart → "Optimize Strategy"
-        logger.info("No Optimize button in dialog — closing and using right-click approach")
-        # Close / Cancel the Format Signals dialog
-        _closed = _click_button_in_dlg(
-            format_dlg, ["Cancel", "Close", "關閉", "取消", "結束", "離開"]
-        )
-        if not _closed:
-            # Send WM_CLOSE if the button wasn't found
-            logger.warning("Close button not found — sending WM_CLOSE to Format dialog")
-            _user32.PostMessageW(format_dlg.handle, 0x0010, 0, 0)
-        time.sleep(0.5)
+        if format_dlg is not None:
+            # Close the Format Signals dialog before right-clicking
+            logger.info("No Optimize button in dialog — closing and using right-click approach")
+            _closed = _click_button_in_dlg(
+                format_dlg, ["Cancel", "Close", "關閉", "取消", "結束", "離開"]
+            )
+            if not _closed:
+                logger.warning("Close button not found — sending WM_CLOSE to Format dialog")
+                _user32.PostMessageW(format_dlg.handle, 0x0010, 0, 0)
+            time.sleep(0.25)
+        else:
+            logger.info("Direct right-click path (Format Signals skipped)")
+
 
         _focus_window(conn._hwnd)
-        time.sleep(0.4)
+        time.sleep(0.2)
 
         # Find ATL_MCGraphPanel (chart area) for right-click
         _all_ch = _win32_enum_children(conn._hwnd)
@@ -2027,10 +2069,10 @@ def configure_optimization(
                         break
             logger.info("Right-click for Optimize Strategy at (%d,%d)", _gpx, _gpy)
             pyautogui.click(_gpx, _gpy)
-            time.sleep(0.4)
+            time.sleep(0.2)
             pyautogui.rightClick(_gpx, _gpy)
-            time.sleep(0.7)
-            _opt_popup = _find_popup_hwnd(timeout=1.5)
+            time.sleep(0.35)
+            _opt_popup = _find_popup_hwnd(timeout=1.0)
             # PostMessage fallback — ATL_MCGraphPanel is transparent to WindowFromPoint
             if not _opt_popup and _gp_hwnd:
                 try:
@@ -2053,18 +2095,18 @@ def configure_optimization(
                     logger.info("PostMessage Optimize right-click: hwnd=0x%x client=(%d,%d) screen=(%d,%d)",
                                 _gp_hwnd, _op_cli_x, _op_cli_y, _op_scr_x, _op_scr_y)
                     _opt_u32.SetForegroundWindow(_gp_hwnd)
-                    time.sleep(0.3)
-                    _opt_u32.PostMessageW(_gp_hwnd, _WM_RBUTTONDOWN, _MK_RBUTTON, _op_cli_lp)
                     time.sleep(0.15)
+                    _opt_u32.PostMessageW(_gp_hwnd, _WM_RBUTTONDOWN, _MK_RBUTTON, _op_cli_lp)
+                    time.sleep(0.1)
                     _opt_u32.PostMessageW(_gp_hwnd, _WM_RBUTTONUP, 0, _op_cli_lp)
-                    time.sleep(0.7)
-                    _opt_popup = _find_popup_hwnd(timeout=1.5)
+                    time.sleep(0.35)
+                    _opt_popup = _find_popup_hwnd(timeout=1.0)
                     if _opt_popup:
                         logger.info("PostMessage WM_RBUTTON* → Optimize popup 0x%x", _opt_popup)
                     else:
                         _opt_u32.PostMessageW(_gp_hwnd, _WM_CONTEXTMENU, _gp_hwnd, _op_scr_lp)
-                        time.sleep(0.7)
-                        _opt_popup = _find_popup_hwnd(timeout=1.5)
+                        time.sleep(0.35)
+                        _opt_popup = _find_popup_hwnd(timeout=1.0)
                         logger.info("PostMessage WM_CONTEXTMENU → Optimize popup %s",
                                     hex(_opt_popup) if _opt_popup else None)
                 except Exception as _op_pme:
@@ -2080,7 +2122,8 @@ def configure_optimization(
         else:
             logger.warning("No chart child found for right-click optimization launch")
 
-    time.sleep(0.8)
+    time.sleep(0.3)
+    _cfg_lap("step3_launch_wizard")
 
     # ── Step 4: Wait for optimization wizard ─────────────────────────────────
     # MC Traditional Chinese wizard title is "最佳化設定"; English is "Optimization".
@@ -2125,6 +2168,8 @@ def configure_optimization(
                 logger.warning("Still on Page 1 after second Next click — proceeding anyway")
     else:
         logger.info("Wizard opened directly on parameter page (Page 1 skipped)")
+
+    _cfg_lap("step4_wizard_appeared")
 
     # Page 2 — configure parameters via UIA
     # MC64 optimization wizard uses custom-drawn controls (no Win32 children).
@@ -2200,6 +2245,7 @@ def configure_optimization(
 
         # Step 0: uncheck ALL rows first — clears stale settings from previous
         # sessions that would leave extra params checked and inflate combo count.
+        _step5_t0 = time.time()
         for _item0 in _all_items:
             try:
                 _txts0 = [d.window_text() for d in _item0.descendants(control_type="Text")]
@@ -2218,31 +2264,27 @@ def configure_optimization(
                         pass
                 if _chk0:
                     try:
-                        _cb0.invoke()
-                        time.sleep(0.15)
+                        # invoke() always fails for this WPF wizard — use click_input directly
+                        _cb0.click_input()
+                        time.sleep(0.2)
                         logger.info("  Step0 unchecked row: '%s'", _row_nm0)
                     except Exception as _ue0:
-                        logger.warning("  Step0 invoke() failed for '%s': %s — trying click_input", _row_nm0, _ue0)
                         try:
                             _cbr0 = _cb0.rectangle()
                             _cbx0 = int((_cbr0.left + _cbr0.right) / 2 / _dpi_scale)
                             _cby0 = int((_cbr0.top + _cbr0.bottom) / 2 / _dpi_scale)
-                            # SINGLE click only — double-click would toggle twice and
-                            # leave the checkbox still checked (no net change).
-                            try:
-                                _cb0.click_input()
-                                time.sleep(0.25)
-                                logger.info("  Step0 click_input fallback unchecked row: '%s'", _row_nm0)
-                            except Exception:
-                                pyautogui.click(_cbx0, _cby0)
-                                time.sleep(0.3)
-                                logger.info("  Step0 pyautogui single-click unchecked row: '%s'", _row_nm0)
+                            pyautogui.click(_cbx0, _cby0)
+                            time.sleep(0.25)
+                            logger.info("  Step0 pyautogui unchecked row: '%s'", _row_nm0)
                         except Exception as _fe0:
-                            logger.warning("  Step0 fallback also failed for '%s': %s", _row_nm0, _fe0)
+                            logger.warning("  Step0 fallback failed for '%s': %s", _row_nm0, _fe0)
             except Exception:
                 pass
 
+        logger.info("[TIMING] cfg.step5a_uncheck_all=%.2fs", time.time() - _step5_t0)
+
         for _pi, _param in enumerate(cfg.params):
+            _param_t0 = time.time()
             # Find the row containing this param's input name
             _target_row = None
             _all_items_cur = list(_wiz_uia.descendants(control_type="DataItem"))
@@ -2437,6 +2479,9 @@ def configure_optimization(
                                        _param.name, _ee)
             except Exception as _re:
                 logger.warning("  Row edit pass for '%s' failed: %s", _param.name, _re)
+            logger.info("[TIMING] cfg.step5b_param[%d]_%s=%.2fs",
+                        _pi, _param.name, time.time() - _param_t0)
+        _cfg_lap("step5_configure_params")
     else:
         logger.warning("Wizard UIA wrapper not available — param config skipped")
 
@@ -2550,6 +2595,8 @@ def configure_optimization(
         # Win32 fallback (unlikely to work but try anyway)
         _click_button_in_dlg(wizard, ["Optimize", "Finish", "完成", "優化"])
 
+    _cfg_lap("step6_exhaustive_and_start")
+    logger.info("[TIMING] cfg.TOTAL=%.2fs", time.time() - _cfg_t0)
     logger.info("Optimization started: %s", cfg.name)
 
 
@@ -3150,15 +3197,35 @@ def run_optimization_for_strategy(
     output_dir: str,
 ) -> str:
     logger.info("=== Starting %s (%d runs) ===", cfg.name, cfg.total_runs())
+    _run_t0 = time.time()
     try:
-        _close_optimization_report()   # close any leftover report from prior run
+        _t = time.time()
+        _close_optimization_report()
+        logger.info("[TIMING] close_report=%.2fs", time.time() - _t)
+
+        _t = time.time()
         ensure_chart_ready(conn, cfg)
+        logger.info("[TIMING] ensure_chart_ready=%.2fs", time.time() - _t)
+
+        _t = time.time()
         configure_optimization(conn, cfg, date_range=cfg.insample)
+        logger.info("[TIMING] configure_optimization=%.2fs", time.time() - _t)
+
         _opt_t0 = time.time()
         completed = wait_for_optimization_complete(conn, opt_start_time=_opt_t0)
         if not completed:
             raise OptimizationFailedError(f"{cfg.name}: timed out")
-        return export_optimization_results(conn, cfg, output_dir, opt_start_time=_opt_t0)
+        logger.info("[TIMING] mc_optimization=%.2fs", time.time() - _opt_t0)
+
+        _t = time.time()
+        result = export_optimization_results(conn, cfg, output_dir, opt_start_time=_opt_t0)
+        logger.info("[TIMING] export_results=%.2fs", time.time() - _t)
+
+        logger.info("[TIMING] TOTAL=%.2fs  (setup=%.2fs  opt=%.2fs)",
+                    time.time() - _run_t0,
+                    _opt_t0 - _run_t0,
+                    time.time() - _opt_t0)
+        return result
     except Exception:
         _save_screenshot(cfg.name, output_dir)
         raise
