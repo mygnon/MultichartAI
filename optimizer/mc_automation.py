@@ -13,6 +13,7 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import pyautogui
+import pyperclip
 import pywinauto
 from pywinauto import Application, Desktop
 from pywinauto.keyboard import send_keys
@@ -527,6 +528,19 @@ def _ensure_english_ime() -> None:
                 user32.AttachThreadInput(our_tid, target_tid, False)
     except Exception as _e:
         logger.debug("_ensure_english_ime failed: %s", _e)
+
+
+def _cb_paste(text: str) -> None:
+    """Set text via clipboard paste — bypasses IME entirely.
+
+    Chinese IMEs (Microsoft New Phonetic / Zhuyin) intercept typewrite() even
+    after ImmSetConversionStatus because WPF manages IME focus independently.
+    Pasting from the clipboard skips all IME processing.
+    """
+    pyperclip.copy(text)
+    time.sleep(0.05)
+    pyautogui.hotkey('ctrl', 'v')
+    time.sleep(0.08)
 
 
 def _pg_type(text: str, interval: float = 0.05) -> None:
@@ -1752,8 +1766,8 @@ def _set_cell_value_at_coords(x: int, y: int, value: str) -> None:
     pyautogui.doubleClick(x, y)
     time.sleep(0.3)
     pyautogui.hotkey("ctrl", "a")
-    _ensure_english_ime()
-    pyautogui.typewrite(str(value), interval=0.04)
+    time.sleep(0.05)
+    _cb_paste(str(value))   # clipboard paste bypasses IME
     pyautogui.press("tab")
     time.sleep(0.2)
 
@@ -2459,9 +2473,8 @@ def configure_optimization(
                     def _set_field(val_str: str, label: str) -> None:
                         pyautogui.hotkey('ctrl', 'a')
                         time.sleep(0.08)
-                        _ensure_english_ime()
-                        pyautogui.typewrite(val_str, interval=0.06)
-                        time.sleep(0.1)
+                        _cb_paste(val_str)   # clipboard paste bypasses IME
+                        time.sleep(0.08)
                         logger.info("  Set '%s'.%s = %s", _param.name, label, val_str)
 
                     try:
@@ -2646,7 +2659,8 @@ def set_params_and_date_for_single_run(
                         item.click_input()
                         time.sleep(0.15)
                         _pg_hotkey("ctrl", "a")
-                        pyautogui.typewrite(str(params[cell_text]), interval=0.04)
+                        time.sleep(0.05)
+                        _cb_paste(str(params[cell_text]))   # clipboard paste bypasses IME
                         pyautogui.press("tab")
                         time.sleep(0.1)
                         inputs_set = True
