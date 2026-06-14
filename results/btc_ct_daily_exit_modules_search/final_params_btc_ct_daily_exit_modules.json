@@ -1,0 +1,263 @@
+{
+  "strategy_main": "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto",
+  "symbol": "BTCUSDT HOT",
+  "timeframe": "Daily",
+  "champion_fixed": {
+    "LENGTH_LONG": 49.0,
+    "STDDEV_LONG": 2.4,
+    "LENGTH_SHORT": 123.0,
+    "STDDEV_SHORT": 1.2
+  },
+  "baseline_reference": {
+    "net_profit": 3592.66,
+    "max_drawdown": -398.78,
+    "total_trades": 16
+  },
+  "baseline_measured": {
+    "net_profit": 3065.39,
+    "max_drawdown": -398.784,
+    "total_trades": 13,
+    "exact_champion_row": true,
+    "drift_vs_reference_pct": -14.676,
+    "status_sec": 0.0,
+    "total_sec": 0.0,
+    "timestamp": "2026-06-13T23:08:26.051938"
+  },
+  "mode": "independent (one module at a time)",
+  "speed_mode": {
+    "status_verify": false,
+    "status_fast_path": "one-pass state read, diffs only"
+  },
+  "smoke": false,
+  "modules": [
+    {
+      "module": 1,
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params_range": {
+        "STP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "started_at": "2026-06-13T23:08:26.052442",
+      "finished_at": "2026-06-13T23:08:26.057471",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "STP": 0.4
+      },
+      "net_profit": 1150.58,
+      "max_drawdown": -810.244,
+      "objective": 1633.8711997867308,
+      "total_trades": 75,
+      "delta_np_vs_baseline": -1914.81,
+      "delta_np_pct": -62.47,
+      "delta_mdd_vs_baseline": -411.46,
+      "valid": true,
+      "coverage_status": "valid",
+      "param_coverage": {
+        "STP": [
+          0.1,
+          100.0
+        ]
+      }
+    },
+    {
+      "module": 2,
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params_range": {
+        "ATRSTP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "started_at": "2026-06-13T23:08:26.060982",
+      "finished_at": "2026-06-13T23:08:26.065492",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "ATRSTP": 15.8
+      },
+      "net_profit": 1038.43,
+      "max_drawdown": -1297.81,
+      "objective": 830.8896255229965,
+      "total_trades": 46,
+      "delta_np_vs_baseline": -2026.96,
+      "delta_np_pct": -66.12,
+      "delta_mdd_vs_baseline": -899.03,
+      "valid": true,
+      "coverage_status": "valid",
+      "param_coverage": {
+        "ATRSTP": [
+          0.1,
+          100.0
+        ]
+      }
+    },
+    {
+      "module": 3,
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params_range": {
+        "EXITBAR": [
+          1.0,
+          1000.0,
+          1.0
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "started_at": "2026-06-13T23:08:26.072037",
+      "finished_at": "2026-06-13T23:08:26.078053",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "EXITBAR": 1.0
+      },
+      "net_profit": 1066.78,
+      "max_drawdown": -1034.56,
+      "objective": 1100.0034491957933,
+      "total_trades": 66,
+      "delta_np_vs_baseline": -1998.61,
+      "delta_np_pct": -65.2,
+      "delta_mdd_vs_baseline": -635.78,
+      "valid": true,
+      "coverage_status": "valid",
+      "param_coverage": {
+        "EXITBAR": [
+          1.0,
+          1000.0
+        ]
+      }
+    },
+    {
+      "module": 4,
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params_range": {
+        "DAYRANGE": [
+          0.01,
+          10.0,
+          0.01
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "started_at": "2026-06-13T23:08:26.082059",
+      "finished_at": "2026-06-13T23:08:26.086752",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "DAYRANGE": 4.77
+      },
+      "net_profit": 1038.43,
+      "max_drawdown": -1297.81,
+      "objective": 830.8896255229965,
+      "total_trades": 46,
+      "delta_np_vs_baseline": -2026.96,
+      "delta_np_pct": -66.12,
+      "delta_mdd_vs_baseline": -899.03,
+      "valid": true,
+      "coverage_status": "valid",
+      "param_coverage": {
+        "DAYRANGE": [
+          0.01,
+          10.0
+        ]
+      }
+    },
+    {
+      "module": 5,
+      "signal": "QuantPass_PT_Exit",
+      "params_range": {
+        "PT_Base": [
+          0.001,
+          1.0,
+          0.001
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "started_at": "2026-06-13T23:08:26.091776",
+      "finished_at": "2026-06-13T23:08:26.095993",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "PT_Base": 0.672
+      },
+      "net_profit": 1452.22,
+      "max_drawdown": -1181.17,
+      "objective": 1785.4694314958897,
+      "total_trades": 47,
+      "delta_np_vs_baseline": -1613.17,
+      "delta_np_pct": -52.63,
+      "delta_mdd_vs_baseline": -782.39,
+      "valid": true,
+      "coverage_status": "valid",
+      "param_coverage": {
+        "PT_Base": [
+          0.001,
+          1.0
+        ]
+      }
+    },
+    {
+      "module": 6,
+      "signal": "RescueTeamExit",
+      "params_range": {
+        "Length": [
+          20.0,
+          600.0,
+          20.0
+        ],
+        "std": [
+          3.0,
+          6.0,
+          0.1
+        ]
+      },
+      "combos": 930,
+      "rows": 768,
+      "started_at": "2026-06-13T23:08:26.101512",
+      "finished_at": "2026-06-13T23:08:26.104511",
+      "status_sec": 0.0,
+      "optimize_sec": 0.0,
+      "total_sec": 0.0,
+      "best_params": {
+        "Length": 20.0,
+        "std": 3.0
+      },
+      "net_profit": 1162.45,
+      "max_drawdown": -1260.19,
+      "objective": 1072.2906883089058,
+      "total_trades": 46,
+      "delta_np_vs_baseline": -1902.94,
+      "delta_np_pct": -62.08,
+      "delta_mdd_vs_baseline": -861.41,
+      "valid": true,
+      "coverage_status": "partial",
+      "param_coverage": {
+        "Length": [
+          20.0,
+          500.0
+        ],
+        "std": [
+          3.0,
+          6.0
+        ]
+      }
+    }
+  ],
+  "run_started_at": "2026-06-13T23:08:26.044935",
+  "run_finished_at": "2026-06-13T23:08:26.110736",
+  "run_total_sec": 0.1
+}

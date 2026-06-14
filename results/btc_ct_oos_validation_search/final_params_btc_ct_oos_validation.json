@@ -1,0 +1,383 @@
+{
+  "strategy_main": "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto",
+  "symbol": "BTCUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "champion_fixed": {
+    "LENGTH_LONG": 104.0,
+    "STDDEV_LONG": 4.15,
+    "LENGTH_SHORT": 68.0,
+    "STDDEV_SHORT": 4.95
+  },
+  "module_fixed_params": {
+    "1": {
+      "STP": 20.9
+    },
+    "2": {
+      "ATRSTP": 28.4
+    },
+    "3": {
+      "EXITBAR": 338.0
+    },
+    "4": {
+      "DAYRANGE": 4.38
+    },
+    "5": {
+      "PT_Base": 0.4
+    },
+    "6": {
+      "Length": 80.0,
+      "std": 3.9
+    }
+  },
+  "periods": {
+    "full": [
+      "2019/01/01",
+      "2027/01/01"
+    ],
+    "oos": [
+      "2026/01/01",
+      "2027/01/01"
+    ]
+  },
+  "is_reference": {
+    "baseline": {
+      "net_profit": 4092.62,
+      "max_intraday_drawdown": -431.096,
+      "total_trades": 23
+    },
+    "modules": {
+      "1": {
+        "net_profit": 638.655,
+        "max_intraday_drawdown": -704.674,
+        "total_trades": 200,
+        "best_params": {
+          "STP": 20.9
+        }
+      },
+      "2": {
+        "net_profit": 625.649,
+        "max_intraday_drawdown": -734.409,
+        "total_trades": 210,
+        "best_params": {
+          "ATRSTP": 28.4
+        }
+      },
+      "3": {
+        "net_profit": 740.049,
+        "max_intraday_drawdown": -689.603,
+        "total_trades": 189,
+        "best_params": {
+          "EXITBAR": 338.0
+        }
+      },
+      "4": {
+        "net_profit": 286.852,
+        "max_intraday_drawdown": -945.968,
+        "total_trades": 190,
+        "best_params": {
+          "DAYRANGE": 4.38
+        }
+      },
+      "5": {
+        "net_profit": 242.425,
+        "max_intraday_drawdown": -932.845,
+        "total_trades": 173,
+        "best_params": {
+          "PT_Base": 0.4
+        }
+      },
+      "6": {
+        "net_profit": 891.084,
+        "max_intraday_drawdown": -828.398,
+        "total_trades": 179,
+        "best_params": {
+          "Length": 80.0,
+          "std": 3.9
+        }
+      }
+    }
+  },
+  "results": {
+    "full": {
+      "baseline": {
+        "net_profit": 3489.2,
+        "max_intraday_drawdown": -724.641,
+        "total_trades": 26
+      },
+      "modules": {
+        "1": {
+          "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+          "fixed_params": {
+            "STP": 20.9
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1623.71,
+          "max_intraday_drawdown": -1035.17,
+          "total_trades": 270,
+          "actual_params": {
+            "STP": 20.9
+          },
+          "delta_np_vs_baseline": -1865.49,
+          "delta_np_pct": -53.46,
+          "delta_mdd_vs_baseline": -310.53,
+          "valid": true
+        },
+        "2": {
+          "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "fixed_params": {
+            "ATRSTP": 28.4
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1511.73,
+          "max_intraday_drawdown": -989.982,
+          "total_trades": 279,
+          "actual_params": {
+            "ATRSTP": 28.4
+          },
+          "delta_np_vs_baseline": -1977.47,
+          "delta_np_pct": -56.67,
+          "delta_mdd_vs_baseline": -265.34,
+          "valid": true
+        },
+        "3": {
+          "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+          "fixed_params": {
+            "EXITBAR": 338.0
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1809.69,
+          "max_intraday_drawdown": -1006.02,
+          "total_trades": 258,
+          "actual_params": {
+            "EXITBAR": 338.0
+          },
+          "delta_np_vs_baseline": -1679.51,
+          "delta_np_pct": -48.13,
+          "delta_mdd_vs_baseline": -281.38,
+          "valid": true
+        },
+        "4": {
+          "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "fixed_params": {
+            "DAYRANGE": 4.38
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 840.297,
+          "max_intraday_drawdown": -1052.2,
+          "total_trades": 255,
+          "actual_params": {
+            "DAYRANGE": 4.38
+          },
+          "delta_np_vs_baseline": -2648.9,
+          "delta_np_pct": -75.92,
+          "delta_mdd_vs_baseline": -327.56,
+          "valid": true
+        },
+        "5": {
+          "signal": "QuantPass_PT_Exit",
+          "fixed_params": {
+            "PT_Base": 0.4
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1808.73,
+          "max_intraday_drawdown": -1053.55,
+          "total_trades": 235,
+          "actual_params": {
+            "PT_Base": 0.4
+          },
+          "delta_np_vs_baseline": -1680.47,
+          "delta_np_pct": -48.16,
+          "delta_mdd_vs_baseline": -328.91,
+          "valid": true
+        },
+        "6": {
+          "signal": "RescueTeamExit",
+          "fixed_params": {
+            "Length": 80.0,
+            "std": 3.9
+          },
+          "combos": 25,
+          "rows": 25,
+          "net_profit": 1966.58,
+          "max_intraday_drawdown": -1026.96,
+          "total_trades": 244,
+          "actual_params": {
+            "Length": 80.0,
+            "std": 3.9
+          },
+          "delta_np_vs_baseline": -1522.62,
+          "delta_np_pct": -43.64,
+          "delta_mdd_vs_baseline": -302.32,
+          "valid": true
+        }
+      }
+    },
+    "oos": {
+      "baseline": {
+        "net_profit": 3489.2,
+        "max_intraday_drawdown": -724.641,
+        "total_trades": 26
+      },
+      "modules": {
+        "1": {
+          "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+          "fixed_params": {
+            "STP": 20.9
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1623.71,
+          "max_intraday_drawdown": -1035.17,
+          "total_trades": 270,
+          "actual_params": {
+            "STP": 20.9
+          },
+          "delta_np_vs_baseline": -1865.49,
+          "delta_np_pct": -53.46,
+          "delta_mdd_vs_baseline": -310.53,
+          "valid": true
+        },
+        "2": {
+          "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "fixed_params": {
+            "ATRSTP": 28.4
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1511.73,
+          "max_intraday_drawdown": -989.982,
+          "total_trades": 279,
+          "actual_params": {
+            "ATRSTP": 28.4
+          },
+          "delta_np_vs_baseline": -1977.47,
+          "delta_np_pct": -56.67,
+          "delta_mdd_vs_baseline": -265.34,
+          "valid": true
+        },
+        "3": {
+          "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+          "fixed_params": {
+            "EXITBAR": 338.0
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1809.69,
+          "max_intraday_drawdown": -1006.02,
+          "total_trades": 258,
+          "actual_params": {
+            "EXITBAR": 338.0
+          },
+          "delta_np_vs_baseline": -1679.51,
+          "delta_np_pct": -48.13,
+          "delta_mdd_vs_baseline": -281.38,
+          "valid": true
+        },
+        "4": {
+          "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "fixed_params": {
+            "DAYRANGE": 4.38
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 840.297,
+          "max_intraday_drawdown": -1052.2,
+          "total_trades": 255,
+          "actual_params": {
+            "DAYRANGE": 4.38
+          },
+          "delta_np_vs_baseline": -2648.9,
+          "delta_np_pct": -75.92,
+          "delta_mdd_vs_baseline": -327.56,
+          "valid": true
+        },
+        "5": {
+          "signal": "QuantPass_PT_Exit",
+          "fixed_params": {
+            "PT_Base": 0.4
+          },
+          "combos": 5,
+          "rows": 5,
+          "net_profit": 1808.73,
+          "max_intraday_drawdown": -1053.55,
+          "total_trades": 235,
+          "actual_params": {
+            "PT_Base": 0.4
+          },
+          "delta_np_vs_baseline": -1680.47,
+          "delta_np_pct": -48.16,
+          "delta_mdd_vs_baseline": -328.91,
+          "valid": true
+        },
+        "6": {
+          "signal": "RescueTeamExit",
+          "fixed_params": {
+            "Length": 80.0,
+            "std": 3.9
+          },
+          "combos": 25,
+          "rows": 25,
+          "net_profit": 1966.58,
+          "max_intraday_drawdown": -1026.96,
+          "total_trades": 244,
+          "actual_params": {
+            "Length": 80.0,
+            "std": 3.9
+          },
+          "delta_np_vs_baseline": -1522.62,
+          "delta_np_pct": -43.64,
+          "delta_mdd_vs_baseline": -302.32,
+          "valid": true
+        }
+      }
+    }
+  },
+  "strategy_dd": {},
+  "smoke": false,
+  "run_started_at": "2026-06-14T00:55:19.088027",
+  "run_finished_at": "2026-06-14T01:18:36.301258",
+  "run_total_sec": 1397.2,
+  "verdicts": {
+    "1": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    },
+    "2": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    },
+    "3": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    },
+    "4": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    },
+    "5": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    },
+    "6": {
+      "improves_full_np": false,
+      "reduces_full_mdd": false,
+      "oos_profitable": true,
+      "oos_beats_baseline": false
+    }
+  }
+}

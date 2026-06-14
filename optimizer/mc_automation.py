@@ -1587,6 +1587,236 @@ def _select_signal_in_list(
     # Proceed — single-signal charts have the signal pre-selected
 
 
+# ── Signal Status (On/Off checkbox) API ──────────────────────────────────────
+# Used by multi-signal module workflows: keep the main signal ON and toggle
+# exit-module signals one at a time.  All discovery goes through UIA
+# (Desktop backend) — never process-scoped pywinauto (UIPI).
+
+def _find_signal_item(format_dlg, signal_name: str):
+    """Return the UIA ListItem/DataItem for *signal_name* in the Format
+    Signals list, or None.  Mirrors _select_signal_in_list's discovery."""
+    hwnd = format_dlg.handle
+    uia = _uia_dlg(hwnd)
+    if uia is None:
+        return None
+    for ct in ["List", "DataGrid", "Table", "ListBox"]:
+        try:
+            lv = uia.child_window(control_type=ct)
+            if not lv.exists(timeout=2):
+                continue
+            items = lv.descendants(control_type="ListItem")
+            if not items:
+                items = lv.descendants(control_type="DataItem")
+            for it in items:
+                try:
+                    if signal_name.lower() in it.window_text().lower():
+                        return it
+                    # Some MC builds put the name in a Text descendant, not
+                    # the item's own window_text
+                    txts = [d.window_text() for d in it.descendants(control_type="Text")]
+                    if any(signal_name.lower() in (t or "").lower() for t in txts):
+                        return it
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.debug("_find_signal_item: list type %s failed: %s", ct, e)
+    return None
+
+
+def _signal_item_state(item) -> Optional[bool]:
+    """Read the enabled/checked state of a signal list item.
+    True=on, False=off, None=unknown."""
+    # 1. CheckBox descendant with TogglePattern
+    try:
+        cbs = list(item.descendants(control_type="CheckBox"))
+        if cbs:
+            try:
+                return cbs[0].iface_toggle.CurrentToggleState == 1
+            except Exception:
+                try:
+                    return cbs[0].is_checked()
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    # 2. The item itself may support TogglePattern (SysListView32 checkboxes)
+    try:
+        return item.iface_toggle.CurrentToggleState == 1
+    except Exception:
+        pass
+    # 3. Legacy accessibility state bit (STATE_SYSTEM_CHECKED = 0x10)
+    try:
+        st = item.legacy_properties().get("State", 0)
+        return bool(st & 0x10)
+    except Exception:
+        pass
+    return None
+
+
+def get_signal_status(format_dlg, signal_name: str) -> Optional[bool]:
+    """Read a signal's Status checkbox. True=on, False=off, None=not found/unknown."""
+    item = _find_signal_item(format_dlg, signal_name)
+    if item is None:
+        logger.warning("get_signal_status: signal '%s' not found in list", signal_name)
+        return None
+    return _signal_item_state(item)
+
+
+def _read_signal_states(format_dlg, signal_names) -> Dict[str, Optional[bool]]:
+    """ONE-PASS read of the current Status of every signal in *signal_names*.
+    Much faster than calling get_signal_status per signal (single UIA scan)."""
+    states: Dict[str, Optional[bool]] = {n: None for n in signal_names}
+    uia = _uia_dlg(format_dlg.handle)
+    if uia is None:
+        return states
+    for ct in ["List", "DataGrid", "Table", "ListBox"]:
+        try:
+            lv = uia.child_window(control_type=ct)
+            if not lv.exists(timeout=2):
+                continue
+            items = lv.descendants(control_type="ListItem")
+            if not items:
+                items = lv.descendants(control_type="DataItem")
+            for it in items:
+                try:
+                    label = (it.window_text() or "").lower()
+                    if not any(n.lower() in label for n in signal_names):
+                        txts = [d.window_text() or "" for d in
+                                it.descendants(control_type="Text")]
+                        label = " ".join(txts).lower()
+                    for n in signal_names:
+                        if states[n] is None and n.lower() in label:
+                            states[n] = _signal_item_state(it)
+                            break
+                except Exception:
+                    pass
+            if any(v is not None for v in states.values()):
+                return states
+        except Exception as e:
+            logger.debug("_read_signal_states: list type %s failed: %s", ct, e)
+    return states
+
+
+def set_signal_status(format_dlg, signal_name: str, enabled: bool) -> bool:
+    """Set a signal's Status checkbox to *enabled*.  Returns True only when the
+    new state was VERIFIED by read-back (never assumes a click worked)."""
+    item = _find_signal_item(format_dlg, signal_name)
+    if item is None:
+        logger.error("set_signal_status: signal '%s' not found", signal_name)
+        return False
+
+    cur = _signal_item_state(item)
+    logger.info("set_signal_status('%s', %s): current=%s", signal_name, enabled, cur)
+    if cur is enabled:
+        return True
+
+    for attempt in range(3):
+        try:
+            if attempt == 0:
+                # Path 1: click the CheckBox descendant directly
+                cbs = list(item.descendants(control_type="CheckBox"))
+                if cbs:
+                    cbs[0].click_input()
+                else:
+                    # ListItem with its own TogglePattern
+                    try:
+                        item.iface_toggle.Toggle()
+                    except Exception:
+                        raise RuntimeError("no checkbox descendant / toggle")
+            elif attempt == 1:
+                # Path 2: select the row (click its text), then Space toggles
+                # the checkbox in SysListView32 LVS_EX_CHECKBOXES lists
+                item.click_input()
+                time.sleep(0.2)
+                _pg_press("space")
+            else:
+                # Path 3: coordinate click on the checkbox column (left edge)
+                r = item.rectangle()
+                pyautogui.click(r.left + 8, (r.top + r.bottom) // 2)
+            time.sleep(0.35)
+        except Exception as e:
+            logger.debug("set_signal_status path %d failed: %s", attempt + 1, e)
+
+        # Re-find the item (UIA refs can go stale after clicks) and verify
+        item = _find_signal_item(format_dlg, signal_name) or item
+        new = _signal_item_state(item)
+        logger.info("set_signal_status('%s'): after path %d state=%s",
+                    signal_name, attempt + 1, new)
+        if new is enabled:
+            return True
+        if new is None and attempt == 2:
+            logger.warning("set_signal_status('%s'): state unreadable — NOT verified",
+                           signal_name)
+            return False
+    logger.error("set_signal_status('%s', %s): all paths failed (state=%s)",
+                 signal_name, enabled, _signal_item_state(item))
+    return False
+
+
+def set_signal_statuses(
+    conn: "MultiChartsConnection",
+    status_map: Dict[str, bool],
+    verify: bool = True,
+    protected: Optional[List[str]] = None,
+) -> Dict[str, Optional[bool]]:
+    """Open Format Signals, apply Status for every signal in *status_map*,
+    click OK, then (optionally) reopen and verify.  Raises MCUIError on any
+    unverified state.  Signals in *protected* must never be turned off."""
+    protected = protected or []
+    for sig in protected:
+        if status_map.get(sig) is False:
+            raise ValueError(f"Refusing to disable protected signal '{sig}'")
+
+    dlg = _open_format_signals(conn)
+    _click_tab(dlg, ["Signals", "訊號", "Signal"])
+    time.sleep(0.5)
+
+    # Fast path: ONE scan for all current states; only toggle the diffs
+    # (between consecutive module attempts only 2 signals actually change).
+    _t0 = time.time()
+    current = _read_signal_states(dlg, list(status_map.keys()))
+    logger.info("set_signal_statuses: current=%s (read in %.1fs)",
+                current, time.time() - _t0)
+
+    results: Dict[str, Optional[bool]] = {}
+    for sig, want in status_map.items():
+        if current.get(sig) is want:
+            results[sig] = want   # already correct — no per-signal rescan needed
+            continue
+        ok = set_signal_status(dlg, sig, want)
+        results[sig] = want if ok else None
+        if not ok:
+            logger.error("set_signal_statuses: '%s' -> %s FAILED", sig, want)
+
+    # Commit with OK (Escape would cancel all changes)
+    if not _click_button_in_dlg(dlg, ["OK", "確定"]):
+        _pg_press("enter")
+    time.sleep(1.0)
+
+    if any(v is None for v in results.values()):
+        raise MCUIError(f"Signal status not verified during apply: "
+                        f"{[s for s, v in results.items() if v is None]}")
+
+    if verify:
+        dlg2 = _open_format_signals(conn)
+        _click_tab(dlg2, ["Signals", "訊號", "Signal"])
+        time.sleep(0.5)
+        mismatches = []
+        for sig, want in status_map.items():
+            got = get_signal_status(dlg2, sig)
+            logger.info("verify status '%s': want=%s got=%s", sig, want, got)
+            if got is not want:
+                mismatches.append((sig, want, got))
+        # Close read-only verify pass without applying anything
+        if not _click_button_in_dlg(dlg2, ["Cancel", "取消"]):
+            _pg_press("escape")
+        time.sleep(0.7)
+        if mismatches:
+            raise MCUIError(f"Signal status verify failed: {mismatches}")
+
+    return results
+
+
 def _click_button_in_dlg(dlg, titles: List[str]) -> bool:
     hwnd = dlg.handle if hasattr(dlg, "handle") else None
 
@@ -2312,11 +2542,17 @@ def configure_optimization(
                     pass
 
             if _target_row is None:
-                if _pi < len(_all_items_cur):
+                # Positional fallback is only safe on single-signal charts where the
+                # grid has exactly len(cfg.params) rows.  With multiple signals
+                # enabled, row[_pi] would be some OTHER signal's input — skip instead.
+                if len(_all_items_cur) == len(cfg.params) and _pi < len(_all_items_cur):
                     _target_row = _all_items_cur[_pi]
                     logger.warning("  Using positional row[%d] for param '%s'", _pi, _param.name)
                 else:
-                    logger.warning("  No DataItem row found for param '%s'", _param.name)
+                    logger.warning("  No DataItem row found for param '%s' "
+                                   "(grid rows=%d, cfg params=%d) — skipping; "
+                                   "check ParamAxis.name and mc_signal_name match MC exactly",
+                                   _param.name, len(_all_items_cur), len(cfg.params))
                     continue
 
             # Get the checkbox within this row
@@ -2509,22 +2745,44 @@ def configure_optimization(
                     len(_all_uia_btns),
                     [((b.window_text() or "")[:20], b.rectangle()) for b in _all_uia_btns])
 
-        # Select Exhaustive via the CB after all DataGrid rows.
-        # Layout: CB[0]=header select-all, CB[1..N]=one per DataGrid row, CB[N+1]=Exhaustive.
-        # N = len(cfg.params), so Exhaustive index = len(cfg.params) + 1.
-        # (Previously hardcoded as 5, which was correct for 4-param strategies but
-        # wrong for 5-param strategies like CL daily that include LenLE — clicking
-        # CB[5] would uncheck LenLE instead of selecting Exhaustive.)
+        # Select Exhaustive.
+        # Layout: CB[0]=header select-all, CB[1..N]=one per DataGrid row, CB[N+1]=Exhaustive,
+        # where N = the TOTAL DataGrid row count (all inputs of all ENABLED signals),
+        # which equals len(cfg.params) only on single-signal charts.
+        # Priority: (1) name match, (2) actual row count + 1, (3) len(cfg.params)+1.
         try:
             _ecbs = list(_wiz_uia2.descendants(control_type="CheckBox"))
-            _exhaustive_idx = len(cfg.params) + 1
-            if len(_ecbs) > _exhaustive_idx:
-                _ecbr = _ecbs[_exhaustive_idx].rectangle()
+            _exh_cb = None
+            _exh_how = None
+            # Path 1: locate by checkbox text
+            for _ec in _ecbs:
+                _ect = (_ec.window_text() or "").strip().lower()
+                if _ect and ("exhaustive" in _ect or "窮舉" in _ect or "暴力" in _ect):
+                    _exh_cb = _ec
+                    _exh_how = f"name-match '{_ect[:20]}'"
+                    break
+            # Path 2: actual DataGrid row count + 1
+            if _exh_cb is None:
+                _n_rows = len(list(_wiz_uia2.descendants(control_type="DataItem")))
+                _exhaustive_idx = _n_rows + 1
+                if 0 < _exhaustive_idx < len(_ecbs):
+                    _exh_cb = _ecbs[_exhaustive_idx]
+                    _exh_how = f"row-count idx={_exhaustive_idx} (rows={_n_rows})"
+            # Path 3: legacy len(cfg.params)+1 (single-signal charts only)
+            if _exh_cb is None:
+                _exhaustive_idx = len(cfg.params) + 1
+                if len(_ecbs) > _exhaustive_idx:
+                    _exh_cb = _ecbs[_exhaustive_idx]
+                    _exh_how = f"legacy idx={_exhaustive_idx}"
+            if _exh_cb is not None:
+                _ecbr = _exh_cb.rectangle()
                 _ecbx = int((_ecbr.left + _ecbr.right) / 2 / _dpi_scale)
                 _ecby = int((_ecbr.top + _ecbr.bottom) / 2 / _dpi_scale)
-                logger.info("Clicking Exhaustive option CB[%d] at (%d,%d)", _exhaustive_idx, _ecbx, _ecby)
+                logger.info("Clicking Exhaustive option via %s at (%d,%d)", _exh_how, _ecbx, _ecby)
                 pyautogui.click(_ecbx, _ecby)
                 time.sleep(0.4)
+            else:
+                logger.warning("Exhaustive checkbox not located (CBs=%d)", len(_ecbs))
         except Exception as _exhe:
             logger.warning("Exhaustive option click failed: %s", _exhe)
 
@@ -2983,6 +3241,44 @@ def _decode_mcreport_to_csv(mcreport_path: str, cfg: StrategyConfig, out_csv: st
             _n_runs = _try_runs
             break
 
+    # Upward fallback for multi-signal charts: the Inp block may contain MORE
+    # columns per run than len(cfg.params) (fixed inputs of other signals).
+    # Try larger strides and locate each cfg.param's column by range-matching.
+    _col_map = None   # list of column indices (one per cfg.param) when stride > len(cfg.params)
+    if _n_runs < 1:
+        for _try_p in range(len(cfg.params) + 1, 17):
+            if _n_params_total % _try_p != 0:
+                continue
+            _try_runs = _n_params_total // _try_p
+            if _try_runs < 1 or _n_vals_total % _try_runs != 0:
+                continue
+            _try_data = _struct.unpack(f"<{_n_params_total}d", _inp_raw)
+            _sample = min(200, _try_runs)
+            _assign = []
+            _used = set()
+            for _p in cfg.params:
+                _lo = min(_p.start, _p.stop) - abs(_p.step) * 4
+                _hi = max(_p.start, _p.stop) + abs(_p.step) * 4
+                _found = -1
+                for _ci in range(_try_p):
+                    if _ci in _used:
+                        continue
+                    _vals_c = [_try_data[_ri * _try_p + _ci] for _ri in range(_sample)]
+                    if all(_lo <= _v <= _hi for _v in _vals_c) and (
+                            _try_runs == 1 or len(set(_vals_c)) > 1):
+                        _found = _ci
+                        break
+                if _found < 0:
+                    break
+                _assign.append(_found)
+                _used.add(_found)
+            if len(_assign) == len(cfg.params):
+                _param_cols = _try_p
+                _n_runs = _try_runs
+                _col_map = _assign
+                logger.info("MCReport decode: upward stride=%d col_map=%s", _try_p, _col_map)
+                break
+
     if _n_runs < 1:
         logger.warning("MCReport decode: unexpected sizes inp=%d vals=%d", len(_inp_raw), len(_vals_raw))
         return False
@@ -3000,14 +3296,20 @@ def _decode_mcreport_to_csv(mcreport_path: str, cfg: StrategyConfig, out_csv: st
 
     # Metrics column names from Caption order (up to n_cols)
     _stat_names = _CAPTION_ORDER[:_n_cols]
-    _headers = [p.name for p in cfg.params[:_param_cols]] + _stat_names
+    if _col_map is not None:
+        _headers = [p.name for p in cfg.params] + _stat_names
+    else:
+        _headers = [p.name for p in cfg.params[:_param_cols]] + _stat_names
 
     os.makedirs(os.path.dirname(out_csv) if os.path.dirname(out_csv) else ".", exist_ok=True)
     with open(out_csv, "w", newline="", encoding="utf-8") as _fcsv:
         _w = _csv_mod.writer(_fcsv)
         _w.writerow(_headers)
         for _i in range(_n_runs):
-            _params = list(_param_data[_i * _param_cols:(_i + 1) * _param_cols])
+            if _col_map is not None:
+                _params = [_param_data[_i * _param_cols + _ci] for _ci in _col_map]
+            else:
+                _params = list(_param_data[_i * _param_cols:(_i + 1) * _param_cols])
             _metrics = list(_struct.unpack(
                 f"<{_n_cols}d",
                 _vals_raw[_i * _n_cols * 8:(_i + 1) * _n_cols * 8]
