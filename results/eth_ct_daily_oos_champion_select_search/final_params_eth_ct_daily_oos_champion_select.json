@@ -1,0 +1,267 @@
+{
+  "symbol": "ETHUSDT HOT",
+  "signal": "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto",
+  "timeframe": "Daily",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "ED1": {
+        "id": "ED1",
+        "regime": "NP/Obj-max hi-freq ***",
+        "params": {
+          "LENGTH_LONG": 5.0,
+          "STDDEV_LONG": 1.75,
+          "LENGTH_SHORT": 37.0,
+          "STDDEV_SHORT": 1.375
+        },
+        "timestamp": "2026-06-15T17:33:08.350791",
+        "elapsed_sec": 93.1,
+        "rows": 63,
+        "net_profit": 3338.69,
+        "max_intraday_drawdown": -863.192,
+        "total_trades": 52,
+        "valid": true
+      },
+      "ED2": {
+        "id": "ED2",
+        "regime": "low-MDD tight-SS",
+        "params": {
+          "LENGTH_LONG": 11.0,
+          "STDDEV_LONG": 1.0,
+          "LENGTH_SHORT": 46.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T17:33:49.466099",
+        "elapsed_sec": 41.1,
+        "rows": 81,
+        "net_profit": 2082.79,
+        "max_intraday_drawdown": -1010.74,
+        "total_trades": 54,
+        "valid": true
+      },
+      "ED3": {
+        "id": "ED3",
+        "regime": "longer-LS low-MDD",
+        "params": {
+          "LENGTH_LONG": 12.0,
+          "STDDEV_LONG": 1.7,
+          "LENGTH_SHORT": 45.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T17:34:31.017827",
+        "elapsed_sec": 41.6,
+        "rows": 81,
+        "net_profit": 2113.32,
+        "max_intraday_drawdown": -920.934,
+        "total_trades": 38,
+        "valid": true
+      },
+      "ED4": {
+        "id": "ED4",
+        "regime": "low-freq BTC-style",
+        "params": {
+          "LENGTH_LONG": 45.0,
+          "STDDEV_LONG": 2.25,
+          "LENGTH_SHORT": 100.0,
+          "STDDEV_SHORT": 1.0
+        },
+        "timestamp": "2026-06-15T17:35:14.087834",
+        "elapsed_sec": 43.1,
+        "rows": 81,
+        "net_profit": 2480.92,
+        "max_intraday_drawdown": -1001.9,
+        "total_trades": 20,
+        "valid": true
+      }
+    },
+    "full": {
+      "ED1": {
+        "id": "ED1",
+        "regime": "NP/Obj-max hi-freq ***",
+        "params": {
+          "LENGTH_LONG": 5.0,
+          "STDDEV_LONG": 1.75,
+          "LENGTH_SHORT": 37.0,
+          "STDDEV_SHORT": 1.375
+        },
+        "timestamp": "2026-06-15T17:36:57.284101",
+        "elapsed_sec": 69.4,
+        "rows": 63,
+        "net_profit": 3295.44,
+        "max_intraday_drawdown": -1143.94,
+        "total_trades": 64,
+        "valid": true
+      },
+      "ED2": {
+        "id": "ED2",
+        "regime": "low-MDD tight-SS",
+        "params": {
+          "LENGTH_LONG": 11.0,
+          "STDDEV_LONG": 1.0,
+          "LENGTH_SHORT": 46.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T17:37:39.167222",
+        "elapsed_sec": 41.9,
+        "rows": 81,
+        "net_profit": 1330.26,
+        "max_intraday_drawdown": -1628.03,
+        "total_trades": 70,
+        "valid": true
+      },
+      "ED3": {
+        "id": "ED3",
+        "regime": "longer-LS low-MDD",
+        "params": {
+          "LENGTH_LONG": 12.0,
+          "STDDEV_LONG": 1.7,
+          "LENGTH_SHORT": 45.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T17:38:20.310955",
+        "elapsed_sec": 41.1,
+        "rows": 81,
+        "net_profit": 1682.54,
+        "max_intraday_drawdown": -1317.38,
+        "total_trades": 48,
+        "valid": true
+      },
+      "ED4": {
+        "id": "ED4",
+        "regime": "low-freq BTC-style",
+        "params": {
+          "LENGTH_LONG": 45.0,
+          "STDDEV_LONG": 2.25,
+          "LENGTH_SHORT": 100.0,
+          "STDDEV_SHORT": 1.0
+        },
+        "timestamp": "2026-06-15T17:39:04.228832",
+        "elapsed_sec": 43.9,
+        "rows": 81,
+        "net_profit": 1981.36,
+        "max_intraday_drawdown": -1001.9,
+        "total_trades": 25,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "ED1": {
+      "id": "ED1",
+      "regime": "NP/Obj-max hi-freq ***",
+      "params": {
+        "LENGTH_LONG": 5.0,
+        "STDDEV_LONG": 1.75,
+        "LENGTH_SHORT": 37.0,
+        "STDDEV_SHORT": 1.375
+      },
+      "prior_is_np": 3755.0,
+      "prior_is_mdd": -863.0,
+      "np_is": 3338.69,
+      "mdd_is": -863.192,
+      "tr_is": 52,
+      "is_drift_vs_prior_pct": -11.1,
+      "np_full": 3295.44,
+      "mdd_full": -1143.94,
+      "tr_full": 64,
+      "oos_np": -43.25,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "ED2": {
+      "id": "ED2",
+      "regime": "low-MDD tight-SS",
+      "params": {
+        "LENGTH_LONG": 11.0,
+        "STDDEV_LONG": 1.0,
+        "LENGTH_SHORT": 46.0,
+        "STDDEV_SHORT": 1.2
+      },
+      "prior_is_np": 2980.0,
+      "prior_is_mdd": -689.0,
+      "np_is": 2082.79,
+      "mdd_is": -1010.74,
+      "tr_is": 54,
+      "is_drift_vs_prior_pct": -30.1,
+      "np_full": 1330.26,
+      "mdd_full": -1628.03,
+      "tr_full": 70,
+      "oos_np": -752.53,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "ED3": {
+      "id": "ED3",
+      "regime": "longer-LS low-MDD",
+      "params": {
+        "LENGTH_LONG": 12.0,
+        "STDDEV_LONG": 1.7,
+        "LENGTH_SHORT": 45.0,
+        "STDDEV_SHORT": 1.2
+      },
+      "prior_is_np": 2833.0,
+      "prior_is_mdd": -703.0,
+      "np_is": 2113.32,
+      "mdd_is": -920.934,
+      "tr_is": 38,
+      "is_drift_vs_prior_pct": -25.4,
+      "np_full": 1682.54,
+      "mdd_full": -1317.38,
+      "tr_full": 48,
+      "oos_np": -430.78,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "ED4": {
+      "id": "ED4",
+      "regime": "low-freq BTC-style",
+      "params": {
+        "LENGTH_LONG": 45.0,
+        "STDDEV_LONG": 2.25,
+        "LENGTH_SHORT": 100.0,
+        "STDDEV_SHORT": 1.0
+      },
+      "prior_is_np": 2447.0,
+      "prior_is_mdd": -1002.0,
+      "np_is": 2480.92,
+      "mdd_is": -1001.9,
+      "tr_is": 20,
+      "is_drift_vs_prior_pct": 1.4,
+      "np_full": 1981.36,
+      "mdd_full": -1001.9,
+      "tr_full": 25,
+      "oos_np": -499.56,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "ED4",
+    "best_oos_np_passing_params": {
+      "LENGTH_LONG": 45.0,
+      "STDDEV_LONG": 2.25,
+      "LENGTH_SHORT": 100.0,
+      "STDDEV_SHORT": 1.0
+    },
+    "best_oos_np_passing_value": -499.56,
+    "max_oos_np_any": "ED1",
+    "lowest_full_mdd": "ED4"
+  },
+  "run_started_at": "2026-06-15T17:31:14.731264",
+  "run_finished_at": "2026-06-15T17:39:04.231344",
+  "run_total_sec": 469.5
+}

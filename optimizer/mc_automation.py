@@ -941,6 +941,39 @@ def read_instrument_data_range(conn: MultiChartsConnection):
     return _from, _to
 
 
+def _enum_menu_item_texts(popup_hwnd: int) -> List[str]:
+    """Return the visible text of every item in a popup menu (via MN_GETHMENU +
+    GetMenuItemInfoW).  Used to detect a scrollbar context menu vs a chart menu."""
+    _u32 = ctypes.windll.user32
+    MN_GETHMENU, MIIM_STRING, MIIM_FTYPE, MF_BYPOSITION = 0x01E1, 0x40, 0x100, 0x400
+
+    class _MII(ctypes.Structure):
+        _fields_ = [("cbSize", ctypes.c_uint), ("fMask", ctypes.c_uint),
+                    ("fType", ctypes.c_uint), ("fState", ctypes.c_uint),
+                    ("wID", ctypes.c_uint), ("hSubMenu", ctypes.c_void_p),
+                    ("hbmpChecked", ctypes.c_void_p), ("hbmpUnchecked", ctypes.c_void_p),
+                    ("dwItemData", ctypes.c_size_t), ("dwTypeData", ctypes.c_void_p),
+                    ("cch", ctypes.c_uint), ("hbmpItem", ctypes.c_void_p)]
+
+    texts: List[str] = []
+    try:
+        hmenu = _u32.SendMessageW(popup_hwnd, MN_GETHMENU, 0, 0)
+        if not hmenu:
+            return texts
+        for i in range(_u32.GetMenuItemCount(hmenu)):
+            buf = ctypes.create_unicode_buffer(512)
+            mii = _MII()
+            mii.cbSize = ctypes.sizeof(_MII)
+            mii.fMask = MIIM_STRING | MIIM_FTYPE
+            mii.dwTypeData = ctypes.addressof(buf)
+            mii.cch = 512
+            if _u32.GetMenuItemInfoW(hmenu, i, MF_BYPOSITION, ctypes.byref(mii)):
+                texts.append(buf.value)
+    except Exception:
+        pass
+    return texts
+
+
 def _open_format_instrument(conn: MultiChartsConnection):
     """Right-click the chart -> Format Instruments... -> return the dialog wrapper.
     This opens the INSTRUMENT settings (which control the loaded data range that the
@@ -960,20 +993,59 @@ def _open_format_instrument(conn: MultiChartsConnection):
     if gp is None:
         raise WindowNotFoundError("ATL_MCGraphPanel not found for Format Instruments right-click")
     l, t, r, b = _win32_get_rect(gp)
-    x, y = r - 35, (t + b) // 2
-    pyautogui.click(x, y); time.sleep(0.2)
-    pyautogui.rightClick(x, y); time.sleep(0.4)
-    popup = _find_popup_hwnd(timeout=1.5)
+
+    # The right-click must land on EMPTY chart background to get the chart context menu
+    # (which has "Format Instruments...").  Hitting the right-edge scrollbar gives a scroll
+    # menu; hitting a K-bar / signal arrow / study plot gives a bar/object menu — neither
+    # has Format Instruments.  So: try several points (empty regions first), and for each
+    # VALIDATE that the popup actually contains a Format-Instruments item; if not, Esc and
+    # move to the next point.  This is robust to scrollbar AND bar/signal/object menus.
+    _fmt_titles = ["format instrument", "format symbol", "格式商品"]
+
+    def _popup_has_format(pp):
+        try:
+            items = _enum_menu_item_texts(pp)
+            return any(any(k in (it or "").lower() for k in _fmt_titles) for it in items)
+        except Exception:
+            return False
+
+    W, H = (r - l), (b - t)
+    # Empty-background-first: top whitespace band + left warmup band, away from price action;
+    # then mid points; the canvas centre (likely on a bar) and legacy edge point LAST.
+    cand_pts = [
+        (l + W // 6,   t + H // 8),    # upper-left whitespace (warmup gap, usually empty)
+        (l + W // 2,   t + H // 10),   # top-centre band, above the bars
+        (l + W // 8,   t + H // 2),    # far-left mid (pre-history blank)
+        (l + W // 3,   t + H // 5),    # upper-third
+        (l + W // 2,   t + H // 2),    # canvas centre (may hit a bar) — late
+        (r - 35,       t + H // 2),    # legacy right-edge point — last resort
+    ]
+    popup = None
+    for (x, y) in cand_pts:
+        pyautogui.click(x, y); time.sleep(0.2)
+        pyautogui.rightClick(x, y); time.sleep(0.4)
+        pp = _find_popup_hwnd(timeout=1.5)
+        if pp and _popup_has_format(pp):
+            popup = pp
+            break
+        if pp:
+            logger.info("  right-click at (%d,%d) gave a non-chart menu -> Esc, retry", x, y)
+            try:
+                pyautogui.press("esc"); time.sleep(0.2)
+            except Exception:
+                pass
     if not popup:   # PostMessage fallback (panel transparent to WindowFromPoint)
         u = ctypes.windll.user32
-        cli_x, cli_y = max(10, (r - l) - 35), max(10, (b - t) // 2)
+        cli_x, cli_y = max(10, W // 6), max(10, H // 8)
         lp = (cli_y << 16) | (cli_x & 0xFFFF)
         u.SetForegroundWindow(gp); time.sleep(0.15)
         u.PostMessageW(gp, 0x0204, 0x0002, lp); time.sleep(0.1)
         u.PostMessageW(gp, 0x0205, 0, lp); time.sleep(0.5)
-        popup = _find_popup_hwnd(timeout=1.5)
+        pp = _find_popup_hwnd(timeout=1.5)
+        if pp:
+            popup = pp
     if not popup:
-        raise WindowNotFoundError("No context menu for Format Instruments")
+        raise WindowNotFoundError("No chart context menu with Format Instruments found")
     _pyautogui_click_popup_item(conn.app, [
         "Format Instruments...", "Format Instrument...", "Format Symbol...",
         "格式商品...", "格式商品", "格式商品設定...",

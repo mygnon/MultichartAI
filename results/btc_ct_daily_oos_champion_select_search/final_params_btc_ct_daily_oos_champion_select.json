@@ -1,0 +1,267 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto",
+  "timeframe": "Daily",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "D1": {
+        "id": "D1",
+        "regime": "NP/Obj-max 7conv ***",
+        "params": {
+          "LENGTH_LONG": 49.0,
+          "STDDEV_LONG": 2.4,
+          "LENGTH_SHORT": 123.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T12:55:26.718322",
+        "elapsed_sec": 84.8,
+        "rows": 81,
+        "net_profit": 3065.39,
+        "max_intraday_drawdown": -398.784,
+        "total_trades": 13,
+        "valid": true
+      },
+      "D2": {
+        "id": "D2",
+        "regime": "LL30-70 mid-freq",
+        "params": {
+          "LENGTH_LONG": 40.0,
+          "STDDEV_LONG": 2.2,
+          "LENGTH_SHORT": 130.0,
+          "STDDEV_SHORT": 1.0
+        },
+        "timestamp": "2026-06-15T12:56:07.809556",
+        "elapsed_sec": 41.1,
+        "rows": 81,
+        "net_profit": 2743.13,
+        "max_intraday_drawdown": -441.872,
+        "total_trades": 16,
+        "valid": true
+      },
+      "D3": {
+        "id": "D3",
+        "regime": "futures high-freq",
+        "params": {
+          "LENGTH_LONG": 4.0,
+          "STDDEV_LONG": 1.25,
+          "LENGTH_SHORT": 45.0,
+          "STDDEV_SHORT": 1.75
+        },
+        "timestamp": "2026-06-15T12:56:48.294740",
+        "elapsed_sec": 40.5,
+        "rows": 81,
+        "net_profit": 2117.5,
+        "max_intraday_drawdown": -364.517,
+        "total_trades": 40,
+        "valid": true
+      },
+      "D4": {
+        "id": "D4",
+        "regime": "tight-SL high-freq",
+        "params": {
+          "LENGTH_LONG": 14.0,
+          "STDDEV_LONG": 0.85,
+          "LENGTH_SHORT": 60.0,
+          "STDDEV_SHORT": 0.5
+        },
+        "timestamp": "2026-06-15T12:57:28.493774",
+        "elapsed_sec": 40.2,
+        "rows": 81,
+        "net_profit": 1824.36,
+        "max_intraday_drawdown": -535.931,
+        "total_trades": 42,
+        "valid": true
+      }
+    },
+    "full": {
+      "D1": {
+        "id": "D1",
+        "regime": "NP/Obj-max 7conv ***",
+        "params": {
+          "LENGTH_LONG": 49.0,
+          "STDDEV_LONG": 2.4,
+          "LENGTH_SHORT": 123.0,
+          "STDDEV_SHORT": 1.2
+        },
+        "timestamp": "2026-06-15T12:58:55.959601",
+        "elapsed_sec": 69.5,
+        "rows": 81,
+        "net_profit": 3592.66,
+        "max_intraday_drawdown": -466.225,
+        "total_trades": 16,
+        "valid": true
+      },
+      "D2": {
+        "id": "D2",
+        "regime": "LL30-70 mid-freq",
+        "params": {
+          "LENGTH_LONG": 40.0,
+          "STDDEV_LONG": 2.2,
+          "LENGTH_SHORT": 130.0,
+          "STDDEV_SHORT": 1.0
+        },
+        "timestamp": "2026-06-15T12:59:32.049994",
+        "elapsed_sec": 36.1,
+        "rows": 81,
+        "net_profit": 3349.51,
+        "max_intraday_drawdown": -441.872,
+        "total_trades": 20,
+        "valid": true
+      },
+      "D3": {
+        "id": "D3",
+        "regime": "futures high-freq",
+        "params": {
+          "LENGTH_LONG": 4.0,
+          "STDDEV_LONG": 1.25,
+          "LENGTH_SHORT": 45.0,
+          "STDDEV_SHORT": 1.75
+        },
+        "timestamp": "2026-06-15T13:00:12.674699",
+        "elapsed_sec": 40.6,
+        "rows": 81,
+        "net_profit": 2309.76,
+        "max_intraday_drawdown": -623.498,
+        "total_trades": 58,
+        "valid": true
+      },
+      "D4": {
+        "id": "D4",
+        "regime": "tight-SL high-freq",
+        "params": {
+          "LENGTH_LONG": 14.0,
+          "STDDEV_LONG": 0.85,
+          "LENGTH_SHORT": 60.0,
+          "STDDEV_SHORT": 0.5
+        },
+        "timestamp": "2026-06-15T13:00:53.555359",
+        "elapsed_sec": 40.9,
+        "rows": 81,
+        "net_profit": 2008.68,
+        "max_intraday_drawdown": -796.303,
+        "total_trades": 55,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "D1": {
+      "id": "D1",
+      "regime": "NP/Obj-max 7conv ***",
+      "params": {
+        "LENGTH_LONG": 49.0,
+        "STDDEV_LONG": 2.4,
+        "LENGTH_SHORT": 123.0,
+        "STDDEV_SHORT": 1.2
+      },
+      "prior_is_np": 3593.0,
+      "prior_is_mdd": -399.0,
+      "np_is": 3065.39,
+      "mdd_is": -398.784,
+      "tr_is": 13,
+      "is_drift_vs_prior_pct": -14.7,
+      "np_full": 3592.66,
+      "mdd_full": -466.225,
+      "tr_full": 16,
+      "oos_np": 527.27,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "D2": {
+      "id": "D2",
+      "regime": "LL30-70 mid-freq",
+      "params": {
+        "LENGTH_LONG": 40.0,
+        "STDDEV_LONG": 2.2,
+        "LENGTH_SHORT": 130.0,
+        "STDDEV_SHORT": 1.0
+      },
+      "prior_is_np": 3519.0,
+      "prior_is_mdd": -442.0,
+      "np_is": 2743.13,
+      "mdd_is": -441.872,
+      "tr_is": 16,
+      "is_drift_vs_prior_pct": -22.0,
+      "np_full": 3349.51,
+      "mdd_full": -441.872,
+      "tr_full": 20,
+      "oos_np": 606.38,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "D3": {
+      "id": "D3",
+      "regime": "futures high-freq",
+      "params": {
+        "LENGTH_LONG": 4.0,
+        "STDDEV_LONG": 1.25,
+        "LENGTH_SHORT": 45.0,
+        "STDDEV_SHORT": 1.75
+      },
+      "prior_is_np": 2687.0,
+      "prior_is_mdd": -365.0,
+      "np_is": 2117.5,
+      "mdd_is": -364.517,
+      "tr_is": 40,
+      "is_drift_vs_prior_pct": -21.2,
+      "np_full": 2309.76,
+      "mdd_full": -623.498,
+      "tr_full": 58,
+      "oos_np": 192.26,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "D4": {
+      "id": "D4",
+      "regime": "tight-SL high-freq",
+      "params": {
+        "LENGTH_LONG": 14.0,
+        "STDDEV_LONG": 0.85,
+        "LENGTH_SHORT": 60.0,
+        "STDDEV_SHORT": 0.5
+      },
+      "prior_is_np": 2482.0,
+      "prior_is_mdd": -536.0,
+      "np_is": 1824.36,
+      "mdd_is": -535.931,
+      "tr_is": 42,
+      "is_drift_vs_prior_pct": -26.5,
+      "np_full": 2008.68,
+      "mdd_full": -796.303,
+      "tr_full": 55,
+      "oos_np": 184.32,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "D2",
+    "best_oos_np_passing_params": {
+      "LENGTH_LONG": 40.0,
+      "STDDEV_LONG": 2.2,
+      "LENGTH_SHORT": 130.0,
+      "STDDEV_SHORT": 1.0
+    },
+    "best_oos_np_passing_value": 606.38,
+    "max_oos_np_any": "D2",
+    "lowest_full_mdd": "D2"
+  },
+  "run_started_at": "2026-06-15T12:53:44.920469",
+  "run_finished_at": "2026-06-15T13:00:53.560863",
+  "run_total_sec": 428.6
+}
