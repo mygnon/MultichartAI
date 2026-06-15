@@ -1,6 +1,6 @@
 """
-search_btc_ct_oos_champion_select.py — Out-of-sample (OOS) selection among the 9 converged
-BTC Hourly CT champions (rounds 1-5).
+search_bnb_ct_oos_champion_select.py — Out-of-sample (OOS) selection among the 9 converged
+BNB Hourly CT champions (rounds 1-5).
 
 Workspace 20260101_SFJ_Bollinger_AI.wsp now has full data 2021/03/01 – 2026/06/10, which
 extends past the IS cutoff 2026/01/01 used in all 5 prior rounds — so OOS is finally measurable.
@@ -25,15 +25,15 @@ METHOD — TWO-PASS, TRIM-CHART (reliable MCReport route, NOT the live report re
   Per-candidate cleanup+retry makes all 9 complete reliably.
 
 PREREQUISITES (MC64, elevated):
-  - 20260101_SFJ_Bollinger_AI.wsp open, BTCUSDT HOT Hourly chart, the
+  - 20260101_SFJ_Bollinger_AI.wsp open, BNBUSDT HOT Hourly chart, the
     SFJ_15Dworkshop_lesson5_countertrend_LS_crypto signal applied (Status ON)
   - The CHART data "To" date MUST be set to match the pass (2026/01/01 for is, 2026/06/10 for full)
 
 CLI (run the two passes with the chart trimmed accordingly, then from-csv):
-  py search_btc_ct_oos_champion_select.py --period is     # chart To=2026/01/01 first
-  py search_btc_ct_oos_champion_select.py --period full   # chart To=2026/06/10 first
-  py search_btc_ct_oos_champion_select.py --from-csv      # compute OOS = full - is
-  py search_btc_ct_oos_champion_select.py --period is --candidate C9   # smoke one candidate
+  py search_bnb_ct_oos_champion_select.py --period is     # chart To=2026/01/01 first
+  py search_bnb_ct_oos_champion_select.py --period full   # chart To=2026/06/10 first
+  py search_bnb_ct_oos_champion_select.py --from-csv      # compute OOS = full - is
+  py search_bnb_ct_oos_champion_select.py --period is --candidate C9   # smoke one candidate
 """
 from __future__ import annotations
 import argparse
@@ -57,9 +57,9 @@ from config import DateRange, ParamAxis, StrategyConfig
 
 
 WORKSPACE   = r"C:\Users\Tim\Downloads\Multichart64\Tim\20260101_SFJ_Bollinger_AI.wsp"
-SYMBOL      = "BTCUSDT HOT"
+SYMBOL      = "BNBUSDT HOT"
 SIGNAL      = "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto"
-OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\btc_ct_oos_champion_select_search")
+OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\bnb_ct_oos_champion_select_search")
 
 # IMPORTANT — TWO-PASS / TRIM-CHART method.
 # Finding: setting the signal's End date does NOT trim the optimization backtest;
@@ -80,20 +80,17 @@ STEP = {"LENGTH_LONG": 1.0, "STDDEV_LONG": 0.025, "LENGTH_SHORT": 1.0, "STDDEV_S
 LO   = {"LENGTH_LONG": 2.0, "STDDEV_LONG": 0.1, "LENGTH_SHORT": 2.0, "STDDEV_SHORT": 0.1}
 HI   = {"LENGTH_LONG": 500.0, "STDDEV_LONG": 20.0, "LENGTH_SHORT": 500.0, "STDDEV_SHORT": 20.0}
 
-# SPEED: 5 representative champions (1 per distinct regime).  The earlier full-period run
-# showed C2/C3 == C1 (NP-max LS139, ~$3,72x/-799), C4 == C5 (NP-max LS165, ~$33xx/-948),
-# C8 == C9 (Obj-max LS68) — dropped as duplicates to halve runtime, no regime lost.
+# 4 converged champions (BNB R1-R4: short-LL Obj-max + long-LL NP-max; verified == bnb_ct_hourly{,2,3,4} JSONs).
 # id, regime, LL, SL, LS, SS, prior IS NP, prior IS MDD (= MCReport Max Intraday DD)
 CANDIDATES = [
-    ("C1", "NP-max LS139",      107.0, 4.10,  139.0, 4.70, 4104.0, -799.0),
-    ("C5", "NP-max LS165 *",    104.0, 4.05,  165.0, 4.95, 4155.0, -498.0),
-    ("C6", "Obj-max LS140",     110.0, 4.00,  140.0, 5.00, 3754.0, -504.0),
-    ("C7", "Obj-max LS70",       95.0, 4.50,   70.0, 5.00, 3799.0, -490.0),
-    ("C9", "Obj-max LS68 ***",  104.0, 4.15,   68.0, 4.95, 4093.0, -431.0),
+    ("B1", "Obj-max 8conv ***", 122.0, 4.025, 29.0, 4.2,  35112.0, -7112.0),
+    ("B2", "NP-max R1 (~B1)",   123.0, 4.05,  29.0, 4.2,  35112.0, -7112.0),
+    ("B3", "NP-max LL229 R3",   229.0, 3.80,  23.0, 4.3,  36703.0, -14441.0),
+    ("B4", "NP-max LL236 R4",   236.0, 3.85,  22.0, 4.15, 36703.0, -14441.0),
 ]
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-_LOG_FILE = OUTPUT_DIR / f"search_btc_ct_oos_champion_select_{int(time.time())}.log"
+_LOG_FILE = OUTPUT_DIR / f"search_bnb_ct_oos_champion_select_{int(time.time())}.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-8s -- %(message)s",
@@ -117,7 +114,7 @@ def _axis(name, val):
 
 def _cfg(cid, period, ll, sl, ls, ss) -> StrategyConfig:
     return StrategyConfig(
-        name=f"BTCCTSEL_{period}_{cid}",
+        name=f"BNBCTSEL_{period}_{cid}",
         mc_signal_name=SIGNAL,
         timeframe="hourly",
         bar_period=60,
@@ -229,7 +226,7 @@ def _pick(df, ll, sl, ls, ss):
 
 
 def save_json(payload):
-    out = OUTPUT_DIR / "final_params_btc_ct_oos_champion_select.json"
+    out = OUTPUT_DIR / "final_params_bnb_ct_oos_champion_select.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     return out
@@ -237,7 +234,7 @@ def save_json(payload):
 
 def run(conn, from_csv, only_candidate, only_period):
     run_t0 = time.time()
-    out_path = OUTPUT_DIR / "final_params_btc_ct_oos_champion_select.json"
+    out_path = OUTPUT_DIR / "final_params_bnb_ct_oos_champion_select.json"
 
     # TWO-PASS: each live run does ONE period; the user must have trimmed the CHART
     # data "To" date to match that period BEFORE running.  Running both periods in a
@@ -274,7 +271,7 @@ def run(conn, from_csv, only_candidate, only_period):
     if not from_csv:
         mc.ensure_chart_ready(conn, _cfg("C1", only_period, *CANDIDATES[0][2:6]))
         log.info("==============================================================")
-        log.info("  BTC Hourly CT — OOS CHAMPION SELECTION  [PASS: %s]", only_period)
+        log.info("  BNB Hourly CT — OOS CHAMPION SELECTION  [PASS: %s]", only_period)
         log.info("  >>> CHART data 'To' date MUST be set to %s for this pass <<<",
                  CHART_TO[only_period])
         log.info("  (signal date is a no-op; the chart's loaded range is what's measured)")
@@ -398,7 +395,7 @@ def _auto_elevate():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="BTC Hourly CT OOS champion selection (micro-grid)")
+    ap = argparse.ArgumentParser(description="BNB Hourly CT OOS champion selection (micro-grid)")
     ap.add_argument("--from-csv", action="store_true")
     ap.add_argument("--candidate", metavar="Cn", default=None)
     ap.add_argument("--period", choices=PERIOD_ORDER, default=None,

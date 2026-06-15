@@ -818,6 +818,286 @@ def set_strategy_date_range(
     logger.info("Date range set: %s ~ %s", date_range.from_date, date_range.to_date)
 
 
+def _set_datetimepicker_value(picker_hwnd: int, y: int, m: int, d: int) -> bool:
+    """Bulletproof set of a Win32 SysDateTimePick32 via DTM_SETSYSTEMTIME (cross-process
+    SYSTEMTIME through WriteProcessMemory), then read back via DTM_GETSYSTEMTIME to verify.
+    Far more reliable than typing digits (no field-order/format/commit ambiguity)."""
+    _k = ctypes.windll.kernel32
+    _u = ctypes.windll.user32
+    DTM_SETSYSTEMTIME, DTM_GETSYSTEMTIME, GDT_VALID = 0x1002, 0x1001, 0
+    PROC = 0x0008 | 0x0010 | 0x0020   # VM_OPERATION|VM_READ|VM_WRITE
+    MEM, FREE, RW = 0x3000, 0x8000, 0x04
+
+    class SYSTEMTIME(ctypes.Structure):
+        _fields_ = [(n, ctypes.c_ushort) for n in
+                    ("wYear", "wMonth", "wDayOfWeek", "wDay", "wHour",
+                     "wMinute", "wSecond", "wMilliseconds")]
+
+    pid = ctypes.c_ulong()
+    _u.GetWindowThreadProcessId(picker_hwnd, ctypes.byref(pid))
+    _k.OpenProcess.restype = ctypes.c_void_p
+    h = _k.OpenProcess(PROC, False, pid.value)
+    if not h:
+        logger.warning("  DTP set: OpenProcess failed (pid=%s)", pid.value)
+        return False
+    try:
+        st = SYSTEMTIME(y, m, 0, d, 0, 0, 0, 0)
+        size = ctypes.sizeof(st)
+        _k.VirtualAllocEx.restype = ctypes.c_void_p
+        _k.VirtualAllocEx.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t,
+                                      ctypes.c_ulong, ctypes.c_ulong]
+        rem = _k.VirtualAllocEx(h, None, size, MEM, RW)
+        if not rem:
+            logger.warning("  DTP set: VirtualAllocEx failed")
+            return False
+        try:
+            written = ctypes.c_size_t(0)
+            _k.WriteProcessMemory.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                                              ctypes.c_size_t, ctypes.c_void_p]
+            _k.WriteProcessMemory(h, rem, ctypes.byref(st), size, ctypes.byref(written))
+            _u.SendMessageW(picker_hwnd, DTM_SETSYSTEMTIME, GDT_VALID, ctypes.c_void_p(rem))
+            time.sleep(0.15)
+            # read back
+            rb = SYSTEMTIME()
+            _u.SendMessageW(picker_hwnd, DTM_GETSYSTEMTIME, 0, ctypes.c_void_p(rem))
+            read = ctypes.c_size_t(0)
+            _k.ReadProcessMemory.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                                             ctypes.c_size_t, ctypes.c_void_p]
+            _k.ReadProcessMemory(h, rem, ctypes.byref(rb), size, ctypes.byref(read))
+            ok = (rb.wYear == y and rb.wMonth == m and rb.wDay == d)
+            logger.info("  DTP set %04d/%02d/%02d -> readback %04d/%02d/%02d %s",
+                        y, m, d, rb.wYear, rb.wMonth, rb.wDay, "OK" if ok else "MISMATCH")
+            return ok
+        finally:
+            _k.VirtualFreeEx.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_ulong]
+            _k.VirtualFreeEx(h, rem, 0, FREE)
+    finally:
+        _k.CloseHandle(ctypes.c_void_p(h))
+
+
+def _read_datetimepicker_value(picker_hwnd: int):
+    """Read a SysDateTimePick32 current value via DTM_GETSYSTEMTIME (cross-process).
+    Returns (y, m, d) or None."""
+    _k = ctypes.windll.kernel32
+    _u = ctypes.windll.user32
+    DTM_GETSYSTEMTIME = 0x1001
+    PROC = 0x0008 | 0x0010 | 0x0020
+    MEM, FREE, RW = 0x3000, 0x8000, 0x04
+
+    class SYSTEMTIME(ctypes.Structure):
+        _fields_ = [(n, ctypes.c_ushort) for n in
+                    ("wYear", "wMonth", "wDayOfWeek", "wDay", "wHour",
+                     "wMinute", "wSecond", "wMilliseconds")]
+
+    pid = ctypes.c_ulong()
+    _u.GetWindowThreadProcessId(picker_hwnd, ctypes.byref(pid))
+    _k.OpenProcess.restype = ctypes.c_void_p
+    h = _k.OpenProcess(PROC, False, pid.value)
+    if not h:
+        return None
+    try:
+        st = SYSTEMTIME()
+        size = ctypes.sizeof(st)
+        _k.VirtualAllocEx.restype = ctypes.c_void_p
+        _k.VirtualAllocEx.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t,
+                                      ctypes.c_ulong, ctypes.c_ulong]
+        rem = _k.VirtualAllocEx(h, None, size, MEM, RW)
+        if not rem:
+            return None
+        try:
+            _u.SendMessageW(picker_hwnd, DTM_GETSYSTEMTIME, 0, ctypes.c_void_p(rem))
+            _k.ReadProcessMemory.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                                             ctypes.c_size_t, ctypes.c_void_p]
+            read = ctypes.c_size_t(0)
+            _k.ReadProcessMemory(h, rem, ctypes.byref(st), size, ctypes.byref(read))
+            return (st.wYear, st.wMonth, st.wDay)
+        finally:
+            _k.VirtualFreeEx.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t, ctypes.c_ulong]
+            _k.VirtualFreeEx(h, rem, 0, FREE)
+    finally:
+        _k.CloseHandle(ctypes.c_void_p(h))
+
+
+def read_instrument_data_range(conn: MultiChartsConnection):
+    """Reopen Format Instruments -> Settings and read back the From/To date pickers.
+    Returns (from_tuple, to_tuple) of (y,m,d) or (None,None).  Used to verify that a
+    prior set_instrument_data_range actually persisted in the dialog."""
+    dlg = _open_format_instrument(conn)
+    hwnd = dlg.handle
+    _click_tab(dlg, ["Settings", "設定", "資料設定", "Data"])
+    time.sleep(0.4)
+    _dt = [h for h, c, _ in _win32_enum_children(hwnd)
+           if c == "SysDateTimePick32" and _win32_is_visible(h)]
+    _from = _to = None
+    if len(_dt) >= 3:
+        _from = _read_datetimepicker_value(_dt[1])
+        _to = _read_datetimepicker_value(_dt[2])
+    elif len(_dt) == 2:
+        _from = _read_datetimepicker_value(_dt[0])
+        _to = _read_datetimepicker_value(_dt[1])
+    logger.info("read_instrument_data_range: From=%s To=%s", _from, _to)
+    _click_button_in_dlg(dlg, ["Cancel", "取消", "OK", "確定"])
+    time.sleep(0.4)
+    return _from, _to
+
+
+def _open_format_instrument(conn: MultiChartsConnection):
+    """Right-click the chart -> Format Instruments... -> return the dialog wrapper.
+    This opens the INSTRUMENT settings (which control the loaded data range that the
+    optimization actually backtests), NOT the signal/strategy dates."""
+    _focus_window(conn._hwnd)
+    time.sleep(0.3)
+    gp = None
+    for h, cls, _ in _win32_enum_children(conn._hwnd):
+        if cls == "ATL_MCGraphPanel" and _win32_is_visible(h):
+            gp = h
+            break
+    if gp is None:
+        for h, cls, _ in _win32_enum_children(conn._hwnd):
+            if cls == "ATL_MCMDIChildFrame" and _win32_is_visible(h):
+                gp = h
+                break
+    if gp is None:
+        raise WindowNotFoundError("ATL_MCGraphPanel not found for Format Instruments right-click")
+    l, t, r, b = _win32_get_rect(gp)
+    x, y = r - 35, (t + b) // 2
+    pyautogui.click(x, y); time.sleep(0.2)
+    pyautogui.rightClick(x, y); time.sleep(0.4)
+    popup = _find_popup_hwnd(timeout=1.5)
+    if not popup:   # PostMessage fallback (panel transparent to WindowFromPoint)
+        u = ctypes.windll.user32
+        cli_x, cli_y = max(10, (r - l) - 35), max(10, (b - t) // 2)
+        lp = (cli_y << 16) | (cli_x & 0xFFFF)
+        u.SetForegroundWindow(gp); time.sleep(0.15)
+        u.PostMessageW(gp, 0x0204, 0x0002, lp); time.sleep(0.1)
+        u.PostMessageW(gp, 0x0205, 0, lp); time.sleep(0.5)
+        popup = _find_popup_hwnd(timeout=1.5)
+    if not popup:
+        raise WindowNotFoundError("No context menu for Format Instruments")
+    _pyautogui_click_popup_item(conn.app, [
+        "Format Instruments...", "Format Instrument...", "Format Symbol...",
+        "格式商品...", "格式商品", "格式商品設定...",
+    ])
+    return _wait_for_any_window(
+        conn.app, [r".*Format Instrument.*", r".*Format Symbol.*", r".*格式商品.*", r".*格式.*"],
+        timeout=12)
+
+
+def set_instrument_data_range(conn: MultiChartsConnection, from_date: str, to_date: str) -> None:
+    """Set the chart INSTRUMENT's loaded data range (Format Instruments -> Settings ->
+    Data Range From/To) — this is what actually restricts the optimization backtest.
+    Dumps the dialog's UIA structure to the log every call (the dialog is not yet
+    characterised, so the log + a user screenshot let us verify/repair)."""
+    logger.info("=== set_instrument_data_range: %s ~ %s ===", from_date, to_date)
+    dlg = _open_format_instrument(conn)
+    hwnd = dlg.handle
+    logger.info("Format Instrument dialog hwnd=%x", hwnd)
+
+    # Settings tab (MC64: "Settings" / "設定"; some builds "資料設定")
+    _click_tab(dlg, ["Settings", "設定", "資料設定", "Data"])
+    time.sleep(0.4)
+
+    # --- DUMP structure (always) so we can verify/repair from log + screenshot ---
+    uia = _uia_dlg(hwnd)
+    if uia is not None:
+        try:
+            kids = uia.descendants()
+            logger.info("Format Instrument UIA descendants (%d):", len(kids))
+            for d in kids[:90]:
+                try:
+                    ct = d.element_info.control_type
+                    tx = (d.window_text() or "")[:30]
+                    if ct in ("Edit", "ComboBox", "RadioButton", "CheckBox", "Text",
+                              "TabItem", "Button", "Pane") and (tx or ct != "Text"):
+                        logger.info("  [%s] '%s'", ct, tx)
+                except Exception:
+                    pass
+        except Exception as e:
+            logger.debug("UIA dump failed: %s", e)
+    logger.info("Format Instrument ctypes children: %s",
+                [(c, t[:24]) for _h, c, t in _win32_enum_children(hwnd)
+                 if c in ("SysDateTimePick32", "Button", "ComboBox", "Static")][:40])
+
+    # --- Set the range ---
+    # MC64 "Data Range" group has TWO modes, each with its own radio:
+    #   R1 "Data Range"  -> mode 1: load N [bars/days] from a single date  (picker P0 + Edit + ComboBox)
+    #   R2 (blank label) -> mode 2: explicit From [date] To [date]         (picker P1=From, P2=To)
+    # We MUST activate R2 (the From-To mode) first, then set P1/P2 (the 2nd & 3rd pickers
+    # in document order).  The earlier bug set P0+P2 without selecting R2 -> no effect.
+    if uia is not None:
+        try:
+            _radios = list(uia.descendants(control_type="RadioButton"))
+            logger.info("RadioButtons: %s", [(rb.window_text() or "")[:16] for rb in _radios])
+            # the From-To radio is the one NOT labelled 'Data Range' (blank); fallback = 2nd
+            _r2 = None
+            for rb in _radios:
+                if "data range" not in (rb.window_text() or "").lower():
+                    _r2 = rb; break
+            if _r2 is None and len(_radios) >= 2:
+                _r2 = _radios[1]
+            if _r2 is not None:
+                _r2.click_input()
+                time.sleep(0.3)
+                logger.info("  activated From-To date-range radio")
+        except Exception as e:
+            logger.warning("  could not click From-To radio: %s", e)
+
+    _dt = [h for h, c, _ in _win32_enum_children(hwnd)
+           if c == "SysDateTimePick32" and _win32_is_visible(h)]  # document/z order: P0,P1,P2
+    logger.info("Found %d SysDateTimePick32 pickers", len(_dt))
+    if len(_dt) >= 3:
+        _from_h, _to_h = _dt[1], _dt[2]      # P1=From, P2=To (the From-To mode pair)
+    elif len(_dt) == 2:
+        _from_h, _to_h = _dt[0], _dt[1]
+    else:
+        _from_h = _to_h = None
+
+    def _ymd(s):
+        a, b, c = s.split("/")
+        return int(a), int(b), int(c)
+
+    if _from_h is not None:
+        for _h, _val, _label in ((_from_h, from_date, "From"), (_to_h, to_date, "To")):
+            _y, _m, _d = _ymd(_val)
+            _ok = _set_datetimepicker_value(_h, _y, _m, _d)
+            if _ok:
+                # DTM_SETSYSTEMTIME sets the value but does NOT fire DTN_DATETIMECHANGE,
+                # so the dialog never marks itself dirty and OK won't apply.  Nudge the
+                # picker (focus + Up then Down on the day field = net-zero value change)
+                # to fire the notification and mark the change as user-made.
+                try:
+                    dl, dt, dr, db = _win32_get_rect(_h)
+                    pyautogui.click(dl + 12, (dt + db) // 2)   # left text area, not dropdown arrow
+                    time.sleep(0.15)
+                    pyautogui.press("right"); pyautogui.press("right")  # move to day field
+                    time.sleep(0.05)
+                    pyautogui.press("up"); time.sleep(0.05); pyautogui.press("down")
+                    time.sleep(0.1)
+                    logger.info("  %s picker nudged to fire DTN_DATETIMECHANGE", _label)
+                except Exception as _ne:
+                    logger.debug("  nudge failed: %s", _ne)
+            else:
+                # fallback: click + type (last resort) — typing fires the notification
+                dl, dt, dr, db = _win32_get_rect(_h)
+                pyautogui.click((dl + dr) // 2, (dt + db) // 2)
+                time.sleep(0.2)
+                _ensure_english_ime()
+                pyautogui.typewrite(_val.replace("/", ""), interval=0.05)
+                pyautogui.press("tab")
+                time.sleep(0.2)
+                logger.info("  set %s picker (typed fallback) -> %s", _label, _val)
+    else:
+        _set_date_field(dlg, conn.app,
+                        ["From:", "From", "From date", "起始日期", "從", "起始"], from_date)
+        _set_date_field(dlg, conn.app,
+                        ["To:", "To", "To date", "結束日期", "到", "結束"], to_date)
+
+    _click_button_in_dlg(dlg, ["OK", "確定"])
+    time.sleep(1.2)   # allow data reload
+    logger.info("set_instrument_data_range done: %s ~ %s (verify chart rightmost bar)",
+                from_date, to_date)
+
+
 def _click_tab(dlg, tab_titles: List[str]) -> None:
     hwnd = dlg.handle if hasattr(dlg, "handle") else None
 

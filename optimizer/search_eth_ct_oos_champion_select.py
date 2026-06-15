@@ -1,6 +1,6 @@
 """
-search_btc_ct_oos_champion_select.py — Out-of-sample (OOS) selection among the 9 converged
-BTC Hourly CT champions (rounds 1-5).
+search_eth_ct_oos_champion_select.py — Out-of-sample (OOS) selection among the 9 converged
+ETH Hourly CT champions (rounds 1-5).
 
 Workspace 20260101_SFJ_Bollinger_AI.wsp now has full data 2021/03/01 – 2026/06/10, which
 extends past the IS cutoff 2026/01/01 used in all 5 prior rounds — so OOS is finally measurable.
@@ -25,15 +25,15 @@ METHOD — TWO-PASS, TRIM-CHART (reliable MCReport route, NOT the live report re
   Per-candidate cleanup+retry makes all 9 complete reliably.
 
 PREREQUISITES (MC64, elevated):
-  - 20260101_SFJ_Bollinger_AI.wsp open, BTCUSDT HOT Hourly chart, the
+  - 20260101_SFJ_Bollinger_AI.wsp open, ETHUSDT HOT Hourly chart, the
     SFJ_15Dworkshop_lesson5_countertrend_LS_crypto signal applied (Status ON)
   - The CHART data "To" date MUST be set to match the pass (2026/01/01 for is, 2026/06/10 for full)
 
 CLI (run the two passes with the chart trimmed accordingly, then from-csv):
-  py search_btc_ct_oos_champion_select.py --period is     # chart To=2026/01/01 first
-  py search_btc_ct_oos_champion_select.py --period full   # chart To=2026/06/10 first
-  py search_btc_ct_oos_champion_select.py --from-csv      # compute OOS = full - is
-  py search_btc_ct_oos_champion_select.py --period is --candidate C9   # smoke one candidate
+  py search_eth_ct_oos_champion_select.py --period is     # chart To=2026/01/01 first
+  py search_eth_ct_oos_champion_select.py --period full   # chart To=2026/06/10 first
+  py search_eth_ct_oos_champion_select.py --from-csv      # compute OOS = full - is
+  py search_eth_ct_oos_champion_select.py --period is --candidate C9   # smoke one candidate
 """
 from __future__ import annotations
 import argparse
@@ -57,9 +57,9 @@ from config import DateRange, ParamAxis, StrategyConfig
 
 
 WORKSPACE   = r"C:\Users\Tim\Downloads\Multichart64\Tim\20260101_SFJ_Bollinger_AI.wsp"
-SYMBOL      = "BTCUSDT HOT"
+SYMBOL      = "ETHUSDT HOT"
 SIGNAL      = "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto"
-OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\btc_ct_oos_champion_select_search")
+OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\eth_ct_oos_champion_select_search")
 
 # IMPORTANT — TWO-PASS / TRIM-CHART method.
 # Finding: setting the signal's End date does NOT trim the optimization backtest;
@@ -72,7 +72,9 @@ OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\btc_ct_oos_champion_selec
 # The cfg.insample below is a WIDE range on purpose so the (ineffective, slow) signal
 # date-set is a no-op and never misleads — the chart range is the real control.
 WIDE = DateRange("2019/01/01", "2027/01/01")
-CHART_TO = {"is": "2026/01/01", "full": "2026/06/10"}   # what the user must set the chart "To"
+# Instrument data ranges set AUTOMATICALLY via Format Instruments -> Settings (set_instrument_data_range).
+# IS = 2022/01/01-2026/01/01 ; FULL = 2021/03/01-2026/06/10  (user-specified).
+RANGES = {"is": ("2022/01/01", "2026/01/01"), "full": ("2021/03/01", "2026/06/10")}
 PERIOD_ORDER = ["is", "full"]
 
 # step per axis for the micro-grid (centre = exact candidate value -> exact row exists)
@@ -80,20 +82,17 @@ STEP = {"LENGTH_LONG": 1.0, "STDDEV_LONG": 0.025, "LENGTH_SHORT": 1.0, "STDDEV_S
 LO   = {"LENGTH_LONG": 2.0, "STDDEV_LONG": 0.1, "LENGTH_SHORT": 2.0, "STDDEV_SHORT": 0.1}
 HI   = {"LENGTH_LONG": 500.0, "STDDEV_LONG": 20.0, "LENGTH_SHORT": 500.0, "STDDEV_SHORT": 20.0}
 
-# SPEED: 5 representative champions (1 per distinct regime).  The earlier full-period run
-# showed C2/C3 == C1 (NP-max LS139, ~$3,72x/-799), C4 == C5 (NP-max LS165, ~$33xx/-948),
-# C8 == C9 (Obj-max LS68) — dropped as duplicates to halve runtime, no regime lost.
+# 4 converged champions (ETH R1-R3 NP-max + Obj-max plateau; verified == eth_ct_hourly{,2,3} JSONs).
 # id, regime, LL, SL, LS, SS, prior IS NP, prior IS MDD (= MCReport Max Intraday DD)
 CANDIDATES = [
-    ("C1", "NP-max LS139",      107.0, 4.10,  139.0, 4.70, 4104.0, -799.0),
-    ("C5", "NP-max LS165 *",    104.0, 4.05,  165.0, 4.95, 4155.0, -498.0),
-    ("C6", "Obj-max LS140",     110.0, 4.00,  140.0, 5.00, 3754.0, -504.0),
-    ("C7", "Obj-max LS70",       95.0, 4.50,   70.0, 5.00, 3799.0, -490.0),
-    ("C9", "Obj-max LS68 ***",  104.0, 4.15,   68.0, 4.95, 4093.0, -431.0),
+    ("E1", "NP-max R1",        112.0, 4.05,  99.0,  4.6,   4868.0, -748.0),
+    ("E2", "NP-max R2/R3 ***", 111.0, 4.025, 115.0, 4.725, 5005.0, -748.0),
+    ("E3", "Obj-max R2",       110.0, 4.30,  110.0, 4.7,   4848.0, -580.0),
+    ("E4", "Obj-max R3 twin",  109.0, 4.40,  109.0, 4.75,  4848.0, -580.0),
 ]
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-_LOG_FILE = OUTPUT_DIR / f"search_btc_ct_oos_champion_select_{int(time.time())}.log"
+_LOG_FILE = OUTPUT_DIR / f"search_eth_ct_oos_champion_select_{int(time.time())}.log"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-8s -- %(message)s",
@@ -117,7 +116,7 @@ def _axis(name, val):
 
 def _cfg(cid, period, ll, sl, ls, ss) -> StrategyConfig:
     return StrategyConfig(
-        name=f"BTCCTSEL_{period}_{cid}",
+        name=f"ETHCTSEL_{period}_{cid}",
         mc_signal_name=SIGNAL,
         timeframe="hourly",
         bar_period=60,
@@ -229,7 +228,7 @@ def _pick(df, ll, sl, ls, ss):
 
 
 def save_json(payload):
-    out = OUTPUT_DIR / "final_params_btc_ct_oos_champion_select.json"
+    out = OUTPUT_DIR / "final_params_eth_ct_oos_champion_select.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(payload, f, ensure_ascii=False, indent=2)
     return out
@@ -237,28 +236,23 @@ def save_json(payload):
 
 def run(conn, from_csv, only_candidate, only_period):
     run_t0 = time.time()
-    out_path = OUTPUT_DIR / "final_params_btc_ct_oos_champion_select.json"
+    out_path = OUTPUT_DIR / "final_params_eth_ct_oos_champion_select.json"
 
-    # TWO-PASS: each live run does ONE period; the user must have trimmed the CHART
-    # data "To" date to match that period BEFORE running.  Running both periods in a
-    # single invocation is impossible (the chart can only be at one range at a time).
-    if not from_csv and not only_period:
-        log.error("Live run needs --period.  TWO-PASS workflow:\n"
-                  "  1) In MC64: Format Instrument (F5) -> Settings -> set data 'To' = %s,"
-                  " then:  py %s --period is\n"
-                  "  2) In MC64: set data 'To' = %s, then:  py %s --period full\n"
-                  "  3) py %s --from-csv     (computes OOS = NP_full - NP_is)",
-                  CHART_TO["is"], Path(__file__).name, CHART_TO["full"],
-                  Path(__file__).name, Path(__file__).name)
-        return 1
-    periods = [only_period] if only_period else []   # from-csv: no live runs
+    # MERGED single-run, AUTO data-range: default does BOTH passes; the script itself
+    # sets the chart instrument Data Range (Format Instruments -> Settings) per pass.
+    # --period restricts to one pass; --from-csv just re-computes from existing CSVs.
+    if from_csv:
+        periods = []
+    elif only_period:
+        periods = [only_period]
+    else:
+        periods = PERIOD_ORDER   # full merged: IS then FULL in one invocation
 
     payload = {
         "symbol": SYMBOL, "signal": SIGNAL, "timeframe": "Hourly (60 min)",
-        "method": "TWO-PASS trim-chart; micro-grid MCReport CSV; metric=Max Intraday Drawdown "
-                  "(apples-to-apples w/ prior rounds); OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is). "
-                  "IS pass = chart To 2026/01/01 ; FULL pass = chart To 2026/06/10.",
-        "chart_to": CHART_TO,
+        "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; "
+                  "metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+        "ranges": RANGES,
         "results": {},     # period -> {cid: {...}}
         "candidates": {},  # cid -> merged is/full + verdict
         "winner": None,
@@ -272,15 +266,30 @@ def run(conn, from_csv, only_candidate, only_period):
             pass
 
     if not from_csv:
-        mc.ensure_chart_ready(conn, _cfg("C1", only_period, *CANDIDATES[0][2:6]))
-        log.info("==============================================================")
-        log.info("  BTC Hourly CT — OOS CHAMPION SELECTION  [PASS: %s]", only_period)
-        log.info("  >>> CHART data 'To' date MUST be set to %s for this pass <<<",
-                 CHART_TO[only_period])
-        log.info("  (signal date is a no-op; the chart's loaded range is what's measured)")
-        log.info("==============================================================")
+        mc.ensure_chart_ready(conn, _cfg("C1", "is", *CANDIDATES[0][2:6]))
+        # Fresh start for a full merged run: clear stale CSVs so both passes re-measure
+        # on the auto-set ranges (otherwise run_or_load would load old cached CSVs).
+        if not only_period:
+            for _f in OUTPUT_DIR.glob("ETHCTSEL_*_raw.csv"):
+                try:
+                    _f.unlink()
+                except Exception:
+                    pass
+            payload["results"] = {}
+            log.info("Cleared stale ETHCTSEL CSVs for a fresh merged run.")
 
     for period in periods:
+        # --- AUTO-set the chart instrument data range for this pass ---
+        rng = RANGES[period]
+        log.info("==============================================================")
+        log.info("  ETH Hourly CT — OOS CHAMPION SELECTION  [PASS: %s]  range %s ~ %s",
+                 period, rng[0], rng[1])
+        log.info("==============================================================")
+        try:
+            mc.set_instrument_data_range(conn, rng[0], rng[1])
+        except Exception as e:
+            log.error("  set_instrument_data_range FAILED for %s: %s — aborting pass", period, e)
+            continue
         pres = payload["results"].get(period, {})
         for (cid, regime, ll, sl, ls, ss, pnp, pmdd) in CANDIDATES:
             if only_candidate and cid != only_candidate:
@@ -357,13 +366,13 @@ def run(conn, from_csv, only_candidate, only_period):
     for c in sorted(valid, key=lambda c: c["oos_np"], reverse=True):
         log.info("  %-3s %-13s %9.0f %9.0f %9.0f %9.0f %4s", c["id"], c["regime"],
                  c["np_is"], c["np_full"], c["oos_np"], c["mdd_full"], "Y" if c["pass"] else "n")
-    # trim sanity: with the two-pass method IS==FULL means the chart was NOT trimmed
-    # to 2026/01/01 for the IS pass (both passes saw the same chart range).
+    # sanity: IS==FULL for all -> set_instrument_data_range did NOT take effect
+    # (the Format Instruments Data Range wasn't actually applied this pass).
     if valid and all(abs(c["np_full"] - c["np_is"]) < 1e-6 for c in valid):
-        log.warning("  !! IS==FULL for ALL candidates -> the chart 'To' date was NOT changed "
-                    "between passes.  Re-run the IS pass with chart data To=%s.", CHART_TO["is"])
+        log.warning("  !! IS==FULL for ALL candidates -> set_instrument_data_range did NOT apply. "
+                    "Check the Format Instrument UIA dump in the log; verify via screenshot.")
     if not valid:
-        log.info("  (Only one pass present so far — run the other --period, then --from-csv.)")
+        log.info("  (Only one pass present so far — IS or FULL missing.)")
     if winner:
         log.info("  >>> WINNER: %s %s  OOS_NP=%.2f  MDD_full=%.0f (<= MDD_is=%.0f)",
                  winner["id"], winner["params"], winner["oos_np"], winner["mdd_full"], winner["mdd_is"])
@@ -398,11 +407,14 @@ def _auto_elevate():
 
 
 def main():
-    ap = argparse.ArgumentParser(description="BTC Hourly CT OOS champion selection (micro-grid)")
+    ap = argparse.ArgumentParser(description="ETH Hourly CT OOS champion selection (auto-range merged)")
     ap.add_argument("--from-csv", action="store_true")
     ap.add_argument("--candidate", metavar="Cn", default=None)
     ap.add_argument("--period", choices=PERIOD_ORDER, default=None,
-                    help="is = chart To 2026/01/01 ; full = chart To 2026/06/10")
+                    help="restrict to one pass (is/full); default runs BOTH (merged)")
+    ap.add_argument("--probe-instrument", action="store_true",
+                    help="just open Format Instruments, set the IS range, and dump the dialog "
+                         "(for verifying/debugging set_instrument_data_range)")
     ap.add_argument("--_elevated", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
 
@@ -414,6 +426,30 @@ def main():
     if not args.from_csv:
         conn = mc.MultiChartsConnection()
         conn.connect()
+
+    if args.probe_instrument:
+        mc.ensure_chart_ready(conn, _cfg("C1", "is", *CANDIDATES[0][2:6]))
+        # Verify the FIX on the hard case: expand to the FULL range (this is the
+        # expansion to 2026/06 that failed 3x).  Then REOPEN the dialog and read the
+        # pickers back to confirm the change persisted (not just the in-call readback).
+        tgt_from, tgt_to = RANGES["full"]     # 2021/03/01 ~ 2026/06/10
+        print(f"\nProbe: setting Data Range -> {tgt_from} ~ {tgt_to} (the failing expansion)")
+        mc.set_instrument_data_range(conn, tgt_from, tgt_to)
+        time.sleep(1.0)
+        rb_from, rb_to = mc.read_instrument_data_range(conn)
+        def _fmt(t):
+            return f"{t[0]:04d}/{t[1]:02d}/{t[2]:02d}" if t else "None"
+        exp_to = tuple(int(x) for x in tgt_to.split("/"))
+        ok_to = (rb_to == exp_to)
+        print("\n================ PROBE RESULT ================")
+        print(f"  target  From={tgt_from}  To={tgt_to}")
+        print(f"  readback From={_fmt(rb_from)}  To={_fmt(rb_to)}")
+        print(f"  To-date persisted after reopen: {'YES ✓' if ok_to else 'NO ✗'}")
+        print("  --> Now SCREENSHOT the chart: rightmost bar should be ~2026/06/10.")
+        print("      If To persisted AND chart extends to Jun-2026, the fix works —")
+        print("      run the full merged BAT next.  If not, we switch to manual-pause BAT.")
+        print("=============================================")
+        return 0
 
     return run(conn, args.from_csv, args.candidate, args.period)
 

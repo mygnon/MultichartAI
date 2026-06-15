@@ -1,0 +1,256 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_15Dworkshop_lesson5_countertrend_LS_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "TWO-PASS trim-chart; micro-grid MCReport CSV; metric=Max Intraday Drawdown (apples-to-apples w/ prior rounds); OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is). IS pass = chart To 2026/01/01 ; FULL pass = chart To 2026/06/10.",
+  "chart_to": {
+    "is": "2026/01/01",
+    "full": "2026/06/10"
+  },
+  "results": {
+    "is": {
+      "B1": {
+        "id": "B1",
+        "regime": "Obj-max 8conv ***",
+        "params": {
+          "LENGTH_LONG": 122.0,
+          "STDDEV_LONG": 4.025,
+          "LENGTH_SHORT": 29.0,
+          "STDDEV_SHORT": 4.2
+        },
+        "timestamp": "2026-06-14T23:56:49.500326",
+        "elapsed_sec": 114.4,
+        "rows": 81,
+        "net_profit": 35112.2,
+        "max_intraday_drawdown": -7112.33,
+        "total_trades": 24,
+        "valid": true
+      },
+      "B2": {
+        "id": "B2",
+        "regime": "NP-max R1 (~B1)",
+        "params": {
+          "LENGTH_LONG": 123.0,
+          "STDDEV_LONG": 4.05,
+          "LENGTH_SHORT": 29.0,
+          "STDDEV_SHORT": 4.2
+        },
+        "timestamp": "2026-06-14T23:57:42.285217",
+        "elapsed_sec": 52.8,
+        "rows": 81,
+        "net_profit": 35112.2,
+        "max_intraday_drawdown": -7112.33,
+        "total_trades": 24,
+        "valid": true
+      },
+      "B3": {
+        "id": "B3",
+        "regime": "NP-max LL229 R3",
+        "params": {
+          "LENGTH_LONG": 229.0,
+          "STDDEV_LONG": 3.8,
+          "LENGTH_SHORT": 23.0,
+          "STDDEV_SHORT": 4.3
+        },
+        "timestamp": "2026-06-14T23:58:33.031116",
+        "elapsed_sec": 50.7,
+        "rows": 45,
+        "net_profit": 36703.2,
+        "max_intraday_drawdown": -14441.1,
+        "total_trades": 10,
+        "valid": true
+      },
+      "B4": {
+        "id": "B4",
+        "regime": "NP-max LL236 R4",
+        "params": {
+          "LENGTH_LONG": 236.0,
+          "STDDEV_LONG": 3.85,
+          "LENGTH_SHORT": 22.0,
+          "STDDEV_SHORT": 4.15
+        },
+        "timestamp": "2026-06-15T00:00:00.222745",
+        "elapsed_sec": 87.2,
+        "rows": 70,
+        "net_profit": 36703.2,
+        "max_intraday_drawdown": -14441.1,
+        "total_trades": 10,
+        "valid": true
+      }
+    },
+    "full": {
+      "B1": {
+        "id": "B1",
+        "regime": "Obj-max 8conv ***",
+        "params": {
+          "LENGTH_LONG": 122.0,
+          "STDDEV_LONG": 4.025,
+          "LENGTH_SHORT": 29.0,
+          "STDDEV_SHORT": 4.2
+        },
+        "timestamp": "2026-06-15T00:02:49.915974",
+        "elapsed_sec": 113.3,
+        "rows": 81,
+        "net_profit": 25065.7,
+        "max_intraday_drawdown": -14490.1,
+        "total_trades": 27,
+        "valid": true
+      },
+      "B2": {
+        "id": "B2",
+        "regime": "NP-max R1 (~B1)",
+        "params": {
+          "LENGTH_LONG": 123.0,
+          "STDDEV_LONG": 4.05,
+          "LENGTH_SHORT": 29.0,
+          "STDDEV_SHORT": 4.2
+        },
+        "timestamp": "2026-06-15T00:04:19.400240",
+        "elapsed_sec": 89.5,
+        "rows": 81,
+        "net_profit": 25065.7,
+        "max_intraday_drawdown": -14490.1,
+        "total_trades": 27,
+        "valid": true
+      },
+      "B3": {
+        "id": "B3",
+        "regime": "NP-max LL229 R3",
+        "params": {
+          "LENGTH_LONG": 229.0,
+          "STDDEV_LONG": 3.8,
+          "LENGTH_SHORT": 23.0,
+          "STDDEV_SHORT": 4.3
+        },
+        "timestamp": "2026-06-15T00:05:11.236326",
+        "elapsed_sec": 51.8,
+        "rows": 45,
+        "net_profit": 26215.8,
+        "max_intraday_drawdown": -18202.2,
+        "total_trades": 12,
+        "valid": true
+      },
+      "B4": {
+        "id": "B4",
+        "regime": "NP-max LL236 R4",
+        "params": {
+          "LENGTH_LONG": 236.0,
+          "STDDEV_LONG": 3.85,
+          "LENGTH_SHORT": 22.0,
+          "STDDEV_SHORT": 4.15
+        },
+        "timestamp": "2026-06-15T00:06:40.383958",
+        "elapsed_sec": 89.1,
+        "rows": 81,
+        "net_profit": 26215.8,
+        "max_intraday_drawdown": -18202.2,
+        "total_trades": 12,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "B1": {
+      "id": "B1",
+      "regime": "Obj-max 8conv ***",
+      "params": {
+        "LENGTH_LONG": 122.0,
+        "STDDEV_LONG": 4.025,
+        "LENGTH_SHORT": 29.0,
+        "STDDEV_SHORT": 4.2
+      },
+      "prior_is_np": 35112.0,
+      "prior_is_mdd": -7112.0,
+      "np_is": 35112.2,
+      "mdd_is": -7112.33,
+      "tr_is": 24,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 25065.7,
+      "mdd_full": -14490.1,
+      "tr_full": 27,
+      "oos_np": -10046.5,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "B2": {
+      "id": "B2",
+      "regime": "NP-max R1 (~B1)",
+      "params": {
+        "LENGTH_LONG": 123.0,
+        "STDDEV_LONG": 4.05,
+        "LENGTH_SHORT": 29.0,
+        "STDDEV_SHORT": 4.2
+      },
+      "prior_is_np": 35112.0,
+      "prior_is_mdd": -7112.0,
+      "np_is": 35112.2,
+      "mdd_is": -7112.33,
+      "tr_is": 24,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 25065.7,
+      "mdd_full": -14490.1,
+      "tr_full": 27,
+      "oos_np": -10046.5,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "B3": {
+      "id": "B3",
+      "regime": "NP-max LL229 R3",
+      "params": {
+        "LENGTH_LONG": 229.0,
+        "STDDEV_LONG": 3.8,
+        "LENGTH_SHORT": 23.0,
+        "STDDEV_SHORT": 4.3
+      },
+      "prior_is_np": 36703.0,
+      "prior_is_mdd": -14441.0,
+      "np_is": 36703.2,
+      "mdd_is": -14441.1,
+      "tr_is": 10,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 26215.8,
+      "mdd_full": -18202.2,
+      "tr_full": 12,
+      "oos_np": -10487.4,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "B4": {
+      "id": "B4",
+      "regime": "NP-max LL236 R4",
+      "params": {
+        "LENGTH_LONG": 236.0,
+        "STDDEV_LONG": 3.85,
+        "LENGTH_SHORT": 22.0,
+        "STDDEV_SHORT": 4.15
+      },
+      "prior_is_np": 36703.0,
+      "prior_is_mdd": -14441.0,
+      "np_is": 36703.2,
+      "mdd_is": -14441.1,
+      "tr_is": 10,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 26215.8,
+      "mdd_full": -18202.2,
+      "tr_full": 12,
+      "oos_np": -10487.4,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "B1",
+    "lowest_full_mdd": "B1"
+  },
+  "run_started_at": "2026-06-15T00:06:41.240716",
+  "run_finished_at": "2026-06-15T00:06:41.246235",
+  "run_total_sec": 0.0
+}

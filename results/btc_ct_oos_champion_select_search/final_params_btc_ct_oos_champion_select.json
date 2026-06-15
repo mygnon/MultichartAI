@@ -11,226 +11,119 @@
     "is": {
       "C1": {
         "id": "C1",
-        "regime": "NP-max R1",
+        "regime": "NP-max LS139",
         "params": {
           "LENGTH_LONG": 107.0,
           "STDDEV_LONG": 4.1,
           "LENGTH_SHORT": 139.0,
           "STDDEV_SHORT": 4.7
         },
-        "timestamp": "2026-06-14T17:44:08.591747",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T10:59:25.659533",
+        "elapsed_sec": 94.2,
         "rows": 81,
-        "net_profit": 3725.93,
+        "net_profit": 4104.25,
         "max_intraday_drawdown": -798.563,
-        "total_trades": 28,
-        "valid": true
-      },
-      "C2": {
-        "id": "C2",
-        "regime": "NP-max R2",
-        "params": {
-          "LENGTH_LONG": 104.0,
-          "STDDEV_LONG": 4.05,
-          "LENGTH_SHORT": 140.0,
-          "STDDEV_SHORT": 4.7
-        },
-        "timestamp": "2026-06-14T17:44:08.592744",
-        "elapsed_sec": 0.0,
-        "rows": 0,
-        "valid": false
-      },
-      "C3": {
-        "id": "C3",
-        "regime": "NP-max R3",
-        "params": {
-          "LENGTH_LONG": 104.0,
-          "STDDEV_LONG": 4.05,
-          "LENGTH_SHORT": 139.0,
-          "STDDEV_SHORT": 4.65
-        },
-        "timestamp": "2026-06-14T17:44:08.596275",
-        "elapsed_sec": 0.0,
-        "rows": 81,
-        "net_profit": 3721.01,
-        "max_intraday_drawdown": -798.563,
-        "total_trades": 28,
-        "valid": true
-      },
-      "C4": {
-        "id": "C4",
-        "regime": "NP-max R4",
-        "params": {
-          "LENGTH_LONG": 105.0,
-          "STDDEV_LONG": 4.075,
-          "LENGTH_SHORT": 165.0,
-          "STDDEV_SHORT": 4.95
-        },
-        "timestamp": "2026-06-14T17:44:08.603282",
-        "elapsed_sec": 0.0,
-        "rows": 81,
-        "net_profit": 3373.47,
-        "max_intraday_drawdown": -948.394,
-        "total_trades": 24,
+        "total_trades": 25,
         "valid": true
       },
       "C5": {
         "id": "C5",
-        "regime": "NP-max R5 *",
+        "regime": "NP-max LS165 *",
         "params": {
           "LENGTH_LONG": 104.0,
           "STDDEV_LONG": 4.05,
           "LENGTH_SHORT": 165.0,
           "STDDEV_SHORT": 4.95
         },
-        "timestamp": "2026-06-14T17:44:08.609822",
-        "elapsed_sec": 0.0,
-        "rows": 0,
-        "valid": false
+        "timestamp": "2026-06-15T11:00:08.642073",
+        "elapsed_sec": 43.0,
+        "rows": 81,
+        "net_profit": 4154.6,
+        "max_intraday_drawdown": -497.577,
+        "total_trades": 22,
+        "valid": true
       },
       "C6": {
         "id": "C6",
-        "regime": "Obj-max R1",
+        "regime": "Obj-max LS140",
         "params": {
           "LENGTH_LONG": 110.0,
           "STDDEV_LONG": 4.0,
           "LENGTH_SHORT": 140.0,
           "STDDEV_SHORT": 5.0
         },
-        "timestamp": "2026-06-14T17:44:08.613337",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:00:51.502060",
+        "elapsed_sec": 42.9,
         "rows": 81,
-        "net_profit": 3014.24,
-        "max_intraday_drawdown": -941.277,
-        "total_trades": 24,
+        "net_profit": 3753.82,
+        "max_intraday_drawdown": -504.298,
+        "total_trades": 22,
         "valid": true
       },
       "C7": {
         "id": "C7",
-        "regime": "Obj-max R2",
+        "regime": "Obj-max LS70",
         "params": {
           "LENGTH_LONG": 95.0,
           "STDDEV_LONG": 4.5,
           "LENGTH_SHORT": 70.0,
           "STDDEV_SHORT": 5.0
         },
-        "timestamp": "2026-06-14T17:44:08.619352",
-        "elapsed_sec": 0.0,
-        "rows": 0,
-        "valid": false
-      },
-      "C8": {
-        "id": "C8",
-        "regime": "Obj-max R3",
-        "params": {
-          "LENGTH_LONG": 105.0,
-          "STDDEV_LONG": 4.2,
-          "LENGTH_SHORT": 68.0,
-          "STDDEV_SHORT": 4.9
-        },
-        "timestamp": "2026-06-14T17:44:08.622354",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:01:33.524559",
+        "elapsed_sec": 42.0,
         "rows": 81,
-        "net_profit": 3298.49,
-        "max_intraday_drawdown": -724.641,
-        "total_trades": 26,
+        "net_profit": 3798.98,
+        "max_intraday_drawdown": -490.028,
+        "total_trades": 19,
         "valid": true
       },
       "C9": {
         "id": "C9",
-        "regime": "Obj-max R4/R5 ***",
+        "regime": "Obj-max LS68 ***",
         "params": {
           "LENGTH_LONG": 104.0,
           "STDDEV_LONG": 4.15,
           "LENGTH_SHORT": 68.0,
           "STDDEV_SHORT": 4.95
         },
-        "timestamp": "2026-06-14T17:44:08.630413",
-        "elapsed_sec": 0.0,
-        "rows": 0,
-        "valid": false
+        "timestamp": "2026-06-15T11:02:16.552913",
+        "elapsed_sec": 43.0,
+        "rows": 81,
+        "net_profit": 4092.62,
+        "max_intraday_drawdown": -431.096,
+        "total_trades": 23,
+        "valid": true
       }
     },
     "full": {
       "C1": {
         "id": "C1",
-        "regime": "NP-max R1",
+        "regime": "NP-max LS139",
         "params": {
           "LENGTH_LONG": 107.0,
           "STDDEV_LONG": 4.1,
           "LENGTH_SHORT": 139.0,
           "STDDEV_SHORT": 4.7
         },
-        "timestamp": "2026-06-14T21:34:36.262993",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:07:00.658470",
+        "elapsed_sec": 93.8,
         "rows": 81,
         "net_profit": 3725.93,
         "max_intraday_drawdown": -798.563,
         "total_trades": 28,
         "valid": true
       },
-      "C2": {
-        "id": "C2",
-        "regime": "NP-max R2",
-        "params": {
-          "LENGTH_LONG": 104.0,
-          "STDDEV_LONG": 4.05,
-          "LENGTH_SHORT": 140.0,
-          "STDDEV_SHORT": 4.7
-        },
-        "timestamp": "2026-06-14T21:36:48.987870",
-        "elapsed_sec": 132.7,
-        "rows": 81,
-        "net_profit": 3721.01,
-        "max_intraday_drawdown": -798.563,
-        "total_trades": 28,
-        "valid": true
-      },
-      "C3": {
-        "id": "C3",
-        "regime": "NP-max R3",
-        "params": {
-          "LENGTH_LONG": 104.0,
-          "STDDEV_LONG": 4.05,
-          "LENGTH_SHORT": 139.0,
-          "STDDEV_SHORT": 4.65
-        },
-        "timestamp": "2026-06-14T21:36:48.994549",
-        "elapsed_sec": 0.0,
-        "rows": 81,
-        "net_profit": 3721.01,
-        "max_intraday_drawdown": -798.563,
-        "total_trades": 28,
-        "valid": true
-      },
-      "C4": {
-        "id": "C4",
-        "regime": "NP-max R4",
-        "params": {
-          "LENGTH_LONG": 105.0,
-          "STDDEV_LONG": 4.075,
-          "LENGTH_SHORT": 165.0,
-          "STDDEV_SHORT": 4.95
-        },
-        "timestamp": "2026-06-14T21:38:16.517502",
-        "elapsed_sec": 87.5,
-        "rows": 81,
-        "net_profit": 3373.47,
-        "max_intraday_drawdown": -948.394,
-        "total_trades": 24,
-        "valid": true
-      },
       "C5": {
         "id": "C5",
-        "regime": "NP-max R5 *",
+        "regime": "NP-max LS165 *",
         "params": {
           "LENGTH_LONG": 104.0,
           "STDDEV_LONG": 4.05,
           "LENGTH_SHORT": 165.0,
           "STDDEV_SHORT": 4.95
         },
-        "timestamp": "2026-06-14T21:38:16.530784",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:07:42.417660",
+        "elapsed_sec": 41.8,
         "rows": 81,
         "net_profit": 3348.27,
         "max_intraday_drawdown": -948.394,
@@ -239,15 +132,15 @@
       },
       "C6": {
         "id": "C6",
-        "regime": "Obj-max R1",
+        "regime": "Obj-max LS140",
         "params": {
           "LENGTH_LONG": 110.0,
           "STDDEV_LONG": 4.0,
           "LENGTH_SHORT": 140.0,
           "STDDEV_SHORT": 5.0
         },
-        "timestamp": "2026-06-14T21:39:43.658790",
-        "elapsed_sec": 87.1,
+        "timestamp": "2026-06-15T11:08:25.164660",
+        "elapsed_sec": 42.7,
         "rows": 81,
         "net_profit": 3014.24,
         "max_intraday_drawdown": -941.277,
@@ -256,49 +149,32 @@
       },
       "C7": {
         "id": "C7",
-        "regime": "Obj-max R2",
+        "regime": "Obj-max LS70",
         "params": {
           "LENGTH_LONG": 95.0,
           "STDDEV_LONG": 4.5,
           "LENGTH_SHORT": 70.0,
           "STDDEV_SHORT": 5.0
         },
-        "timestamp": "2026-06-14T21:39:43.678379",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:09:08.569106",
+        "elapsed_sec": 43.4,
         "rows": 81,
         "net_profit": 3406.27,
         "max_intraday_drawdown": -654.208,
         "total_trades": 22,
         "valid": true
       },
-      "C8": {
-        "id": "C8",
-        "regime": "Obj-max R3",
-        "params": {
-          "LENGTH_LONG": 105.0,
-          "STDDEV_LONG": 4.2,
-          "LENGTH_SHORT": 68.0,
-          "STDDEV_SHORT": 4.9
-        },
-        "timestamp": "2026-06-14T21:41:11.633786",
-        "elapsed_sec": 88.0,
-        "rows": 81,
-        "net_profit": 3298.49,
-        "max_intraday_drawdown": -724.641,
-        "total_trades": 26,
-        "valid": true
-      },
       "C9": {
         "id": "C9",
-        "regime": "Obj-max R4/R5 ***",
+        "regime": "Obj-max LS68 ***",
         "params": {
           "LENGTH_LONG": 104.0,
           "STDDEV_LONG": 4.15,
           "LENGTH_SHORT": 68.0,
           "STDDEV_SHORT": 4.95
         },
-        "timestamp": "2026-06-14T21:41:11.674006",
-        "elapsed_sec": 0.0,
+        "timestamp": "2026-06-15T11:09:50.707451",
+        "elapsed_sec": 42.1,
         "rows": 81,
         "net_profit": 3489.2,
         "max_intraday_drawdown": -724.641,
@@ -310,7 +186,7 @@
   "candidates": {
     "C1": {
       "id": "C1",
-      "regime": "NP-max R1",
+      "regime": "NP-max LS139",
       "params": {
         "LENGTH_LONG": 107.0,
         "STDDEV_LONG": 4.1,
@@ -319,83 +195,21 @@
       },
       "prior_is_np": 4104.0,
       "prior_is_mdd": -799.0,
-      "np_is": 3725.93,
+      "np_is": 4104.25,
       "mdd_is": -798.563,
-      "tr_is": 28,
-      "is_drift_vs_prior_pct": -9.2,
+      "tr_is": 25,
+      "is_drift_vs_prior_pct": 0.0,
       "np_full": 3725.93,
       "mdd_full": -798.563,
       "tr_full": 28,
-      "oos_np": 0.0,
-      "mdd_break": false,
-      "pass": true,
-      "valid": true
-    },
-    "C2": {
-      "id": "C2",
-      "regime": "NP-max R2",
-      "params": {
-        "LENGTH_LONG": 104.0,
-        "STDDEV_LONG": 4.05,
-        "LENGTH_SHORT": 140.0,
-        "STDDEV_SHORT": 4.7
-      },
-      "prior_is_np": 4125.0,
-      "prior_is_mdd": -799.0,
-      "np_full": 3721.01,
-      "mdd_full": -798.563,
-      "tr_full": 28,
-      "valid": false
-    },
-    "C3": {
-      "id": "C3",
-      "regime": "NP-max R3",
-      "params": {
-        "LENGTH_LONG": 104.0,
-        "STDDEV_LONG": 4.05,
-        "LENGTH_SHORT": 139.0,
-        "STDDEV_SHORT": 4.65
-      },
-      "prior_is_np": 4125.0,
-      "prior_is_mdd": -799.0,
-      "np_is": 3721.01,
-      "mdd_is": -798.563,
-      "tr_is": 28,
-      "is_drift_vs_prior_pct": -9.8,
-      "np_full": 3721.01,
-      "mdd_full": -798.563,
-      "tr_full": 28,
-      "oos_np": 0.0,
-      "mdd_break": false,
-      "pass": true,
-      "valid": true
-    },
-    "C4": {
-      "id": "C4",
-      "regime": "NP-max R4",
-      "params": {
-        "LENGTH_LONG": 105.0,
-        "STDDEV_LONG": 4.075,
-        "LENGTH_SHORT": 165.0,
-        "STDDEV_SHORT": 4.95
-      },
-      "prior_is_np": 4155.0,
-      "prior_is_mdd": -498.0,
-      "np_is": 3373.47,
-      "mdd_is": -948.394,
-      "tr_is": 24,
-      "is_drift_vs_prior_pct": -18.8,
-      "np_full": 3373.47,
-      "mdd_full": -948.394,
-      "tr_full": 24,
-      "oos_np": 0.0,
+      "oos_np": -378.32,
       "mdd_break": false,
       "pass": true,
       "valid": true
     },
     "C5": {
       "id": "C5",
-      "regime": "NP-max R5 *",
+      "regime": "NP-max LS165 *",
       "params": {
         "LENGTH_LONG": 104.0,
         "STDDEV_LONG": 4.05,
@@ -404,14 +218,21 @@
       },
       "prior_is_np": 4155.0,
       "prior_is_mdd": -498.0,
+      "np_is": 4154.6,
+      "mdd_is": -497.577,
+      "tr_is": 22,
+      "is_drift_vs_prior_pct": -0.0,
       "np_full": 3348.27,
       "mdd_full": -948.394,
       "tr_full": 24,
-      "valid": false
+      "oos_np": -806.33,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
     },
     "C6": {
       "id": "C6",
-      "regime": "Obj-max R1",
+      "regime": "Obj-max LS140",
       "params": {
         "LENGTH_LONG": 110.0,
         "STDDEV_LONG": 4.0,
@@ -420,21 +241,21 @@
       },
       "prior_is_np": 3754.0,
       "prior_is_mdd": -504.0,
-      "np_is": 3014.24,
-      "mdd_is": -941.277,
-      "tr_is": 24,
-      "is_drift_vs_prior_pct": -19.7,
+      "np_is": 3753.82,
+      "mdd_is": -504.298,
+      "tr_is": 22,
+      "is_drift_vs_prior_pct": -0.0,
       "np_full": 3014.24,
       "mdd_full": -941.277,
       "tr_full": 24,
-      "oos_np": 0.0,
-      "mdd_break": false,
-      "pass": true,
+      "oos_np": -739.58,
+      "mdd_break": true,
+      "pass": false,
       "valid": true
     },
     "C7": {
       "id": "C7",
-      "regime": "Obj-max R2",
+      "regime": "Obj-max LS70",
       "params": {
         "LENGTH_LONG": 95.0,
         "STDDEV_LONG": 4.5,
@@ -443,37 +264,21 @@
       },
       "prior_is_np": 3799.0,
       "prior_is_mdd": -490.0,
+      "np_is": 3798.98,
+      "mdd_is": -490.028,
+      "tr_is": 19,
+      "is_drift_vs_prior_pct": -0.0,
       "np_full": 3406.27,
       "mdd_full": -654.208,
       "tr_full": 22,
-      "valid": false
-    },
-    "C8": {
-      "id": "C8",
-      "regime": "Obj-max R3",
-      "params": {
-        "LENGTH_LONG": 105.0,
-        "STDDEV_LONG": 4.2,
-        "LENGTH_SHORT": 68.0,
-        "STDDEV_SHORT": 4.9
-      },
-      "prior_is_np": 3991.0,
-      "prior_is_mdd": -464.0,
-      "np_is": 3298.49,
-      "mdd_is": -724.641,
-      "tr_is": 26,
-      "is_drift_vs_prior_pct": -17.4,
-      "np_full": 3298.49,
-      "mdd_full": -724.641,
-      "tr_full": 26,
-      "oos_np": 0.0,
-      "mdd_break": false,
-      "pass": true,
+      "oos_np": -392.71,
+      "mdd_break": true,
+      "pass": false,
       "valid": true
     },
     "C9": {
       "id": "C9",
-      "regime": "Obj-max R4/R5 ***",
+      "regime": "Obj-max LS68 ***",
       "params": {
         "LENGTH_LONG": 104.0,
         "STDDEV_LONG": 4.15,
@@ -482,10 +287,17 @@
       },
       "prior_is_np": 4093.0,
       "prior_is_mdd": -431.0,
+      "np_is": 4092.62,
+      "mdd_is": -431.096,
+      "tr_is": 23,
+      "is_drift_vs_prior_pct": -0.0,
       "np_full": 3489.2,
       "mdd_full": -724.641,
       "tr_full": 26,
-      "valid": false
+      "oos_np": -603.42,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
     }
   },
   "winner": {
@@ -496,11 +308,11 @@
       "LENGTH_SHORT": 139.0,
       "STDDEV_SHORT": 4.7
     },
-    "best_oos_np_passing_value": 0.0,
+    "best_oos_np_passing_value": -378.32,
     "max_oos_np_any": "C1",
-    "lowest_full_mdd": "C8"
+    "lowest_full_mdd": "C7"
   },
-  "run_started_at": "2026-06-14T21:41:12.547337",
-  "run_finished_at": "2026-06-14T21:41:12.547337",
+  "run_started_at": "2026-06-15T11:09:51.589998",
+  "run_finished_at": "2026-06-15T11:09:51.591007",
   "run_total_sec": 0.0
 }
