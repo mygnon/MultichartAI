@@ -1,0 +1,250 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "SFJ_XtremeStop_Crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "CX1": {
+        "id": "CX1",
+        "regime": "sym high-pct champion ***",
+        "params": {
+          "X": 60.0,
+          "LY": 12.75,
+          "SY": 12.4
+        },
+        "timestamp": "2026-06-16T22:15:21.281399",
+        "elapsed_sec": 111.1,
+        "rows": 27,
+        "net_profit": 2605.54,
+        "max_intraday_drawdown": -582.482,
+        "total_trades": 13,
+        "valid": true
+      },
+      "CX2": {
+        "id": "CX2",
+        "regime": "asym mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 2.5,
+          "SY": 7.5
+        },
+        "timestamp": "2026-06-16T22:16:00.662186",
+        "elapsed_sec": 39.4,
+        "rows": 27,
+        "net_profit": 2345.15,
+        "max_intraday_drawdown": -599.477,
+        "total_trades": 94,
+        "valid": true
+      },
+      "CX3": {
+        "id": "CX3",
+        "regime": "long-X low-MDD",
+        "params": {
+          "X": 800.0,
+          "LY": 1.0,
+          "SY": 5.0
+        },
+        "timestamp": "2026-06-16T22:16:49.096636",
+        "elapsed_sec": 48.4,
+        "rows": 27,
+        "net_profit": 2099.51,
+        "max_intraday_drawdown": -493.782,
+        "total_trades": 69,
+        "valid": true
+      },
+      "CX4": {
+        "id": "CX4",
+        "regime": "short-pct high-freq",
+        "params": {
+          "X": 65.0,
+          "LY": 3.0,
+          "SY": 6.5
+        },
+        "timestamp": "2026-06-16T22:17:33.208874",
+        "elapsed_sec": 44.1,
+        "rows": 27,
+        "net_profit": 1962.38,
+        "max_intraday_drawdown": -499.957,
+        "total_trades": 121,
+        "valid": true
+      }
+    },
+    "full": {
+      "CX1": {
+        "id": "CX1",
+        "regime": "sym high-pct champion ***",
+        "params": {
+          "X": 60.0,
+          "LY": 12.75,
+          "SY": 12.4
+        },
+        "timestamp": "2026-06-16T22:19:23.584472",
+        "elapsed_sec": 76.2,
+        "rows": 27,
+        "net_profit": 3175.92,
+        "max_intraday_drawdown": -584.493,
+        "total_trades": 26,
+        "valid": true
+      },
+      "CX2": {
+        "id": "CX2",
+        "regime": "asym mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 2.5,
+          "SY": 7.5
+        },
+        "timestamp": "2026-06-16T22:20:13.754685",
+        "elapsed_sec": 50.2,
+        "rows": 27,
+        "net_profit": 1169.78,
+        "max_intraday_drawdown": -1386.03,
+        "total_trades": 160,
+        "valid": true
+      },
+      "CX3": {
+        "id": "CX3",
+        "regime": "long-X low-MDD",
+        "params": {
+          "X": 800.0,
+          "LY": 1.0,
+          "SY": 5.0
+        },
+        "timestamp": "2026-06-16T22:20:55.908173",
+        "elapsed_sec": 42.2,
+        "rows": 27,
+        "net_profit": 2477.89,
+        "max_intraday_drawdown": -574.004,
+        "total_trades": 93,
+        "valid": true
+      },
+      "CX4": {
+        "id": "CX4",
+        "regime": "short-pct high-freq",
+        "params": {
+          "X": 65.0,
+          "LY": 3.0,
+          "SY": 6.5
+        },
+        "timestamp": "2026-06-16T22:21:44.281301",
+        "elapsed_sec": 48.4,
+        "rows": 27,
+        "net_profit": 690.105,
+        "max_intraday_drawdown": -1427.61,
+        "total_trades": 204,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "CX1": {
+      "id": "CX1",
+      "regime": "sym high-pct champion ***",
+      "params": {
+        "X": 60.0,
+        "LY": 12.75,
+        "SY": 12.4
+      },
+      "prior_is_np": 2606.0,
+      "prior_is_mdd": -582.0,
+      "np_is": 2605.54,
+      "mdd_is": -582.482,
+      "tr_is": 13,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 3175.92,
+      "mdd_full": -584.493,
+      "tr_full": 26,
+      "oos_np": 570.38,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CX2": {
+      "id": "CX2",
+      "regime": "asym mid-X high-freq",
+      "params": {
+        "X": 70.0,
+        "LY": 2.5,
+        "SY": 7.5
+      },
+      "prior_is_np": 2345.0,
+      "prior_is_mdd": -599.0,
+      "np_is": 2345.15,
+      "mdd_is": -599.477,
+      "tr_is": 94,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1169.78,
+      "mdd_full": -1386.03,
+      "tr_full": 160,
+      "oos_np": -1175.37,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CX3": {
+      "id": "CX3",
+      "regime": "long-X low-MDD",
+      "params": {
+        "X": 800.0,
+        "LY": 1.0,
+        "SY": 5.0
+      },
+      "prior_is_np": 2100.0,
+      "prior_is_mdd": -494.0,
+      "np_is": 2099.51,
+      "mdd_is": -493.782,
+      "tr_is": 69,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2477.89,
+      "mdd_full": -574.004,
+      "tr_full": 93,
+      "oos_np": 378.38,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CX4": {
+      "id": "CX4",
+      "regime": "short-pct high-freq",
+      "params": {
+        "X": 65.0,
+        "LY": 3.0,
+        "SY": 6.5
+      },
+      "prior_is_np": 1962.0,
+      "prior_is_mdd": -500.0,
+      "np_is": 1962.38,
+      "mdd_is": -499.957,
+      "tr_is": 121,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 690.105,
+      "mdd_full": -1427.61,
+      "tr_full": 204,
+      "oos_np": -1272.28,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "CX1",
+    "lowest_full_mdd": "CX3"
+  },
+  "run_started_at": "2026-06-16T22:13:13.291350",
+  "run_finished_at": "2026-06-16T22:21:44.285298",
+  "run_total_sec": 511.0
+}
