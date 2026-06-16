@@ -1,0 +1,238 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_SuperTrend_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "SS1": {
+        "id": "SS1",
+        "regime": "wide-band champion ***",
+        "params": {
+          "ATRLength": 79.0,
+          "Multiplier": 6.625
+        },
+        "timestamp": "2026-06-16T11:58:49.294808",
+        "elapsed_sec": 89.8,
+        "rows": 9,
+        "net_profit": 17453.0,
+        "max_intraday_drawdown": -7613.61,
+        "total_trades": 220,
+        "valid": true
+      },
+      "SS2": {
+        "id": "SS2",
+        "regime": "mid-ATR low-MDD",
+        "params": {
+          "ATRLength": 52.0,
+          "Multiplier": 6.0
+        },
+        "timestamp": "2026-06-16T11:59:18.520176",
+        "elapsed_sec": 29.2,
+        "rows": 9,
+        "net_profit": 11525.4,
+        "max_intraday_drawdown": -5254.88,
+        "total_trades": 268,
+        "valid": true
+      },
+      "SS3": {
+        "id": "SS3",
+        "regime": "high-mult low-freq",
+        "params": {
+          "ATRLength": 105.0,
+          "Multiplier": 12.0
+        },
+        "timestamp": "2026-06-16T11:59:47.547033",
+        "elapsed_sec": 29.0,
+        "rows": 9,
+        "net_profit": 9367.93,
+        "max_intraday_drawdown": -6823.74,
+        "total_trades": 80,
+        "valid": true
+      },
+      "SS4": {
+        "id": "SS4",
+        "regime": "long-ATR vhigh-freq",
+        "params": {
+          "ATRLength": 190.0,
+          "Multiplier": 4.25
+        },
+        "timestamp": "2026-06-16T12:00:16.646077",
+        "elapsed_sec": 29.1,
+        "rows": 9,
+        "net_profit": 9228.86,
+        "max_intraday_drawdown": -7963.97,
+        "total_trades": 489,
+        "valid": true
+      }
+    },
+    "full": {
+      "SS1": {
+        "id": "SS1",
+        "regime": "wide-band champion ***",
+        "params": {
+          "ATRLength": 79.0,
+          "Multiplier": 6.625
+        },
+        "timestamp": "2026-06-16T12:01:53.748617",
+        "elapsed_sec": 63.6,
+        "rows": 9,
+        "net_profit": 14930.7,
+        "max_intraday_drawdown": -9025.51,
+        "total_trades": 303,
+        "valid": true
+      },
+      "SS2": {
+        "id": "SS2",
+        "regime": "mid-ATR low-MDD",
+        "params": {
+          "ATRLength": 52.0,
+          "Multiplier": 6.0
+        },
+        "timestamp": "2026-06-16T12:02:22.932092",
+        "elapsed_sec": 29.2,
+        "rows": 9,
+        "net_profit": 8344.12,
+        "max_intraday_drawdown": -11000.9,
+        "total_trades": 365,
+        "valid": true
+      },
+      "SS3": {
+        "id": "SS3",
+        "regime": "high-mult low-freq",
+        "params": {
+          "ATRLength": 105.0,
+          "Multiplier": 12.0
+        },
+        "timestamp": "2026-06-16T12:02:52.256206",
+        "elapsed_sec": 29.3,
+        "rows": 9,
+        "net_profit": 10195.1,
+        "max_intraday_drawdown": -7919.37,
+        "total_trades": 106,
+        "valid": true
+      },
+      "SS4": {
+        "id": "SS4",
+        "regime": "long-ATR vhigh-freq",
+        "params": {
+          "ATRLength": 190.0,
+          "Multiplier": 4.25
+        },
+        "timestamp": "2026-06-16T12:03:19.777912",
+        "elapsed_sec": 27.5,
+        "rows": 9,
+        "net_profit": -8654.05,
+        "max_intraday_drawdown": -25582.0,
+        "total_trades": 688,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "SS1": {
+      "id": "SS1",
+      "regime": "wide-band champion ***",
+      "params": {
+        "ATRLength": 79.0,
+        "Multiplier": 6.625
+      },
+      "prior_is_np": 17453.0,
+      "prior_is_mdd": -7614.0,
+      "np_is": 17453.0,
+      "mdd_is": -7613.61,
+      "tr_is": 220,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 14930.7,
+      "mdd_full": -9025.51,
+      "tr_full": 303,
+      "oos_np": -2522.3,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "SS2": {
+      "id": "SS2",
+      "regime": "mid-ATR low-MDD",
+      "params": {
+        "ATRLength": 52.0,
+        "Multiplier": 6.0
+      },
+      "prior_is_np": 11525.0,
+      "prior_is_mdd": -5255.0,
+      "np_is": 11525.4,
+      "mdd_is": -5254.88,
+      "tr_is": 268,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 8344.12,
+      "mdd_full": -11000.9,
+      "tr_full": 365,
+      "oos_np": -3181.28,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "SS3": {
+      "id": "SS3",
+      "regime": "high-mult low-freq",
+      "params": {
+        "ATRLength": 105.0,
+        "Multiplier": 12.0
+      },
+      "prior_is_np": 9368.0,
+      "prior_is_mdd": -6824.0,
+      "np_is": 9367.93,
+      "mdd_is": -6823.74,
+      "tr_is": 80,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 10195.1,
+      "mdd_full": -7919.37,
+      "tr_full": 106,
+      "oos_np": 827.17,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "SS4": {
+      "id": "SS4",
+      "regime": "long-ATR vhigh-freq",
+      "params": {
+        "ATRLength": 190.0,
+        "Multiplier": 4.25
+      },
+      "prior_is_np": 9229.0,
+      "prior_is_mdd": -7964.0,
+      "np_is": 9228.86,
+      "mdd_is": -7963.97,
+      "tr_is": 489,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": -8654.05,
+      "mdd_full": -25582.0,
+      "tr_full": 688,
+      "oos_np": -17882.91,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "SS3",
+    "lowest_full_mdd": "SS3"
+  },
+  "run_started_at": "2026-06-16T11:56:59.529790",
+  "run_finished_at": "2026-06-16T12:03:19.780916",
+  "run_total_sec": 380.3
+}

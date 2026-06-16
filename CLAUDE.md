@@ -149,6 +149,26 @@ Params: Len, Multiple. Workspace: `20260101_QuantPassATR_Breakout_AI.wsp`.
 | BNBUSDT | Hourly | >100K | Ceiling $35,634 (−64.4%; 13-conv strongest ever; Len=3 Multiple=2.965 82tr). ⭐⭐⭐ Obj-max: Len=145 Multiple=2.91 NP=$32,506 MDD=−$4,610 Obj=229,204. BNB/BTC 12.97× |
 | BNBUSDT | Daily | >100K | Ceiling $20,317 (−79.7%; 8-conv; Len=18 Mult=0.735 114tr HIGH-FREQ regime Obj=81,486; NP-max = Obj-max). Daily/Hourly −43% worst |
 
+### `SFJ_XtremeStop_Crypto` (% breakout vs close X bars ago, reversal exits, `_Crypto1MUSD`)
+
+Params: X (lookback bars), LY/SY (long/short breakout %). Logic: `pos≠1 → BUY C[X]*(1+LY*0.01) STOP`; `pos≠-1 → SHORT C[X]*(1-SY*0.01) STOP`. Workspace: `20260101_SFJ_XtremeStop_AI.wsp`. IS window 2022/01-2026/01 (chart-trimmed).
+
+| Instrument | TF | Target | Status |
+|---|---|---|---|
+| BNBUSDT | Hourly | >100K | Ceiling ~$26-28K (−72%; R1-R3 params converged X≈905 LY≈3.0 SY≈10.65 asym long-X, 25-31tr; R2 $27,991 / R3 $25,665 data drift Rule 5; X & SY both bounded). $100K unreachable. Weaker than CT/QPATRex/Breakout |
+| BNBUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **WINNER BX4: X=70 LY=5.5 SY=4.5** (asym mid-X high-freq 166tr) — ONLY strict PASS (full MDD −$7,625 = IS, held) + OOS-profitable **+$3,024**. BX3 (short-X 57tr) highest OOS **+$8,743** but broke 1.05×. In-sample champ BX1 (long-X) OOS-fragile (−$2,140, broke). HIGH-freq OOS-robust (like BNB CT). Clean OOS (IS=prior drift ≠ FULL). `search_bnb_xtreme_hourly_oos_champion_select.py` |
+
+### `SFJ_SuperTrend_crypto` (ATR-band trend-flip, market entries, reversal, `_Crypto1MUSD`)
+
+Params: ATRLength, Multiplier. Logic: Up=C−Mult·ATR, Dn=C+Mult·ATR, trend flip; BUY TREND=1 & C↑Dn; SHORT TREND=−1 & C↓Up. Workspace: `20260101_SFJ_SuperTrend_AI.wsp`. **Weakest crypto strategy tested.** IS 2022/01-2026/01.
+
+| Instrument | TF | Target | Status |
+|---|---|---|---|
+| BNBUSDT | Hourly | >100K | Ceiling $17,453 (−82.5%; R1=R2; ATR=79 Mult=6.625 wide-band 220tr MDD=−$7,614 Obj=40,008; NP-max=Obj-max). Both axes bounded (low-mult churns negative). $100K unreachable |
+| BNBUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **NO strict PASS — all 4 broke MDD.** Best compromise **SS3 ATR=105 Mult=12** (low-freq 80tr): ONLY OOS-profitable +$827, lowest full MDD. SS4 long-ATR (489tr) OOS DISASTER (full NP **−$8,654**, MDD 3.2× blowup). In-sample champ SS1 OOS-fragile. `search_bnb_supertrend_hourly_oos_champion_select.py` |
+| BTCUSDT | Hourly | >100K | Ceiling $1,986 (−98%; R1=R2; ATR=151 Mult=9.15 127tr MDD=−$586 Obj=6,733; NP-max=Obj-max; BTC=BNB/8.8 exactly). Wider bands than BNB. $100K unreachable |
+| BTCUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **WINNER TS1: ATR=151 Mult=9.15** (in-sample champion ALSO wins OOS — rare) — strict PASS (full MDD −$586 = IS, held) + highest OOS **+$1,102** + lowest full MDD. TS4 (ATR=200 Mult=15.5, 53tr) also PASS. LOW-freq regimes hold MDD; high-freq broke (opposite of BNB CT/XtremeStop). Absolute NP tiny ($3K full). `search_btc_supertrend_hourly_oos_champion_select.py` |
+
 ## Running the Optimizer
 
 All scripts must run as Administrator because MC64 runs elevated and Windows UIPI blocks cross-privilege UI automation. MC64 must be open with the correct workspace before running.

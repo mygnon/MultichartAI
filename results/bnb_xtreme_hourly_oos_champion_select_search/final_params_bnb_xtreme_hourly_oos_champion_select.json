@@ -1,0 +1,254 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_XtremeStop_Crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "BX1": {
+        "id": "BX1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 909.0,
+          "LY": 2.9,
+          "SY": 10.65
+        },
+        "timestamp": "2026-06-16T00:18:40.060754",
+        "elapsed_sec": 89.4,
+        "rows": 27,
+        "net_profit": 24939.0,
+        "max_intraday_drawdown": -9724.19,
+        "total_trades": 31,
+        "valid": true
+      },
+      "BX2": {
+        "id": "BX2",
+        "regime": "symmetric high-pct",
+        "params": {
+          "X": 1000.0,
+          "LY": 9.5,
+          "SY": 11.0
+        },
+        "timestamp": "2026-06-16T00:23:22.566648",
+        "elapsed_sec": 282.5,
+        "rows": 27,
+        "net_profit": 24161.4,
+        "max_intraday_drawdown": -8945.32,
+        "total_trades": 19,
+        "valid": true
+      },
+      "BX3": {
+        "id": "BX3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 14.0,
+          "LY": 6.5,
+          "SY": 8.0
+        },
+        "timestamp": "2026-06-16T00:23:59.453867",
+        "elapsed_sec": 36.9,
+        "rows": 27,
+        "net_profit": 19138.5,
+        "max_intraday_drawdown": -8392.14,
+        "total_trades": 58,
+        "valid": true
+      },
+      "BX4": {
+        "id": "BX4",
+        "regime": "asym mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 5.5,
+          "SY": 4.5
+        },
+        "timestamp": "2026-06-16T00:24:36.941321",
+        "elapsed_sec": 37.5,
+        "rows": 27,
+        "net_profit": 10857.0,
+        "max_intraday_drawdown": -7624.83,
+        "total_trades": 162,
+        "valid": true
+      }
+    },
+    "full": {
+      "BX1": {
+        "id": "BX1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 909.0,
+          "LY": 2.9,
+          "SY": 10.65
+        },
+        "timestamp": "2026-06-16T00:26:10.880090",
+        "elapsed_sec": 64.2,
+        "rows": 27,
+        "net_profit": 22799.0,
+        "max_intraday_drawdown": -10135.4,
+        "total_trades": 45,
+        "valid": true
+      },
+      "BX2": {
+        "id": "BX2",
+        "regime": "symmetric high-pct",
+        "params": {
+          "X": 1000.0,
+          "LY": 9.5,
+          "SY": 11.0
+        },
+        "timestamp": "2026-06-16T00:26:48.858421",
+        "elapsed_sec": 38.0,
+        "rows": 27,
+        "net_profit": 15079.8,
+        "max_intraday_drawdown": -12640.9,
+        "total_trades": 31,
+        "valid": true
+      },
+      "BX3": {
+        "id": "BX3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 14.0,
+          "LY": 6.5,
+          "SY": 8.0
+        },
+        "timestamp": "2026-06-16T00:27:20.728727",
+        "elapsed_sec": 31.9,
+        "rows": 27,
+        "net_profit": 27881.8,
+        "max_intraday_drawdown": -8824.18,
+        "total_trades": 114,
+        "valid": true
+      },
+      "BX4": {
+        "id": "BX4",
+        "regime": "asym mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 5.5,
+          "SY": 4.5
+        },
+        "timestamp": "2026-06-16T00:27:57.089624",
+        "elapsed_sec": 36.4,
+        "rows": 27,
+        "net_profit": 13880.5,
+        "max_intraday_drawdown": -7624.83,
+        "total_trades": 248,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "BX1": {
+      "id": "BX1",
+      "regime": "long-X asym champion ***",
+      "params": {
+        "X": 909.0,
+        "LY": 2.9,
+        "SY": 10.65
+      },
+      "prior_is_np": 27991.0,
+      "prior_is_mdd": -9724.0,
+      "np_is": 24939.0,
+      "mdd_is": -9724.19,
+      "tr_is": 31,
+      "is_drift_vs_prior_pct": -10.9,
+      "np_full": 22799.0,
+      "mdd_full": -10135.4,
+      "tr_full": 45,
+      "oos_np": -2140.0,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BX2": {
+      "id": "BX2",
+      "regime": "symmetric high-pct",
+      "params": {
+        "X": 1000.0,
+        "LY": 9.5,
+        "SY": 11.0
+      },
+      "prior_is_np": 24913.0,
+      "prior_is_mdd": -8945.0,
+      "np_is": 24161.4,
+      "mdd_is": -8945.32,
+      "tr_is": 19,
+      "is_drift_vs_prior_pct": -3.0,
+      "np_full": 15079.8,
+      "mdd_full": -12640.9,
+      "tr_full": 31,
+      "oos_np": -9081.6,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BX3": {
+      "id": "BX3",
+      "regime": "short-X high-freq",
+      "params": {
+        "X": 14.0,
+        "LY": 6.5,
+        "SY": 8.0
+      },
+      "prior_is_np": 20921.0,
+      "prior_is_mdd": -8392.0,
+      "np_is": 19138.5,
+      "mdd_is": -8392.14,
+      "tr_is": 58,
+      "is_drift_vs_prior_pct": -8.5,
+      "np_full": 27881.8,
+      "mdd_full": -8824.18,
+      "tr_full": 114,
+      "oos_np": 8743.3,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BX4": {
+      "id": "BX4",
+      "regime": "asym mid-X high-freq",
+      "params": {
+        "X": 70.0,
+        "LY": 5.5,
+        "SY": 4.5
+      },
+      "prior_is_np": 11688.0,
+      "prior_is_mdd": -7625.0,
+      "np_is": 10857.0,
+      "mdd_is": -7624.83,
+      "tr_is": 162,
+      "is_drift_vs_prior_pct": -7.1,
+      "np_full": 13880.5,
+      "mdd_full": -7624.83,
+      "tr_full": 248,
+      "oos_np": 3023.5,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "BX4",
+    "best_oos_np_passing_params": {
+      "X": 70.0,
+      "LY": 5.5,
+      "SY": 4.5
+    },
+    "best_oos_np_passing_value": 3023.5,
+    "max_oos_np_any": "BX3",
+    "lowest_full_mdd": "BX4"
+  },
+  "run_started_at": "2026-06-16T00:16:53.220371",
+  "run_finished_at": "2026-06-16T00:27:57.092132",
+  "run_total_sec": 663.9
+}
