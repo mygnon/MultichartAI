@@ -1,0 +1,250 @@
+{
+  "symbol": "ETHUSDT HOT",
+  "signal": "SFJ_XtremeStop_Crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "EX1": {
+        "id": "EX1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 796.0,
+          "LY": 5.85,
+          "SY": 3.35
+        },
+        "timestamp": "2026-06-16T23:56:08.767450",
+        "elapsed_sec": 115.0,
+        "rows": 27,
+        "net_profit": 3681.56,
+        "max_intraday_drawdown": -450.218,
+        "total_trades": 46,
+        "valid": true
+      },
+      "EX2": {
+        "id": "EX2",
+        "regime": "long-X low-SY high-freq",
+        "params": {
+          "X": 720.0,
+          "LY": 3.0,
+          "SY": 1.0
+        },
+        "timestamp": "2026-06-16T23:56:48.637297",
+        "elapsed_sec": 39.9,
+        "rows": 27,
+        "net_profit": 3343.8,
+        "max_intraday_drawdown": -743.03,
+        "total_trades": 134,
+        "valid": true
+      },
+      "EX3": {
+        "id": "EX3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 1.0,
+          "LY": 3.0,
+          "SY": 4.0
+        },
+        "timestamp": "2026-06-16T23:57:34.639558",
+        "elapsed_sec": 46.0,
+        "rows": 18,
+        "net_profit": 2631.61,
+        "max_intraday_drawdown": -893.92,
+        "total_trades": 272,
+        "valid": true
+      },
+      "EX4": {
+        "id": "EX4",
+        "regime": "mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 3.0,
+          "SY": 6.0
+        },
+        "timestamp": "2026-06-16T23:58:17.005334",
+        "elapsed_sec": 42.4,
+        "rows": 27,
+        "net_profit": 2569.4,
+        "max_intraday_drawdown": -838.672,
+        "total_trades": 209,
+        "valid": true
+      }
+    },
+    "full": {
+      "EX1": {
+        "id": "EX1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 796.0,
+          "LY": 5.85,
+          "SY": 3.35
+        },
+        "timestamp": "2026-06-17T00:00:05.421366",
+        "elapsed_sec": 74.5,
+        "rows": 27,
+        "net_profit": 2584.48,
+        "max_intraday_drawdown": -2583.43,
+        "total_trades": 81,
+        "valid": true
+      },
+      "EX2": {
+        "id": "EX2",
+        "regime": "long-X low-SY high-freq",
+        "params": {
+          "X": 720.0,
+          "LY": 3.0,
+          "SY": 1.0
+        },
+        "timestamp": "2026-06-17T00:00:47.937114",
+        "elapsed_sec": 42.5,
+        "rows": 27,
+        "net_profit": 3782.31,
+        "max_intraday_drawdown": -1447.68,
+        "total_trades": 193,
+        "valid": true
+      },
+      "EX3": {
+        "id": "EX3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 1.0,
+          "LY": 3.0,
+          "SY": 4.0
+        },
+        "timestamp": "2026-06-17T00:01:28.954207",
+        "elapsed_sec": 41.0,
+        "rows": 18,
+        "net_profit": 1959.1,
+        "max_intraday_drawdown": -1355.45,
+        "total_trades": 488,
+        "valid": true
+      },
+      "EX4": {
+        "id": "EX4",
+        "regime": "mid-X high-freq",
+        "params": {
+          "X": 70.0,
+          "LY": 3.0,
+          "SY": 6.0
+        },
+        "timestamp": "2026-06-17T00:02:13.747192",
+        "elapsed_sec": 44.8,
+        "rows": 27,
+        "net_profit": 2417.99,
+        "max_intraday_drawdown": -1181.54,
+        "total_trades": 306,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "EX1": {
+      "id": "EX1",
+      "regime": "long-X asym champion ***",
+      "params": {
+        "X": 796.0,
+        "LY": 5.85,
+        "SY": 3.35
+      },
+      "prior_is_np": 3682.0,
+      "prior_is_mdd": -450.0,
+      "np_is": 3681.56,
+      "mdd_is": -450.218,
+      "tr_is": 46,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2584.48,
+      "mdd_full": -2583.43,
+      "tr_full": 81,
+      "oos_np": -1097.08,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EX2": {
+      "id": "EX2",
+      "regime": "long-X low-SY high-freq",
+      "params": {
+        "X": 720.0,
+        "LY": 3.0,
+        "SY": 1.0
+      },
+      "prior_is_np": 3344.0,
+      "prior_is_mdd": -743.0,
+      "np_is": 3343.8,
+      "mdd_is": -743.03,
+      "tr_is": 134,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 3782.31,
+      "mdd_full": -1447.68,
+      "tr_full": 193,
+      "oos_np": 438.51,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EX3": {
+      "id": "EX3",
+      "regime": "short-X high-freq",
+      "params": {
+        "X": 1.0,
+        "LY": 3.0,
+        "SY": 4.0
+      },
+      "prior_is_np": 2632.0,
+      "prior_is_mdd": -894.0,
+      "np_is": 2631.61,
+      "mdd_is": -893.92,
+      "tr_is": 272,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 1959.1,
+      "mdd_full": -1355.45,
+      "tr_full": 488,
+      "oos_np": -672.51,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EX4": {
+      "id": "EX4",
+      "regime": "mid-X high-freq",
+      "params": {
+        "X": 70.0,
+        "LY": 3.0,
+        "SY": 6.0
+      },
+      "prior_is_np": 2569.0,
+      "prior_is_mdd": -839.0,
+      "np_is": 2569.4,
+      "mdd_is": -838.672,
+      "tr_is": 209,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2417.99,
+      "mdd_full": -1181.54,
+      "tr_full": 306,
+      "oos_np": -151.41,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "EX2",
+    "lowest_full_mdd": "EX4"
+  },
+  "run_started_at": "2026-06-16T23:53:34.565072",
+  "run_finished_at": "2026-06-17T00:02:13.753740",
+  "run_total_sec": 519.2
+}

@@ -160,6 +160,7 @@ Params: X (lookback bars), LY/SY (long/short breakout %). Logic: `pos≠1 → BU
 | ETHUSDT | Hourly | >100K | Ceiling $3,682 (−96.3%; R2=R3; X=796 LY=5.85 SY=3.35 long-X asym 46tr MDD=−$450 Obj=30,105; NP-max=Obj-max; X bounded both sides). Best crypto XtremeStop on BTC/ETH (lowest MDD). $100K unreachable. `search_eth_xtreme_hourly{,2,3}.py` |
 | BTCUSDT | Hourly | >100K | Ceiling $2,606 (−97.4%; R1=R2; X=60 LY=12.75 SY=12.4 **symmetric high-pct** 13tr MDD=−$582 Obj=11,655; NP-max=Obj-max; X & % bounded). Distinct regime from BNB asym. `search_btc_xtreme_hourly{,2}.py` |
 | BTCUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **NO strict PASS — all broke, but CX1 (champion X=60 LY=12.75 SY=12.4) broke by only $2** (−582→−584, 1.003×) AND highest OOS **+$570** = de-facto winner. CX3 (long-X 69tr) OOS +$378 broke 1.16×. **High-freq CX2/CX4 (94/121tr) OOS-COLLAPSED** (−$1,175/−$1,272, MDD 2.3-2.9×) — OPPOSITE of BNB (low-freq robust on BTC). `search_btc_xtreme_hourly_oos_champion_select.py` |
+| ETHUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **NO strict PASS — all 4 broke.** Best-available EX2 (long-X low-SY X=720 LY=3 SY=1, 134tr) only OOS-profitable +$439 (broke 1.95×). **In-sample champion EX1 (X=796) OOS-WORST: −$1,097, MDD blew 5.7× (−$450→−$2,583)** — low IS-MDD = overfit to calm. ETH XtremeStop OOS-fragile (no safe regime). `search_eth_xtreme_hourly_oos_champion_select.py` |
 
 ### `SFJ_SuperTrend_crypto` (ATR-band trend-flip, market entries, reversal, `_Crypto1MUSD`)
 
@@ -178,6 +179,17 @@ Params: ATRLength, Multiplier. Logic: Up=C−Mult·ATR, Dn=C+Mult·ATR, trend fl
 | ETHUSDT | Daily (champion OOS) | most OOS profit, no MDD break | **WINNER EDS2: ATR=4 Mult=1** (low-mult high-freq 117tr) — only OOS-profitable strict PASS (full MDD −$797 = IS, held; OOS +$206). In-sample wide-band champ EDS1 (ATR=4 Mult=4.5, 12tr) made more OOS (+$444) but BROKE MDD — Daily wide-band too sparse to hold (opposite of Hourly where wide-band champ held). `search_eth_supertrend_daily_oos_champion_select.py` |
 
 **SuperTrend exit modules (BTC + ETH Hourly):** UNLIKE CT (24/24 modules hurt), exit modules **HELP** SuperTrend (trend strategy): BTC 4/6 + ETH 6/6 positive in-sample. M5 QuantPass_PT_Exit adds most NP (BTC +8.8% / ETH +14.6%) but MDD flat; M6 RescueTeam IS-strong but MDD deepens. **Full-period OOS joint test (NP↑ AND MaxDD↓): M2 TrailingStop PASSES on BOTH** (BTC ATRSTP=51.7, ETH ATRSTP=46.4) — the consistent robust improver; BTC also M3 EXITBAR=425 passes but ETH M3 EXITBAR=30 was IS-overfit (full NP −10.5%). `search_{btc,eth}_supertrend_exit_modules.py` + `..._oos_validation.py`.
+
+### `SFJ_HUNTER2_crypto` (MA filter + ATR-stop entry, max 1 entry/day, reversal exits, `_Crypto1MUSD`)
+
+Params: LEN_L, LEN_S, ATR_multiplier_L, ATR_multiplier_S. Logic: `C>avg(C,LEN_L) & EntriesToday=0 → BUY C[1]+ATR_L·ATR(20) STOP`; `C<avg(C,LEN_S) → SHORT C[1]−ATR_S·ATR STOP`. Workspace: `20260101_SFJ_HUNTER_AI.wsp`. IS 2022/01-2026/01.
+
+| Instrument | TF | Target | Status |
+|---|---|---|---|
+| BTCUSDT | Hourly | >100K | **Obj-max (your criterion) WINNER: LEN_L=225 LEN_S=825 ATR_L=4.25 ATR_S=1.75** (R3; NP=$2,720 MDD=−$320 Obj=23,082 192tr; ultra-long low-MDD, all axes bounded). NP-max alt: high-ATR LEN_L≈95 LEN_S≈176 ATR_L=3.8 ATR_S=11.6 ($3,282, MDD−$1,351, 14tr sparse). $100K unreachable. ⚠️ high-ATR sparse zoom hit MCReport packing garble (LEN_L col misread) — use coarse grids there. `search_btc_hunter2_hourly{,2,3}.py` |
+| BTCUSDT | Hourly (champion OOS) | most OOS profit, no MDD break | **NO strict PASS but BH1 (Obj-max ultra-long 225/825/4.25/1.75) de-facto WINNER**: highest OOS **+$1,498**, best full NP $4,254, lowest full MDD −$411, mildest break 1.28×. **IS Obj-max = OOS-best (rare alignment).** High-freq BH4 (338tr) OOS-COLLAPSED (MDD 3.4×); NP-max high-ATR BH2 OOS-fragile. `search_btc_hunter2_hourly_oos_champion_select.py` |
+
+**HUNTER2 exit modules (BTC Hourly):** like SuperTrend (trend strategy), exit modules **HELP** — 5/6 positive in-sample, 0 hurt. **M5 QuantPass_PT_Exit (PT_Base=0.671) best: +10.2% NP AND MDD↓ (−309 vs −320)** — pure improvement. Full-period OOS: NO module reduces the already-tight −$411 MDD (baseline drawdown minimal), but **M5 adds +6.7% NP at equal MDD** (best "free profit"); M6/M2/M1 add small NP at equal MDD. M5 QuantPass_PT_Exit = the consistent NP-booster across SuperTrend (BTC/ETH) + HUNTER2. `search_btc_hunter2_exit_modules.py` + `..._oos_validation.py`.
 
 ## Running the Optimizer
 

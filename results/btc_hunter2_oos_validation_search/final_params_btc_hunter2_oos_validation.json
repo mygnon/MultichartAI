@@ -1,0 +1,140 @@
+{
+  "strategy_main": "SFJ_HUNTER2_crypto",
+  "symbol": "BTCUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "champion_fixed": {
+    "LEN_L": 225.0,
+    "LEN_S": 825.0,
+    "ATR_multiplier_L": 4.25,
+    "ATR_multiplier_S": 1.75
+  },
+  "full_range": [
+    "2021/03/01",
+    "2026/06/10"
+  ],
+  "method": "Each module FIXED at IS-best param; full-period 2021/03-2026/06; PASS = NP > baseline AND abs(MDD) < abs(baseline MDD).",
+  "baseline_full": {
+    "net_profit": 4166.91,
+    "max_drawdown": -411.226,
+    "total_trades": 251,
+    "timestamp": "2026-06-17T22:11:38.966240"
+  },
+  "modules": [
+    {
+      "module": 1,
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "fixed_params": {
+        "STP": 9.2
+      },
+      "rows": 3,
+      "timestamp": "2026-06-17T22:13:37.913121",
+      "net_profit": 4182.27,
+      "max_drawdown": -411.226,
+      "total_trades": 254,
+      "delta_np": 15.36,
+      "delta_np_pct": 0.37,
+      "delta_mdd": 0.0,
+      "improves_np": true,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    },
+    {
+      "module": 2,
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "fixed_params": {
+        "ATRSTP": 44.4
+      },
+      "rows": 3,
+      "timestamp": "2026-06-17T22:15:47.730557",
+      "net_profit": 4215.87,
+      "max_drawdown": -411.226,
+      "total_trades": 256,
+      "delta_np": 48.96,
+      "delta_np_pct": 1.17,
+      "delta_mdd": 0.0,
+      "improves_np": true,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    },
+    {
+      "module": 3,
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "fixed_params": {
+        "EXITBAR": 131.0
+      },
+      "rows": 3,
+      "timestamp": "2026-06-17T22:17:54.412134",
+      "net_profit": 4140.44,
+      "max_drawdown": -416.193,
+      "total_trades": 258,
+      "delta_np": -26.47,
+      "delta_np_pct": -0.64,
+      "delta_mdd": -4.97,
+      "improves_np": false,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    },
+    {
+      "module": 4,
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "fixed_params": {
+        "DAYRANGE": 6.21
+      },
+      "rows": 3,
+      "timestamp": "2026-06-17T22:20:06.777413",
+      "net_profit": 4032.73,
+      "max_drawdown": -415.576,
+      "total_trades": 252,
+      "delta_np": -134.18,
+      "delta_np_pct": -3.22,
+      "delta_mdd": -4.35,
+      "improves_np": false,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    },
+    {
+      "module": 5,
+      "signal": "QuantPass_PT_Exit",
+      "fixed_params": {
+        "PT_Base": 0.671
+      },
+      "rows": 3,
+      "timestamp": "2026-06-17T22:22:19.191505",
+      "net_profit": 4444.51,
+      "max_drawdown": -411.226,
+      "total_trades": 252,
+      "delta_np": 277.6,
+      "delta_np_pct": 6.66,
+      "delta_mdd": 0.0,
+      "improves_np": true,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    },
+    {
+      "module": 6,
+      "signal": "RescueTeamExit",
+      "fixed_params": {
+        "Length": 280.0,
+        "std": 3.5
+      },
+      "rows": 9,
+      "timestamp": "2026-06-17T22:24:34.946246",
+      "net_profit": 4286.46,
+      "max_drawdown": -429.606,
+      "total_trades": 283,
+      "delta_np": 119.55,
+      "delta_np_pct": 2.87,
+      "delta_mdd": -18.38,
+      "improves_np": true,
+      "reduces_mdd": false,
+      "pass": false,
+      "valid": true
+    }
+  ],
+  "timestamp": "2026-06-17T22:08:15.001400"
+}
