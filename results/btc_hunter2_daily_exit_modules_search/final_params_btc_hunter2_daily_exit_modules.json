@@ -1,0 +1,174 @@
+{
+  "strategy_main": "SFJ_HUNTER2_crypto",
+  "symbol": "BTCUSDT HOT",
+  "timeframe": "Daily (1440 min)",
+  "champion_fixed": {
+    "LEN_L": 4.0,
+    "LEN_S": 112.0,
+    "ATR_multiplier_L": 0.55,
+    "ATR_multiplier_S": 0.75
+  },
+  "baseline_reference": {
+    "net_profit": 2948.0,
+    "max_drawdown": -642.0,
+    "total_trades": 70
+  },
+  "baseline_measured": {
+    "net_profit": 2948.47,
+    "max_drawdown": -641.717,
+    "total_trades": 70,
+    "exact_champion_row": true,
+    "drift_vs_reference_pct": 0.016,
+    "timestamp": "2026-06-19T02:53:22.810414"
+  },
+  "mode": "independent (one module at a time)",
+  "smoke": false,
+  "modules": [
+    {
+      "module": 1,
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params_range": {
+        "STP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-19T02:55:55.159088",
+      "best_params": {
+        "STP": 4.4
+      },
+      "net_profit": 2861.9,
+      "max_drawdown": -641.717,
+      "objective": 12763.370161613298,
+      "total_trades": 47,
+      "delta_np_vs_baseline": -86.57,
+      "delta_np_pct": -2.94,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 2,
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params_range": {
+        "ATRSTP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-19T02:59:00.621488",
+      "best_params": {
+        "ATRSTP": 7.7
+      },
+      "net_profit": 2907.7,
+      "max_drawdown": -641.717,
+      "objective": 13175.152427004426,
+      "total_trades": 47,
+      "delta_np_vs_baseline": -40.77,
+      "delta_np_pct": -1.38,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 3,
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params_range": {
+        "EXITBAR": [
+          1.0,
+          1000.0,
+          1.0
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-19T03:02:10.410702",
+      "best_params": {
+        "EXITBAR": 12.0
+      },
+      "net_profit": 2911.95,
+      "max_drawdown": -641.717,
+      "objective": 13213.695137420387,
+      "total_trades": 48,
+      "delta_np_vs_baseline": -36.52,
+      "delta_np_pct": -1.24,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 4,
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params_range": {
+        "DAYRANGE": [
+          0.01,
+          10.0,
+          0.01
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-19T03:05:09.719966",
+      "best_params": {
+        "DAYRANGE": 4.49
+      },
+      "net_profit": 2861.9,
+      "max_drawdown": -641.717,
+      "objective": 12763.370161613298,
+      "total_trades": 47,
+      "delta_np_vs_baseline": -86.57,
+      "delta_np_pct": -2.94,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 5,
+      "signal": "QuantPass_PT_Exit",
+      "params_range": {
+        "PT_Base": [
+          0.001,
+          1.0,
+          0.001
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-19T03:08:13.010335",
+      "best_params": {
+        "PT_Base": 0.635
+      },
+      "net_profit": 2786.03,
+      "max_drawdown": -373.029,
+      "objective": 20807.93493508548,
+      "total_trades": 51,
+      "delta_np_vs_baseline": -162.44,
+      "delta_np_pct": -5.51,
+      "delta_mdd_vs_baseline": 268.69,
+      "valid": true
+    },
+    {
+      "module": 6,
+      "signal": "RescueTeamExit",
+      "params_range": {
+        "Length": [
+          20.0,
+          600.0,
+          20.0
+        ],
+        "std": [
+          3.0,
+          6.0,
+          0.1
+        ]
+      },
+      "combos": 930,
+      "rows": 432,
+      "timestamp": "2026-06-19T03:11:32.180705",
+      "valid": false
+    }
+  ],
+  "timestamp": "2026-06-19T02:49:20.016901"
+}
