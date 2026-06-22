@@ -1,0 +1,280 @@
+{
+  "symbol": "ETHUSDT HOT",
+  "signal": "_2021Basic_Osc_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 5D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "EO1": {
+        "id": "EO1",
+        "regime": "R2 Obj-max ***",
+        "params": {
+          "LEN": 45.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.0,
+          "LMT": 17.0
+        },
+        "timestamp": "2026-06-21T00:47:23.922185",
+        "elapsed_sec": 116.6,
+        "rows": 243,
+        "net_profit": 1655.75,
+        "max_intraday_drawdown": -360.789,
+        "total_trades": 394,
+        "valid": true
+      },
+      "EO2": {
+        "id": "EO2",
+        "regime": "R2 NP-max high-LMT",
+        "params": {
+          "LEN": 48.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.25,
+          "LMT": 26.0
+        },
+        "timestamp": "2026-06-21T00:48:23.335678",
+        "elapsed_sec": 59.4,
+        "rows": 243,
+        "net_profit": 1752.47,
+        "max_intraday_drawdown": -412.883,
+        "total_trades": 343,
+        "valid": true
+      },
+      "EO3": {
+        "id": "EO3",
+        "regime": "R1 Obj-max tight",
+        "params": {
+          "LEN": 46.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.0,
+          "LMT": 16.5
+        },
+        "timestamp": "2026-06-21T00:49:22.839238",
+        "elapsed_sec": 59.5,
+        "rows": 243,
+        "net_profit": 1387.08,
+        "max_intraday_drawdown": -271.08,
+        "total_trades": 383,
+        "valid": true
+      },
+      "EO4": {
+        "id": "EO4",
+        "regime": "R1 alt momentum",
+        "params": {
+          "LEN": 20.0,
+          "LE": 0.0,
+          "SE": 3.0,
+          "STP": 2.0,
+          "LMT": 11.0
+        },
+        "timestamp": "2026-06-21T00:50:24.207905",
+        "elapsed_sec": 61.4,
+        "rows": 243,
+        "net_profit": 1510.34,
+        "max_intraday_drawdown": -644.83,
+        "total_trades": 545,
+        "valid": true
+      }
+    },
+    "full": {
+      "EO1": {
+        "id": "EO1",
+        "regime": "R2 Obj-max ***",
+        "params": {
+          "LEN": 45.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.0,
+          "LMT": 17.0
+        },
+        "timestamp": "2026-06-21T00:52:12.828699",
+        "elapsed_sec": 84.6,
+        "rows": 243,
+        "net_profit": 1430.5,
+        "max_intraday_drawdown": -531.916,
+        "total_trades": 479,
+        "valid": true
+      },
+      "EO2": {
+        "id": "EO2",
+        "regime": "R2 NP-max high-LMT",
+        "params": {
+          "LEN": 48.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.25,
+          "LMT": 26.0
+        },
+        "timestamp": "2026-06-21T00:53:09.090030",
+        "elapsed_sec": 56.3,
+        "rows": 243,
+        "net_profit": 1949.63,
+        "max_intraday_drawdown": -455.053,
+        "total_trades": 430,
+        "valid": true
+      },
+      "EO3": {
+        "id": "EO3",
+        "regime": "R1 Obj-max tight",
+        "params": {
+          "LEN": 46.0,
+          "LE": -3.0,
+          "SE": 2.0,
+          "STP": 1.0,
+          "LMT": 16.5
+        },
+        "timestamp": "2026-06-21T00:54:05.675170",
+        "elapsed_sec": 56.6,
+        "rows": 243,
+        "net_profit": 1460.5,
+        "max_intraday_drawdown": -474.178,
+        "total_trades": 472,
+        "valid": true
+      },
+      "EO4": {
+        "id": "EO4",
+        "regime": "R1 alt momentum",
+        "params": {
+          "LEN": 20.0,
+          "LE": 0.0,
+          "SE": 3.0,
+          "STP": 2.0,
+          "LMT": 11.0
+        },
+        "timestamp": "2026-06-21T00:55:01.021833",
+        "elapsed_sec": 55.3,
+        "rows": 243,
+        "net_profit": 1811.54,
+        "max_intraday_drawdown": -644.83,
+        "total_trades": 698,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "EO1": {
+      "id": "EO1",
+      "regime": "R2 Obj-max ***",
+      "params": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 17.0
+      },
+      "prior_is_np": 1656.0,
+      "prior_is_mdd": -361.0,
+      "np_is": 1655.75,
+      "mdd_is": -360.789,
+      "tr_is": 394,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 1430.5,
+      "mdd_full": -531.916,
+      "tr_full": 479,
+      "oos_np": -225.25,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EO2": {
+      "id": "EO2",
+      "regime": "R2 NP-max high-LMT",
+      "params": {
+        "LEN": 48.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.25,
+        "LMT": 26.0
+      },
+      "prior_is_np": 1752.0,
+      "prior_is_mdd": -413.0,
+      "np_is": 1752.47,
+      "mdd_is": -412.883,
+      "tr_is": 343,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1949.63,
+      "mdd_full": -455.053,
+      "tr_full": 430,
+      "oos_np": 197.16,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EO3": {
+      "id": "EO3",
+      "regime": "R1 Obj-max tight",
+      "params": {
+        "LEN": 46.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 16.5
+      },
+      "prior_is_np": 1387.0,
+      "prior_is_mdd": -271.0,
+      "np_is": 1387.08,
+      "mdd_is": -271.08,
+      "tr_is": 383,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1460.5,
+      "mdd_full": -474.178,
+      "tr_full": 472,
+      "oos_np": 73.42,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "EO4": {
+      "id": "EO4",
+      "regime": "R1 alt momentum",
+      "params": {
+        "LEN": 20.0,
+        "LE": 0.0,
+        "SE": 3.0,
+        "STP": 2.0,
+        "LMT": 11.0
+      },
+      "prior_is_np": 1510.0,
+      "prior_is_mdd": -645.0,
+      "np_is": 1510.34,
+      "mdd_is": -644.83,
+      "tr_is": 545,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1811.54,
+      "mdd_full": -644.83,
+      "tr_full": 698,
+      "oos_np": 301.2,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "EO4",
+    "best_oos_np_passing_params": {
+      "LEN": 20.0,
+      "LE": 0.0,
+      "SE": 3.0,
+      "STP": 2.0,
+      "LMT": 11.0
+    },
+    "best_oos_np_passing_value": 301.2,
+    "max_oos_np_any": "EO4",
+    "lowest_full_mdd": "EO2"
+  },
+  "run_started_at": "2026-06-21T00:45:08.896731",
+  "run_finished_at": "2026-06-21T00:55:01.027337",
+  "run_total_sec": 592.1
+}

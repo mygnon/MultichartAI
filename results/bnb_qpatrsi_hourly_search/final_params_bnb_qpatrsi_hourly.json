@@ -1,0 +1,302 @@
+{
+  "round": 1,
+  "strategy": "QuantPassRSI",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "RSI(C,Len)>100-RSI_Gap -> BUY market; RSI(C,Len)<RSI_Gap -> SHORT market (momentum, reversal exits)",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "Len (RSI period), RSI_Gap (threshold); defaults Len=30 RSI_Gap=32"
+  },
+  "obj_max_champion": {
+    "Len": 56.0,
+    "RSI_Gap": 34.0,
+    "objective": 24887.067041352486,
+    "net_profit": 17397.1,
+    "max_drawdown": -12161.3,
+    "total_trades": 16,
+    "attempt": 1,
+    "name": "01_global"
+  },
+  "np_max_champion": {
+    "Len": 56.0,
+    "RSI_Gap": 34.0,
+    "objective": 24887.067041352486,
+    "net_profit": 17397.1,
+    "max_drawdown": -12161.3,
+    "total_trades": 16,
+    "attempt": 1,
+    "name": "01_global"
+  },
+  "run_total_sec": 483.7,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global",
+      "combos": 2450,
+      "rows": 1198,
+      "obj_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "elapsed_sec": 98.3,
+      "timestamp": "2026-06-20T02:01:19.456474"
+    },
+    {
+      "attempt": 2,
+      "name": "02_short_len",
+      "combos": 2009,
+      "rows": 1294,
+      "obj_max": {
+        "Len": 47.0,
+        "RSI_Gap": 32.0,
+        "objective": 23874.310792171626,
+        "net_profit": 17224.3,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 47.0,
+        "RSI_Gap": 32.0,
+        "objective": 23874.310792171626,
+        "net_profit": 17224.3,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "elapsed_sec": 40.9,
+      "timestamp": "2026-06-20T02:02:00.436869"
+    },
+    {
+      "attempt": 3,
+      "name": "03_mid_len",
+      "combos": 2501,
+      "rows": 646,
+      "obj_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "elapsed_sec": 42.5,
+      "timestamp": "2026-06-20T02:02:42.956026"
+    },
+    {
+      "attempt": 4,
+      "name": "04_long_len",
+      "combos": 2501,
+      "rows": 145,
+      "obj_max": {
+        "Len": 165.0,
+        "RSI_Gap": 42.0,
+        "objective": 22728.517660187306,
+        "net_profit": 16427.7,
+        "max_drawdown": -11873.6,
+        "total_trades": 10
+      },
+      "np_max": {
+        "Len": 165.0,
+        "RSI_Gap": 42.0,
+        "objective": 22728.517660187306,
+        "net_profit": 16427.7,
+        "max_drawdown": -11873.6,
+        "total_trades": 10
+      },
+      "elapsed_sec": 41.8,
+      "timestamp": "2026-06-20T02:03:24.767568"
+    },
+    {
+      "attempt": 5,
+      "name": "05_low_gap",
+      "combos": 1000,
+      "rows": 107,
+      "obj_max": {
+        "Len": 12.0,
+        "RSI_Gap": 15.0,
+        "objective": 13358.936078411292,
+        "net_profit": 9825.4,
+        "max_drawdown": -7226.51,
+        "total_trades": 26
+      },
+      "np_max": {
+        "Len": 22.0,
+        "RSI_Gap": 20.0,
+        "objective": 8627.202195176738,
+        "net_profit": 11258.1,
+        "max_drawdown": -14691.3,
+        "total_trades": 10
+      },
+      "elapsed_sec": 36.5,
+      "timestamp": "2026-06-20T02:04:01.302849"
+    },
+    {
+      "attempt": 6,
+      "name": "06_high_gap",
+      "combos": 1250,
+      "rows": 984,
+      "obj_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 56.0,
+        "RSI_Gap": 34.0,
+        "objective": 24887.067041352486,
+        "net_profit": 17397.1,
+        "max_drawdown": -12161.3,
+        "total_trades": 16
+      },
+      "elapsed_sec": 32.7,
+      "timestamp": "2026-06-20T02:04:33.999340"
+    },
+    {
+      "attempt": 7,
+      "name": "07_ultra_short",
+      "combos": 1363,
+      "rows": 1032,
+      "obj_max": {
+        "Len": 12.0,
+        "RSI_Gap": 15.0,
+        "objective": 13358.936078411292,
+        "net_profit": 9825.4,
+        "max_drawdown": -7226.51,
+        "total_trades": 26
+      },
+      "np_max": {
+        "Len": 22.0,
+        "RSI_Gap": 20.0,
+        "objective": 8627.202195176738,
+        "net_profit": 11258.1,
+        "max_drawdown": -14691.3,
+        "total_trades": 10
+      },
+      "elapsed_sec": 39.9,
+      "timestamp": "2026-06-20T02:05:13.948674"
+    },
+    {
+      "attempt": 8,
+      "name": "08_vlong_len",
+      "combos": 1681,
+      "rows": 16,
+      "obj_max": {
+        "Len": 230.0,
+        "RSI_Gap": 44.0,
+        "objective": 12095.905754390864,
+        "net_profit": 11771.4,
+        "max_drawdown": -11455.6,
+        "total_trades": 12
+      },
+      "np_max": {
+        "Len": 230.0,
+        "RSI_Gap": 44.0,
+        "objective": 12095.905754390864,
+        "net_profit": 11771.4,
+        "max_drawdown": -11455.6,
+        "total_trades": 12
+      },
+      "elapsed_sec": 38.0,
+      "timestamp": "2026-06-20T02:05:51.968351"
+    },
+    {
+      "attempt": 9,
+      "name": "09_adaptive_zoom1",
+      "combos": 735,
+      "rows": 520,
+      "obj_max": {
+        "Len": 50.2,
+        "RSI_Gap": 32.8,
+        "objective": 23618.849694204375,
+        "net_profit": 17131.9,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 50.2,
+        "RSI_Gap": 32.8,
+        "objective": 23618.849694204375,
+        "net_profit": 17131.9,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "elapsed_sec": 36.9,
+      "timestamp": "2026-06-20T02:06:28.873663"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom2",
+      "combos": 234,
+      "rows": 195,
+      "obj_max": {
+        "Len": 50.6,
+        "RSI_Gap": 32.88,
+        "objective": 23618.849694204375,
+        "net_profit": 17131.9,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 50.6,
+        "RSI_Gap": 32.88,
+        "objective": 23618.849694204375,
+        "net_profit": 17131.9,
+        "max_drawdown": -12426.6,
+        "total_trades": 16
+      },
+      "elapsed_sec": 30.1,
+      "timestamp": "2026-06-20T02:06:59.004313"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom3",
+      "combos": 72,
+      "rows": 68,
+      "obj_max": {
+        "Len": 59.92,
+        "RSI_Gap": 34.6,
+        "objective": 24230.924676338556,
+        "net_profit": 17261.6,
+        "max_drawdown": -12296.8,
+        "total_trades": 16
+      },
+      "np_max": {
+        "Len": 59.92,
+        "RSI_Gap": 34.6,
+        "objective": 24230.924676338556,
+        "net_profit": 17261.6,
+        "max_drawdown": -12296.8,
+        "total_trades": 16
+      },
+      "elapsed_sec": 28.2,
+      "timestamp": "2026-06-20T02:07:27.249127"
+    }
+  ]
+}

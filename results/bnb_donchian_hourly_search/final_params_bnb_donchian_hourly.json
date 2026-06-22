@@ -1,0 +1,140 @@
+{
+  "round": 1,
+  "strategy": "SFJ_DonchianATR_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Donchian breakout entries (Close vs Highest/Lowest(Length)[1]); ATR chandelier trailing-stop exits (ATRMult x ATR(ATRLength)); long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "Length (Donchian period int), ATRLength (ATR period int), ATRMult (trail multiple frac); defaults 20/14/3.0"
+  },
+  "obj_max_champion": {},
+  "np_max_champion": {},
+  "run_total_sec": 604.3,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global_wide",
+      "combos": 800,
+      "rows": 800,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 101.8,
+      "timestamp": "2026-06-22T01:50:41.381968"
+    },
+    {
+      "attempt": 2,
+      "name": "02_default_zone",
+      "combos": 480,
+      "rows": 480,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 43.0,
+      "timestamp": "2026-06-22T01:51:24.371529"
+    },
+    {
+      "attempt": 3,
+      "name": "03_len_fine",
+      "combos": 435,
+      "rows": 435,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 44.9,
+      "timestamp": "2026-06-22T01:52:09.248826"
+    },
+    {
+      "attempt": 4,
+      "name": "04_atrl_fine",
+      "combos": 380,
+      "rows": 380,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 38.0,
+      "timestamp": "2026-06-22T01:52:47.272217"
+    },
+    {
+      "attempt": 5,
+      "name": "05_mult_fine",
+      "combos": 580,
+      "rows": 725,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 44.8,
+      "timestamp": "2026-06-22T01:53:32.070223"
+    },
+    {
+      "attempt": 6,
+      "name": "06_short_len",
+      "combos": 644,
+      "rows": 644,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 45.8,
+      "timestamp": "2026-06-22T01:54:17.852257"
+    },
+    {
+      "attempt": 7,
+      "name": "07_long_len",
+      "combos": 644,
+      "rows": 644,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 44.8,
+      "timestamp": "2026-06-22T01:55:02.679899"
+    },
+    {
+      "attempt": 8,
+      "name": "08_wide_mult",
+      "combos": 855,
+      "rows": 855,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 46.7,
+      "timestamp": "2026-06-22T01:55:49.434694"
+    },
+    {
+      "attempt": 9,
+      "name": "09_global_bound",
+      "combos": 756,
+      "rows": 756,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 46.2,
+      "timestamp": "2026-06-22T01:56:35.688597"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom1",
+      "combos": 441,
+      "rows": 441,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 43.3,
+      "timestamp": "2026-06-22T01:57:19.016581"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom2",
+      "combos": 441,
+      "rows": 504,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 44.8,
+      "timestamp": "2026-06-22T01:58:03.847447"
+    },
+    {
+      "attempt": 12,
+      "name": "12_adaptive_zoom3",
+      "combos": 125,
+      "rows": 125,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 42.2,
+      "timestamp": "2026-06-22T01:58:46.024518"
+    }
+  ]
+}

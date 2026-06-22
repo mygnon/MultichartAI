@@ -1,0 +1,241 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "QuantPassRSI",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "RS1": {
+        "id": "RS1",
+        "regime": "R2 Obj-max mid-len ***",
+        "params": {
+          "Len": 58.0,
+          "RSI_Gap": 33.0
+        },
+        "timestamp": "2026-06-20T00:35:49.360567",
+        "elapsed_sec": 80.5,
+        "rows": 9,
+        "net_profit": 2009.59,
+        "max_intraday_drawdown": -624.373,
+        "total_trades": 15,
+        "valid": true
+      },
+      "RS2": {
+        "id": "RS2",
+        "regime": "NP-max short-len",
+        "params": {
+          "Len": 7.0,
+          "RSI_Gap": 5.0
+        },
+        "timestamp": "2026-06-20T00:36:17.864439",
+        "elapsed_sec": 28.5,
+        "rows": 5,
+        "net_profit": 2207.13,
+        "max_intraday_drawdown": -1156.02,
+        "total_trades": 11,
+        "valid": true
+      },
+      "RS3": {
+        "id": "RS3",
+        "regime": "high-gap DENSE",
+        "params": {
+          "Len": 28.0,
+          "RSI_Gap": 38.0
+        },
+        "timestamp": "2026-06-20T00:36:45.692071",
+        "elapsed_sec": 27.8,
+        "rows": 9,
+        "net_profit": 1372.11,
+        "max_intraday_drawdown": -496.849,
+        "total_trades": 195,
+        "valid": true
+      },
+      "RS4": {
+        "id": "RS4",
+        "regime": "very-long-len",
+        "params": {
+          "Len": 290.0,
+          "RSI_Gap": 45.0
+        },
+        "timestamp": "2026-06-20T00:37:12.938959",
+        "elapsed_sec": 27.2,
+        "rows": 9,
+        "net_profit": 1632.86,
+        "max_intraday_drawdown": -673.686,
+        "total_trades": 11,
+        "valid": true
+      }
+    },
+    "full": {
+      "RS1": {
+        "id": "RS1",
+        "regime": "R2 Obj-max mid-len ***",
+        "params": {
+          "Len": 58.0,
+          "RSI_Gap": 33.0
+        },
+        "timestamp": "2026-06-20T00:38:32.455275",
+        "elapsed_sec": 58.0,
+        "rows": 9,
+        "net_profit": 2630.02,
+        "max_intraday_drawdown": -813.481,
+        "total_trades": 18,
+        "valid": true
+      },
+      "RS2": {
+        "id": "RS2",
+        "regime": "NP-max short-len",
+        "params": {
+          "Len": 7.0,
+          "RSI_Gap": 5.0
+        },
+        "timestamp": "2026-06-20T00:39:04.277925",
+        "elapsed_sec": 31.8,
+        "rows": 6,
+        "net_profit": 2722.5,
+        "max_intraday_drawdown": -1156.02,
+        "total_trades": 13,
+        "valid": true
+      },
+      "RS3": {
+        "id": "RS3",
+        "regime": "high-gap DENSE",
+        "params": {
+          "Len": 28.0,
+          "RSI_Gap": 38.0
+        },
+        "timestamp": "2026-06-20T00:39:31.826987",
+        "elapsed_sec": 27.5,
+        "rows": 9,
+        "net_profit": 1694.97,
+        "max_intraday_drawdown": -638.894,
+        "total_trades": 257,
+        "valid": true
+      },
+      "RS4": {
+        "id": "RS4",
+        "regime": "very-long-len",
+        "params": {
+          "Len": 290.0,
+          "RSI_Gap": 45.0
+        },
+        "timestamp": "2026-06-20T00:39:58.879978",
+        "elapsed_sec": 27.1,
+        "rows": 9,
+        "net_profit": 1940.03,
+        "max_intraday_drawdown": -815.297,
+        "total_trades": 18,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "RS1": {
+      "id": "RS1",
+      "regime": "R2 Obj-max mid-len ***",
+      "params": {
+        "Len": 58.0,
+        "RSI_Gap": 33.0
+      },
+      "prior_is_np": 2010.0,
+      "prior_is_mdd": -624.0,
+      "np_is": 2009.59,
+      "mdd_is": -624.373,
+      "tr_is": 15,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2630.02,
+      "mdd_full": -813.481,
+      "tr_full": 18,
+      "oos_np": 620.43,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "RS2": {
+      "id": "RS2",
+      "regime": "NP-max short-len",
+      "params": {
+        "Len": 7.0,
+        "RSI_Gap": 5.0
+      },
+      "prior_is_np": 2207.0,
+      "prior_is_mdd": -1156.0,
+      "np_is": 2207.13,
+      "mdd_is": -1156.02,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2722.5,
+      "mdd_full": -1156.02,
+      "tr_full": 13,
+      "oos_np": 515.37,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "RS3": {
+      "id": "RS3",
+      "regime": "high-gap DENSE",
+      "params": {
+        "Len": 28.0,
+        "RSI_Gap": 38.0
+      },
+      "prior_is_np": 1372.0,
+      "prior_is_mdd": -497.0,
+      "np_is": 1372.11,
+      "mdd_is": -496.849,
+      "tr_is": 195,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1694.97,
+      "mdd_full": -638.894,
+      "tr_full": 257,
+      "oos_np": 322.86,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "RS4": {
+      "id": "RS4",
+      "regime": "very-long-len",
+      "params": {
+        "Len": 290.0,
+        "RSI_Gap": 45.0
+      },
+      "prior_is_np": 1633.0,
+      "prior_is_mdd": -674.0,
+      "np_is": 1632.86,
+      "mdd_is": -673.686,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 1940.03,
+      "mdd_full": -815.297,
+      "tr_full": 18,
+      "oos_np": 307.17,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "RS2",
+    "best_oos_np_passing_params": {
+      "Len": 7.0,
+      "RSI_Gap": 5.0
+    },
+    "best_oos_np_passing_value": 515.37,
+    "max_oos_np_any": "RS1",
+    "lowest_full_mdd": "RS3"
+  },
+  "run_started_at": "2026-06-20T00:34:10.961471",
+  "run_finished_at": "2026-06-20T00:39:58.881989",
+  "run_total_sec": 347.9
+}

@@ -1,0 +1,97 @@
+{===============================================================================
+  SFJ_DonchianATR_crypto_v2
+  -------------------------------------------------------------------------------
+  EasyLanguage (PowerLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Donchian breakout + ATR trailing stop, with 3 ANTI-CHOP filters.
+
+  v1 lost on every parameter combo on BNB Hourly: pure market-breakout + ATR trail
+  + always-in flipping over-traded (119-3,602 trades) and bled via whipsaw.
+  v2 adds three churn-killers (each is an optimizable input):
+
+    1) TREND FILTER  : only take longs when Close > Average(Close, TrendLen),
+                       only take shorts when Close < Average(Close, TrendLen).
+                       Removes counter-trend breakouts (the main chop source).
+    2) STOP-BREAKOUT : enter with a STOP order at the prior Length-bar channel
+                       edge (Highest(High,Length)[1] / Lowest(Low,Length)[1]),
+                       so only a genuine continuation breakout fills (not a late
+                       market entry after the close already poked the channel).
+    3) RE-ENTRY COOLDOWN : after any exit, wait ReentryBars flat bars before a new
+                       entry. Kills the "stop-out -> immediate re-entry" loop.
+    Plus entries fire ONLY when flat (no always-in flipping).
+
+  Exit (unchanged): ATR chandelier trailing stop, ATRMult x AvgTrueRange(ATRLength).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - Donchian breakout lookback (bars)
+    ATRLength   - AvgTrueRange period for the trailing stop
+    ATRMult     - trailing-stop distance in ATR multiples
+    TrendLen    - moving-average period for the trend filter
+    ReentryBars - flat-bar cooldown required after an exit before a new entry
+
+  Defaults: Length=20, ATRLength=14, ATRMult=3.0, TrendLen=100, ReentryBars=5
+  Author: generated for Tim / MultichartAI, 2026-06-22
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    ATRLength( 14 ),
+    ATRMult( 3.0 ),
+    TrendLen( 100 ),
+    ReentryBars( 5 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRVal( 0 ),
+    HH( 0 ),
+    LL( 0 ),
+    TrendMA( 0 ),
+    BarsFlat( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+{ ---- indicators ---- }
+ATRVal  = AvgTrueRange( ATRLength ) ;
+HH      = Highest( High, Length )[1] ;   { prior-bar channel top    }
+LL      = Lowest ( Low , Length )[1] ;   { prior-bar channel bottom }
+TrendMA = Average( Close, TrendLen ) ;
+
+{ ---- flat-bar cooldown counter ---- }
+if MarketPosition <> 0 then
+    BarsFlat = 0
+else
+    BarsFlat = BarsFlat + 1 ;
+
+{ ---- entries: trend-filtered STOP breakout, only when flat + cooled down ---- }
+if MarketPosition = 0 and BarsFlat >= ReentryBars then
+begin
+    if Close > TrendMA then
+        Buy ( "DonLE" ) _Crypto1MUSD contract next bar at HH stop ;
+    if Close < TrendMA then
+        SellShort ( "DonSE" ) _Crypto1MUSD contract next bar at LL stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRVal
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRVal ) ;
+    Sell ( "DonLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRVal
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRVal ) ;
+    BuyToCover ( "DonSX" ) next bar at TrailShort stop ;
+end ;

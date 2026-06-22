@@ -201,6 +201,55 @@ Params: LEN_L, LEN_S, ATR_multiplier_L, ATR_multiplier_S. Logic: `C>avg(C,LEN_L)
 
 **HUNTER2 exit modules (Hourly: BTC/ETH/BNB; Daily: BNB/BTC/ETH):** trend-strategy pattern, but **modules help on Hourly, NOT on Daily**. Hourly IS: all positive (BTC 5/6, ETH 6/6, **BNB 6/6 — M5 QuantPass_PT_Exit PT=0.069 +30.66% NP AND MDD↓25% = strongest M5 ever**; BTC PT=0.671 +10.2%; ETH PT=0.677 +9.52%). **Daily IS: modules HURT NP** (BNB max +4.78% M4; **BTC + ETH ALL negative** — BTC −1.2..−5.5%, ETH −12.9..−17.5% [6/6, incl. M6 −12.9%] — low-freq daily already tight). **M5 QuantPass_PT_Exit flips role by TF: Hourly = NP-booster (NP↑+MDD↓); Daily = MDD-slasher** (BNB M5 −45%MDD; BTC −42%; ETH −52%). Full-period OOS (Hourly BTC/ETH): no module reduces main-dominated MDD but M5 adds NP at equal MDD (BTC +6.7%, ETH +10.09%). ⚠️ **M6 RescueTeamExit Status-checkbox toggle reverts after OK on Daily auto-runs** (works via `--manual-status`; ETH Daily M6 ran manually = Length=40 std=3 −12.9%). **M5 QuantPass_PT_Exit = consistent across SuperTrend + HUNTER2.** `search_{btc,eth,bnb}_hunter2{,_daily}_exit_modules.py` + `..._oos_validation.py`. (All scripts `ensure_chart_ready` before chart-trim — connect() picks the largest MC window = Study Editor when open. ⚠️ The Data-Range trim does NOT re-restrict already-loaded wider data: an exit-module run launched right after an OOS run on FULL range silently ran full-period — added a baseline-drift>10% ABORT guard; manually set + verify the chart range first. Truncated-but-clean exports [RescueTeam high-Length drops to 0-trade] are accepted if they still start at the declared min, else garble→discard.)
 
+### `QuantPassRSI` (RSI zero-threshold momentum, market entries, reversal exits, `_Crypto1MUSD`)
+
+Params: Len (RSI period), RSI_Gap (threshold). Logic: `RSI(C,Len)>100−RSI_Gap → BUY market`; `RSI(C,Len)<RSI_Gap → SHORT market` (momentum: long when RSI high). Workspace: `20260101_QuantPassRSI_AI.wsp`. Weak crypto strategy (sparse 10-22tr Hourly; $100K unreachable everywhere).
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | Strongest QPRSI: Obj-max Len=56 Gap=34 NP~$17.4K MDD−$12.2K (deep) 16tr. OOS WINNER BS4 +$3,384 |
+| BTCUSDT | Hourly | Ceiling ~$2.2K (Obj-max Len=62 Gap=34 15tr). OOS least-bad RS2 +$515 |
+| ETHUSDT | Hourly | Ceiling ~$3.4K (Len=12-17 Gap=15-19 22tr). OOS: NO strict PASS (all broke) |
+| BTCUSDT | Daily | Ceiling ~$1.6K (Len=63 Gap≈48 near-degenerate 11tr). OOS WINNER BSD4 +$892 (low-freq flip) |
+| ETHUSDT | Daily | Ceiling ~$1.2K (Len=50 Gap=47 10tr, weakest). OOS WINNER ESD3 dense Len=2 Gap=12 +$726 (sparse IS champ ESD1 collapsed) |
+| BNBUSDT | Daily | ~$6K but **data-unstable (Rule 5 drift), unusable** |
+| ETHUSDT | Hourly (exit modules) | ALL hurt (reversal/momentum type — same as CT) |
+
+OOS law reconfirmed: **sparse IS-Obj-max champions overfit/collapse OOS; denser regimes (low Gap / short Len) generalize** (ESD3, BSD4). `search_{btc,eth,bnb}_qpatrsi_{hourly,daily}{,2}.py` + `..._oos_champion_select.py`.
+
+### `_2021Basic_Osc_crypto` (BB-oscillator, STOP entries, ATR(10) STP/LMT exits, `_Crypto1MUSD`)
+
+Params: LEN, LE, SE, STP, LMT (LE/SE = STDDEV multipliers, LE can be negative). `BUY H STOP` when C crosses over `BollingerBand(C,LEN,LE)`; `SHORT L STOP` when C crosses under `BollingerBand(C,LEN,SE)`; STP×ATR(10) stop + LMT×ATR(10) limit. Workspace: `20260101_SFJ_BASIC_OSC_AI.wsp`. **Same strategy, 3 coins, 3 OPPOSITE regimes.**
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **Strongest** — R2 ceiling Obj-max=NP-max LEN=13 LE=−0.5 SE=3 STP=1 LMT=19.5 NP=$15,113 MDD=−$1,919 Obj=119,051 166tr (B07=B08=B09); **asymmetric regime** (LE≈0 long / SE=3 short); MDD/NP 12.7% best. SE/LE confirmed (push worse), LMT crept 13.5→19.5 |
+| ETHUSDT | Hourly | R2 ceiling Obj-max LEN=45 LE=−3 SE=2 STP=1 LMT=17 NP=$1,656 MDD=−$361 Obj=7,599 394tr (6-attempt byte-identical); **deep-LE mean-reversion regime**; LE=−3 confirmed peak (push to −6 worse) |
+| BTCUSDT | Hourly | R2 ceiling Obj-max LEN=6 LE=2.25 SE=−0.5 STP=2 LMT=9 NP=$946 MDD=−$187 Obj=4,790 66tr (8-attempt byte-identical); **momentum/breakout regime** (LE>0); LE/SE confirmed (push worse) |
+
+OOS (Data Range 2021/03-2026/06): **BNB WINNER BNO3** (NP-max hi-freq LEN=15 LE=0 SE=3 STP=2 LMT=20) OOS **+$4,583** held MDD −$6,506; **ETH WINNER EO4** (alt momentum LEN=20 LE=0 SE=3 STP=2 LMT=11) OOS +$301 held MDD −$645; **BTC NO PASS** (all 4 broke + OOS-loss; do not deploy). Law reconfirmed: **IS tight-MDD Obj-max champions overfit & break OOS; IS-MDD-wider high-freq regime generalizes** (BNO3, EO4). `search_{eth,btc,bnb}_osc_hourly{,2}.py` + `..._oos_champion_select.py`.
+
+### `SFJ_MACD_Strategy03_crypto` (MACD zero-cross entries, histogram-cross exits, `_Crypto1MUSD`)
+
+Params: FastLength, SlowLength, MACDLength (all int; valid Fast<Slow). `MACD(C,Fast,Slow)` crosses 0 → market entry (over=BUY, under=SHORT); histogram (`MACD−signal(MACDLength)`) crosses 0 → exit. Workspace: `20260101_SFJ_MACD03_AI.wsp`. **Weakest crypto strategy tested — poor risk profile.**
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | R2 ceiling Obj-max Fast=62 Slow=114 MACD=30 NP=$7,957 MDD=−$7,065 Obj=8,961 215tr; **short/mid MACD ALL-LOSING (whipsaw, every combo NP<0); only long-period works**; MDD/NP **88.8%** (NP-max even 105%, MDD>NP) — Obj 13× below Osc. Long-period bounded (push longer worse). Not recommended live |
+
+### `SFJ_DonchianATR_crypto` / `_v2` (Donchian breakout + ATR chandelier trail, long+short, `_Crypto1MUSD`)
+
+**Self-authored strategy** (`Strategy/SFJ_DonchianATR_crypto{,_v2}.txt`). Workspace: `20260622_SFJ_DonchianATR_AI.wsp`.
+
+- **v1** (Length, ATRLength, ATRMult): market-breakout + ATR trail + always-in flip. **LOST on EVERY combo on BNB Hourly** (6,889 combos, NP −$94K..−$1.3K, 119-3,602 trades) — whipsaw / over-trading. Tight default trail (M=3) the main culprit.
+- **v2** (Length, ATRLength, ATRMult, TrendLen, ReentryBars): adds 3 anti-chop filters — trend MA filter, **STOP-breakout entry at prior channel edge**, **flat-only + ReentryBars cooldown**. **Fixed it.**
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R3 ceiling, 2 regimes.** ⭐ Obj-max Length=3 ATRLength=16 ATRMult=7 TrendLen=10 ReentryBars=17 NP=$19,141 MDD=−$3,661 Obj=100,089 212tr (C01=C04, MDD/NP 19.1%). 🥇 NP-max Length=2 ATRLength=12 ATRMult=16 TrendLen=15 ReentryBars=10 NP=**$24,426** MDD=−$6,394 66tr (C02=C05=C07; M=16 wide-trail low-freq; M>16 worse). **TrendLen filter NOT helpful (→floor); the wins came from WIDE ATR trail + cooldown.** NP $24,426 = highest-NP non-CT BNB crypto strategy; Obj #2 behind Osc |
+
+`search_bnb_donchian{,_v2}_hourly{,2,3}.py`. v2 R1→R2 Obj +85%, R2→R3 +8% (Length→floor).
+
 ## Running the Optimizer
 
 All scripts must run as Administrator because MC64 runs elevated and Windows UIPI blocks cross-privilege UI automation. MC64 must be open with the correct workspace before running.

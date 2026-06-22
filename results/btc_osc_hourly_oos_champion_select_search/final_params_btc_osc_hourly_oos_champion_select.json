@@ -1,0 +1,274 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "_2021Basic_Osc_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 5D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "BO1": {
+        "id": "BO1",
+        "regime": "R2 Obj-max momentum ***",
+        "params": {
+          "LEN": 6.0,
+          "LE": 2.25,
+          "SE": -0.5,
+          "STP": 2.0,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:02:26.310880",
+        "elapsed_sec": 109.5,
+        "rows": 243,
+        "net_profit": 946.181,
+        "max_intraday_drawdown": -186.913,
+        "total_trades": 66,
+        "valid": true
+      },
+      "BO2": {
+        "id": "BO2",
+        "regime": "R2 NP-max momentum",
+        "params": {
+          "LEN": 8.0,
+          "LE": 2.75,
+          "SE": 0.0,
+          "STP": 1.5,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:03:17.113798",
+        "elapsed_sec": 50.8,
+        "rows": 243,
+        "net_profit": 990.604,
+        "max_intraday_drawdown": -235.68,
+        "total_trades": 82,
+        "valid": true
+      },
+      "BO3": {
+        "id": "BO3",
+        "regime": "R1 NP-max momentum",
+        "params": {
+          "LEN": 7.0,
+          "LE": 2.5,
+          "SE": -0.5,
+          "STP": 2.0,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:04:13.662314",
+        "elapsed_sec": 56.5,
+        "rows": 243,
+        "net_profit": 949.763,
+        "max_intraday_drawdown": -227.466,
+        "total_trades": 104,
+        "valid": true
+      },
+      "BO4": {
+        "id": "BO4",
+        "regime": "R1 alt mean-reversion",
+        "params": {
+          "LEN": 5.0,
+          "LE": -3.0,
+          "SE": 0.0,
+          "STP": 1.5,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:05:09.671927",
+        "elapsed_sec": 56.0,
+        "rows": 243,
+        "net_profit": 602.551,
+        "max_intraday_drawdown": -290.428,
+        "total_trades": 62,
+        "valid": true
+      }
+    },
+    "full": {
+      "BO1": {
+        "id": "BO1",
+        "regime": "R2 Obj-max momentum ***",
+        "params": {
+          "LEN": 6.0,
+          "LE": 2.25,
+          "SE": -0.5,
+          "STP": 2.0,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:06:54.879443",
+        "elapsed_sec": 82.6,
+        "rows": 243,
+        "net_profit": 695.214,
+        "max_intraday_drawdown": -319.081,
+        "total_trades": 57,
+        "valid": true
+      },
+      "BO2": {
+        "id": "BO2",
+        "regime": "R2 NP-max momentum",
+        "params": {
+          "LEN": 8.0,
+          "LE": 2.75,
+          "SE": 0.0,
+          "STP": 1.5,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:07:50.249525",
+        "elapsed_sec": 55.4,
+        "rows": 243,
+        "net_profit": 700.641,
+        "max_intraday_drawdown": -316.756,
+        "total_trades": 69,
+        "valid": true
+      },
+      "BO3": {
+        "id": "BO3",
+        "regime": "R1 NP-max momentum",
+        "params": {
+          "LEN": 7.0,
+          "LE": 2.5,
+          "SE": -0.5,
+          "STP": 2.0,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:08:46.582180",
+        "elapsed_sec": 56.3,
+        "rows": 243,
+        "net_profit": 608.47,
+        "max_intraday_drawdown": -347.83,
+        "total_trades": 80,
+        "valid": true
+      },
+      "BO4": {
+        "id": "BO4",
+        "regime": "R1 alt mean-reversion",
+        "params": {
+          "LEN": 5.0,
+          "LE": -3.0,
+          "SE": 0.0,
+          "STP": 1.5,
+          "LMT": 9.0
+        },
+        "timestamp": "2026-06-21T02:09:42.661921",
+        "elapsed_sec": 56.1,
+        "rows": 243,
+        "net_profit": 366.9,
+        "max_intraday_drawdown": -474.64,
+        "total_trades": 83,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "BO1": {
+      "id": "BO1",
+      "regime": "R2 Obj-max momentum ***",
+      "params": {
+        "LEN": 6.0,
+        "LE": 2.25,
+        "SE": -0.5,
+        "STP": 2.0,
+        "LMT": 9.0
+      },
+      "prior_is_np": 946.0,
+      "prior_is_mdd": -187.0,
+      "np_is": 946.181,
+      "mdd_is": -186.913,
+      "tr_is": 66,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 695.214,
+      "mdd_full": -319.081,
+      "tr_full": 57,
+      "oos_np": -250.97,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BO2": {
+      "id": "BO2",
+      "regime": "R2 NP-max momentum",
+      "params": {
+        "LEN": 8.0,
+        "LE": 2.75,
+        "SE": 0.0,
+        "STP": 1.5,
+        "LMT": 9.0
+      },
+      "prior_is_np": 990.0,
+      "prior_is_mdd": -235.0,
+      "np_is": 990.604,
+      "mdd_is": -235.68,
+      "tr_is": 82,
+      "is_drift_vs_prior_pct": 0.1,
+      "np_full": 700.641,
+      "mdd_full": -316.756,
+      "tr_full": 69,
+      "oos_np": -289.96,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BO3": {
+      "id": "BO3",
+      "regime": "R1 NP-max momentum",
+      "params": {
+        "LEN": 7.0,
+        "LE": 2.5,
+        "SE": -0.5,
+        "STP": 2.0,
+        "LMT": 9.0
+      },
+      "prior_is_np": 950.0,
+      "prior_is_mdd": -227.0,
+      "np_is": 949.763,
+      "mdd_is": -227.466,
+      "tr_is": 104,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 608.47,
+      "mdd_full": -347.83,
+      "tr_full": 80,
+      "oos_np": -341.29,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BO4": {
+      "id": "BO4",
+      "regime": "R1 alt mean-reversion",
+      "params": {
+        "LEN": 5.0,
+        "LE": -3.0,
+        "SE": 0.0,
+        "STP": 1.5,
+        "LMT": 9.0
+      },
+      "prior_is_np": 603.0,
+      "prior_is_mdd": -290.0,
+      "np_is": 602.551,
+      "mdd_is": -290.428,
+      "tr_is": 62,
+      "is_drift_vs_prior_pct": -0.1,
+      "np_full": 366.9,
+      "mdd_full": -474.64,
+      "tr_full": 83,
+      "oos_np": -235.65,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "BO4",
+    "lowest_full_mdd": "BO2"
+  },
+  "run_started_at": "2026-06-21T02:00:15.559813",
+  "run_finished_at": "2026-06-21T02:09:42.679960",
+  "run_total_sec": 567.1
+}

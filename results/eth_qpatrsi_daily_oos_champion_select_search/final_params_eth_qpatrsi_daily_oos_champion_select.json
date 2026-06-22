@@ -1,0 +1,241 @@
+{
+  "symbol": "ETHUSDT HOT",
+  "signal": "QuantPassRSI",
+  "timeframe": "Daily (1440 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "ESD1": {
+        "id": "ESD1",
+        "regime": "R2 Obj-max mid-len ***",
+        "params": {
+          "Len": 50.0,
+          "RSI_Gap": 47.0
+        },
+        "timestamp": "2026-06-20T18:04:29.606598",
+        "elapsed_sec": 88.9,
+        "rows": 9,
+        "net_profit": 1218.45,
+        "max_intraday_drawdown": -755.489,
+        "total_trades": 10,
+        "valid": true
+      },
+      "ESD2": {
+        "id": "ESD2",
+        "regime": "short-len",
+        "params": {
+          "Len": 16.0,
+          "RSI_Gap": 36.0
+        },
+        "timestamp": "2026-06-20T18:04:59.497219",
+        "elapsed_sec": 29.9,
+        "rows": 9,
+        "net_profit": 1008.43,
+        "max_intraday_drawdown": -1047.28,
+        "total_trades": 11,
+        "valid": true
+      },
+      "ESD3": {
+        "id": "ESD3",
+        "regime": "dense low-gap",
+        "params": {
+          "Len": 2.0,
+          "RSI_Gap": 12.0
+        },
+        "timestamp": "2026-06-20T18:05:28.478887",
+        "elapsed_sec": 29.0,
+        "rows": 6,
+        "net_profit": 707.356,
+        "max_intraday_drawdown": -940.176,
+        "total_trades": 74,
+        "valid": true
+      },
+      "ESD4": {
+        "id": "ESD4",
+        "regime": "mid-len contrast",
+        "params": {
+          "Len": 32.0,
+          "RSI_Gap": 44.0
+        },
+        "timestamp": "2026-06-20T18:05:58.063249",
+        "elapsed_sec": 29.6,
+        "rows": 9,
+        "net_profit": 939.714,
+        "max_intraday_drawdown": -875.299,
+        "total_trades": 11,
+        "valid": true
+      }
+    },
+    "full": {
+      "ESD1": {
+        "id": "ESD1",
+        "regime": "R2 Obj-max mid-len ***",
+        "params": {
+          "Len": 50.0,
+          "RSI_Gap": 47.0
+        },
+        "timestamp": "2026-06-20T18:07:21.721486",
+        "elapsed_sec": 62.3,
+        "rows": 9,
+        "net_profit": 1017.78,
+        "max_intraday_drawdown": -1158.04,
+        "total_trades": 16,
+        "valid": true
+      },
+      "ESD2": {
+        "id": "ESD2",
+        "regime": "short-len",
+        "params": {
+          "Len": 16.0,
+          "RSI_Gap": 36.0
+        },
+        "timestamp": "2026-06-20T18:07:52.230126",
+        "elapsed_sec": 30.5,
+        "rows": 9,
+        "net_profit": 629.584,
+        "max_intraday_drawdown": -1731.31,
+        "total_trades": 18,
+        "valid": true
+      },
+      "ESD3": {
+        "id": "ESD3",
+        "regime": "dense low-gap",
+        "params": {
+          "Len": 2.0,
+          "RSI_Gap": 12.0
+        },
+        "timestamp": "2026-06-20T18:08:23.599719",
+        "elapsed_sec": 31.4,
+        "rows": 6,
+        "net_profit": 1433.62,
+        "max_intraday_drawdown": -940.176,
+        "total_trades": 106,
+        "valid": true
+      },
+      "ESD4": {
+        "id": "ESD4",
+        "regime": "mid-len contrast",
+        "params": {
+          "Len": 32.0,
+          "RSI_Gap": 44.0
+        },
+        "timestamp": "2026-06-20T18:08:54.416048",
+        "elapsed_sec": 30.8,
+        "rows": 9,
+        "net_profit": 710.158,
+        "max_intraday_drawdown": -1617.46,
+        "total_trades": 16,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "ESD1": {
+      "id": "ESD1",
+      "regime": "R2 Obj-max mid-len ***",
+      "params": {
+        "Len": 50.0,
+        "RSI_Gap": 47.0
+      },
+      "prior_is_np": 1218.0,
+      "prior_is_mdd": -755.0,
+      "np_is": 1218.45,
+      "mdd_is": -755.489,
+      "tr_is": 10,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1017.78,
+      "mdd_full": -1158.04,
+      "tr_full": 16,
+      "oos_np": -200.67,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "ESD2": {
+      "id": "ESD2",
+      "regime": "short-len",
+      "params": {
+        "Len": 16.0,
+        "RSI_Gap": 36.0
+      },
+      "prior_is_np": 1008.0,
+      "prior_is_mdd": -1047.0,
+      "np_is": 1008.43,
+      "mdd_is": -1047.28,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 629.584,
+      "mdd_full": -1731.31,
+      "tr_full": 18,
+      "oos_np": -378.85,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "ESD3": {
+      "id": "ESD3",
+      "regime": "dense low-gap",
+      "params": {
+        "Len": 2.0,
+        "RSI_Gap": 12.0
+      },
+      "prior_is_np": 707.0,
+      "prior_is_mdd": -940.0,
+      "np_is": 707.356,
+      "mdd_is": -940.176,
+      "tr_is": 74,
+      "is_drift_vs_prior_pct": 0.1,
+      "np_full": 1433.62,
+      "mdd_full": -940.176,
+      "tr_full": 106,
+      "oos_np": 726.26,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "ESD4": {
+      "id": "ESD4",
+      "regime": "mid-len contrast",
+      "params": {
+        "Len": 32.0,
+        "RSI_Gap": 44.0
+      },
+      "prior_is_np": 940.0,
+      "prior_is_mdd": -875.0,
+      "np_is": 939.714,
+      "mdd_is": -875.299,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 710.158,
+      "mdd_full": -1617.46,
+      "tr_full": 16,
+      "oos_np": -229.56,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "ESD3",
+    "best_oos_np_passing_params": {
+      "Len": 2.0,
+      "RSI_Gap": 12.0
+    },
+    "best_oos_np_passing_value": 726.26,
+    "max_oos_np_any": "ESD3",
+    "lowest_full_mdd": "ESD3"
+  },
+  "run_started_at": "2026-06-20T18:02:42.642989",
+  "run_finished_at": "2026-06-20T18:08:54.423167",
+  "run_total_sec": 371.8
+}

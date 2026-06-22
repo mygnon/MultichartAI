@@ -1,0 +1,405 @@
+{
+  "round": 1,
+  "strategy": "_2021Basic_Osc_crypto",
+  "symbol": "ETHUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "BUY H STOP when C crosses over BollingerBand(C,LEN,LE); SHORT L STOP when C crosses under BollingerBand(C,LEN,SE)",
+    "exits": "STP x ATR(10) stop + LMT x ATR(10) limit",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "LEN=BB period, LE=long-entry STDDEV mult (can be neg), SE=short-entry STDDEV mult, STP=ATR stop, LMT=ATR limit; defaults LEN=5 LE=-1 SE=1.75 STP=1 LMT=7.5"
+  },
+  "obj_max_champion": {
+    "LEN": 46.0,
+    "LE": -3.0,
+    "SE": 2.0,
+    "STP": 1.0,
+    "LMT": 16.5,
+    "objective": 7097.502310756971,
+    "net_profit": 1387.08,
+    "max_drawdown": -271.08,
+    "total_trades": 383,
+    "attempt": 12,
+    "name": "12_adaptive_zoom3"
+  },
+  "np_max_champion": {
+    "LEN": 45.0,
+    "LE": -3.0,
+    "SE": 2.0,
+    "STP": 1.0,
+    "LMT": 16.5,
+    "objective": 6996.721449387596,
+    "net_profit": 1657.28,
+    "max_drawdown": -392.552,
+    "total_trades": 397,
+    "attempt": 12,
+    "name": "12_adaptive_zoom3"
+  },
+  "run_total_sec": 919.2,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global_wide",
+      "combos": 2400,
+      "rows": 2352,
+      "obj_max": {
+        "LEN": 5.0,
+        "LE": -2.0,
+        "SE": 0.5,
+        "STP": 1.5,
+        "LMT": 3.0,
+        "objective": 1945.27712442946,
+        "net_profit": 444.215,
+        "max_drawdown": -101.439,
+        "total_trades": 23
+      },
+      "np_max": {
+        "LEN": 25.0,
+        "LE": -2.0,
+        "SE": 0.5,
+        "STP": 2.5,
+        "LMT": 9.0,
+        "objective": 901.3152352984637,
+        "net_profit": 804.083,
+        "max_drawdown": -717.34,
+        "total_trades": 1173
+      },
+      "elapsed_sec": 122.9,
+      "timestamp": "2026-06-20T23:27:30.961615"
+    },
+    {
+      "attempt": 2,
+      "name": "02_default_zone",
+      "combos": 3000,
+      "rows": 2780,
+      "obj_max": {
+        "LEN": 3.0,
+        "LE": -0.5,
+        "SE": 1.5,
+        "STP": 2.0,
+        "LMT": 12.5,
+        "objective": 2596.9679359270376,
+        "net_profit": 687.309,
+        "max_drawdown": -181.902,
+        "total_trades": 43
+      },
+      "np_max": {
+        "LEN": 13.0,
+        "LE": -1.5,
+        "SE": 2.5,
+        "STP": 2.0,
+        "LMT": 12.5,
+        "objective": 842.5557495315157,
+        "net_profit": 893.097,
+        "max_drawdown": -946.67,
+        "total_trades": 922
+      },
+      "elapsed_sec": 72.4,
+      "timestamp": "2026-06-20T23:28:43.353554"
+    },
+    {
+      "attempt": 3,
+      "name": "03_breakout_regime",
+      "combos": 1200,
+      "rows": 1200,
+      "obj_max": {
+        "LEN": 5.0,
+        "LE": 2.0,
+        "SE": 0.5,
+        "STP": 1.5,
+        "LMT": 3.0,
+        "objective": 1945.27712442946,
+        "net_profit": 444.215,
+        "max_drawdown": -101.439,
+        "total_trades": 23
+      },
+      "np_max": {
+        "LEN": 5.0,
+        "LE": 2.0,
+        "SE": 0.5,
+        "STP": 1.5,
+        "LMT": 3.0,
+        "objective": 1945.27712442946,
+        "net_profit": 444.215,
+        "max_drawdown": -101.439,
+        "total_trades": 23
+      },
+      "elapsed_sec": 61.3,
+      "timestamp": "2026-06-20T23:29:44.681155"
+    },
+    {
+      "attempt": 4,
+      "name": "04_tight_exit",
+      "combos": 1024,
+      "rows": 1024,
+      "obj_max": {
+        "LEN": 5.0,
+        "LE": 0.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 8.0,
+        "objective": 73.64800451355065,
+        "net_profit": 90.8614,
+        "max_drawdown": -112.098,
+        "total_trades": 42
+      },
+      "np_max": {
+        "LEN": 5.0,
+        "LE": -1.5,
+        "SE": 2.0,
+        "STP": 0.75,
+        "LMT": 4.0,
+        "objective": 66.96910398675544,
+        "net_profit": 96.4556,
+        "max_drawdown": -138.925,
+        "total_trades": 89
+      },
+      "elapsed_sec": 62.5,
+      "timestamp": "2026-06-20T23:30:47.194439"
+    },
+    {
+      "attempt": 5,
+      "name": "05_long_lmt",
+      "combos": 2000,
+      "rows": 1976,
+      "obj_max": {
+        "LEN": 20.0,
+        "LE": 0.0,
+        "SE": 3.0,
+        "STP": 2.0,
+        "LMT": 11.0,
+        "objective": 3537.563257912938,
+        "net_profit": 1510.34,
+        "max_drawdown": -644.83,
+        "total_trades": 545
+      },
+      "np_max": {
+        "LEN": 20.0,
+        "LE": 0.0,
+        "SE": 3.0,
+        "STP": 2.0,
+        "LMT": 11.0,
+        "objective": 3537.563257912938,
+        "net_profit": 1510.34,
+        "max_drawdown": -644.83,
+        "total_trades": 545
+      },
+      "elapsed_sec": 67.8,
+      "timestamp": "2026-06-20T23:31:54.975745"
+    },
+    {
+      "attempt": 6,
+      "name": "06_global_boundary",
+      "combos": 4320,
+      "rows": 4104,
+      "obj_max": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 12.0,
+        "objective": 3595.016026249854,
+        "net_profit": 1277.26,
+        "max_drawdown": -453.793,
+        "total_trades": 429
+      },
+      "np_max": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 12.0,
+        "objective": 3595.016026249854,
+        "net_profit": 1277.26,
+        "max_drawdown": -453.793,
+        "total_trades": 429
+      },
+      "elapsed_sec": 81.7,
+      "timestamp": "2026-06-20T23:33:16.668784"
+    },
+    {
+      "attempt": 7,
+      "name": "07_len_fine",
+      "combos": 2304,
+      "rows": 2280,
+      "obj_max": {
+        "LEN": 3.0,
+        "LE": -1.5,
+        "SE": 1.0,
+        "STP": 1.0,
+        "LMT": 9.0,
+        "objective": 1853.3876312563107,
+        "net_profit": 508.729,
+        "max_drawdown": -139.639,
+        "total_trades": 27
+      },
+      "np_max": {
+        "LEN": 3.0,
+        "LE": -1.5,
+        "SE": 1.0,
+        "STP": 1.0,
+        "LMT": 9.0,
+        "objective": 1853.3876312563107,
+        "net_profit": 508.729,
+        "max_drawdown": -139.639,
+        "total_trades": 27
+      },
+      "elapsed_sec": 69.5,
+      "timestamp": "2026-06-20T23:34:26.210027"
+    },
+    {
+      "attempt": 8,
+      "name": "08_stp_lmt_fine",
+      "combos": 3072,
+      "rows": 3072,
+      "obj_max": {
+        "LEN": 5.0,
+        "LE": -1.0,
+        "SE": 2.0,
+        "STP": 2.0,
+        "LMT": 12.0,
+        "objective": 1250.3757509238512,
+        "net_profit": 506.101,
+        "max_drawdown": -204.849,
+        "total_trades": 43
+      },
+      "np_max": {
+        "LEN": 5.0,
+        "LE": -1.0,
+        "SE": 2.0,
+        "STP": 2.0,
+        "LMT": 12.0,
+        "objective": 1250.3757509238512,
+        "net_profit": 506.101,
+        "max_drawdown": -204.849,
+        "total_trades": 43
+      },
+      "elapsed_sec": 74.6,
+      "timestamp": "2026-06-20T23:35:40.773296"
+    },
+    {
+      "attempt": 9,
+      "name": "09_high_lmt_ratio",
+      "combos": 3000,
+      "rows": 2768,
+      "obj_max": {
+        "LEN": 5.0,
+        "LE": -0.5,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 10.0,
+        "objective": 760.1340408843098,
+        "net_profit": 293.303,
+        "max_drawdown": -113.173,
+        "total_trades": 37
+      },
+      "np_max": {
+        "LEN": 20.0,
+        "LE": 0.0,
+        "SE": 3.5,
+        "STP": 1.0,
+        "LMT": 14.0,
+        "objective": 326.4889851844551,
+        "net_profit": 430.705,
+        "max_drawdown": -568.187,
+        "total_trades": 216
+      },
+      "elapsed_sec": 73.0,
+      "timestamp": "2026-06-20T23:36:53.839638"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom1",
+      "combos": 3375,
+      "rows": 3375,
+      "obj_max": {
+        "LEN": 44.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 13.0,
+        "objective": 6139.624979427846,
+        "net_profit": 1533.05,
+        "max_drawdown": -382.799,
+        "total_trades": 411
+      },
+      "np_max": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 13.0,
+        "objective": 5207.681626343405,
+        "net_profit": 1537.27,
+        "max_drawdown": -453.791,
+        "total_trades": 422
+      },
+      "elapsed_sec": 76.5,
+      "timestamp": "2026-06-20T23:38:10.374720"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom2",
+      "combos": 3375,
+      "rows": 3375,
+      "obj_max": {
+        "LEN": 46.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 15.0,
+        "objective": 6949.990069721115,
+        "net_profit": 1372.59,
+        "max_drawdown": -271.08,
+        "total_trades": 391
+      },
+      "np_max": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 15.0,
+        "objective": 6247.918048586667,
+        "net_profit": 1566.22,
+        "max_drawdown": -392.618,
+        "total_trades": 406
+      },
+      "elapsed_sec": 77.7,
+      "timestamp": "2026-06-20T23:39:28.110362"
+    },
+    {
+      "attempt": 12,
+      "name": "12_adaptive_zoom3",
+      "combos": 945,
+      "rows": 945,
+      "obj_max": {
+        "LEN": 46.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 16.5,
+        "objective": 7097.502310756971,
+        "net_profit": 1387.08,
+        "max_drawdown": -271.08,
+        "total_trades": 383
+      },
+      "np_max": {
+        "LEN": 45.0,
+        "LE": -3.0,
+        "SE": 2.0,
+        "STP": 1.0,
+        "LMT": 16.5,
+        "objective": 6996.721449387596,
+        "net_profit": 1657.28,
+        "max_drawdown": -392.552,
+        "total_trades": 397
+      },
+      "elapsed_sec": 61.1,
+      "timestamp": "2026-06-20T23:40:29.195689"
+    }
+  ]
+}
