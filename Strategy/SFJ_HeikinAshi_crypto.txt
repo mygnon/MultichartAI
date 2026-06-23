@@ -1,0 +1,91 @@
+{===============================================================================
+  SFJ_HeikinAshi_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Smoothed Heikin-Ashi trend-flip entry + ATR chandelier trailing exit.
+
+  New entry archetype (smoothed Heikin-Ashi candles) paired with the EXIT that the
+  crypto research proved decisive: a WIDE ATR chandelier trailing stop (Donchian's
+  edge was its exit, not its entry). Heikin-Ashi smooths OHLC into synthetic candles
+  whose colour (HAClose vs HAOpen) flips with the trend; pre-smoothing the OHLC by
+  an EMA of length HASmooth is the anti-whipsaw lever (larger = fewer, cleaner flips).
+    - Long  on a green flip (HAClose crosses over HAOpen); short on a red flip.
+    - Flat-only entry (no always-in flipping); exit = ATR(14) chandelier trail.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (both optimizable; names match the optimizer's ParamAxis exactly):
+    HASmooth - EMA smoothing length applied to OHLC before building HA candles
+    ATRMult  - trailing-stop distance in ATR(14) multiples (wider = looser stop)
+
+  Logic:
+    sO/sH/sL/sC = XAverage(Open/High/Low/Close, HASmooth)
+    HAClose = (sO+sH+sL+sC)/4 ;  HAOpen = (HAOpen[1] + HAClose[1]) / 2
+    Long  entry : flat & HAClose cross over  HAOpen -> Buy       next bar market
+    Short entry : flat & HAClose cross under HAOpen -> SellShort next bar market
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: HASmooth=5, ATRMult=3.0
+  Author: generated for Tim / MultichartAI, 2026-06-23
+===============================================================================}
+
+inputs:
+    HASmooth( 5 ),
+    ATRMult( 3.0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    sO( 0 ),
+    sH( 0 ),
+    sL( 0 ),
+    sC( 0 ),
+    HAClose( 0 ),
+    HAOpen( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+{ ---- smoothed Heikin-Ashi candles ---- }
+ATRv = AvgTrueRange( 14 ) ;
+sO = XAverage( Open,  HASmooth ) ;
+sH = XAverage( High,  HASmooth ) ;
+sL = XAverage( Low,   HASmooth ) ;
+sC = XAverage( Close, HASmooth ) ;
+HAClose = ( sO + sH + sL + sC ) / 4 ;
+if CurrentBar = 1 then
+    HAOpen = ( sO + sC ) / 2
+else
+    HAOpen = ( HAOpen[1] + HAClose[1] ) / 2 ;
+
+{ ---- entries: Heikin-Ashi colour flip, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    if HAClose cross over HAOpen then
+        Buy ( "HaLE" ) _Crypto1MUSD contract next bar at market ;
+    if HAClose cross under HAOpen then
+        SellShort ( "HaSE" ) _Crypto1MUSD contract next bar at market ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "HaLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "HaSX" ) next bar at TrailShort stop ;
+end ;

@@ -317,8 +317,16 @@ OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 
 
 `search_bnb_turtlechannel_hourly.py`. **KEY LESSON: the decisive factor is the EXIT, not the channel entry** — Donchian's wide ATR chandelier trail (lets winners run) is what makes it work; the Turtle channel exit (reactive) and PSAR reversal both whipsaw on crypto.
 
-**9 self-authored strategies (clean-IS BNB Hourly), all confirmed: Donchian v2 $24.4K (ONLY OOS PASS, DN3 +$5,704) ≈ ADXtrend $23.9K (OOS fail) > BBSqueeze $16.1K (OOS fail) > Keltner $10.1K > RSIPullback ~$8K > ROCmomentum $5.6K > ParabolicSAR $4.6K (broken) ; TurtleChannel all-negative.**
-**FINAL LAWS: (1) only Donchian (channel breakout + WIDE ATR chandelier trail) is both IS-strong AND OOS-robust. (2) The EXIT is decisive — wide ATR trail >> channel exit (Turtle all-negative) / SAR reversal (broken). (3) Entry filters (ADX gate, squeeze, RSI/trend) can boost IS but ALL fail OOS; BNB dislikes most trend filters (params→floor) except the ADX gate (which still fails OOS). (4) IS strength != OOS robustness (ADXtrend/BBSqueeze tie/near Donchian IS but break OOS).**
+### `SFJ_HeikinAshi_crypto` (smoothed Heikin-Ashi trend-flip + ATR chandelier trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_HeikinAshi_crypto.txt`). Params: HASmooth (OHLC EMA smoothing int), ATRMult (trail frac). `sO/sH/sL/sC=XAverage(O/H/L/C,HASmooth); HAClose=(sO+sH+sL+sC)/4; HAOpen=(HAOpen[1]+HAClose[1])/2`; flat-only: long on `HAClose cross over HAOpen` (market), short on cross under; ATR(14) chandelier trail exit. Workspace: `20260622_SFJ_SFJ_HeikinAshi_crypto_AI.wsp` (⚠️ actual filename has DOUBLE `SFJ_SFJ`).
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R2 ceiling CONFIRMED $20,689** (8-conv byte-identical: R1 A06/A09/A10/A11 + R2 A01/A09/A10/A11; R1→R2 +0.00%). NP-max = Obj-max: HASmooth=3 ATRMult=8.25 MDD=−$6,348 Obj=67,428 196tr (MDD/NP 30.7%). **Short-smooth + WIDE ATR trail wins**: tight-trail grids (ATRMult 2.5-5) all-NEGATIVE; HASmooth 1-2 floor worse + deeper MDD; ATRMult 8.25→20 all worse (8.25 interior peak). **#3 self-authored** (beats BBSqueeze). $100K −79.3% unreachable. `search_bnb_heikinashi_hourly{,2}.py` |
+
+**10 self-authored strategies (clean-IS BNB Hourly), all confirmed: Donchian v2 $24.4K (ONLY OOS PASS, DN3 +$5,704) ≈ ADXtrend $23.9K (OOS fail) > HeikinAshi $20.7K > BBSqueeze $16.1K (OOS fail) > Keltner $10.1K > RSIPullback ~$8K > ROCmomentum $5.6K > ParabolicSAR $4.6K (broken) ; TurtleChannel all-negative.**
+**FINAL LAWS: (1) only Donchian (channel breakout + WIDE ATR chandelier trail) is both IS-strong AND OOS-robust. (2) The EXIT is decisive — wide ATR trail >> channel exit (Turtle all-negative) / SAR reversal (broken); HeikinAshi reconfirms it (tight-trail all-negative, wide ATR trail=8.25 wins). (3) Entry filters (ADX gate, squeeze, RSI/trend) can boost IS but ALL fail OOS; BNB dislikes most trend filters (params→floor) except the ADX gate (which still fails OOS). (4) IS strength != OOS robustness (ADXtrend/BBSqueeze tie/near Donchian IS but break OOS).**
 
 ## Running the Optimizer
 
