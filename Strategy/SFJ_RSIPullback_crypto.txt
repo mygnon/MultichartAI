@@ -1,0 +1,85 @@
+{===============================================================================
+  SFJ_RSIPullback_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Trend-filtered RSI pullback ("buy the dip in an uptrend").
+
+  Distinct archetype from the breakout strategies (Donchian / Keltner):
+  those ENTER ON EXTENSION (price breaking out); this ENTERS ON RETRACEMENT
+  (an RSI dip that turns back up) but ONLY in the direction of the larger trend.
+  Standalone RSI/oscillators FAILED on crypto (whipsaw); the long-MA trend
+  filter is what makes a pullback entry viable here -- you only buy dips when
+  the market is already trending up, and sell rips only when trending down.
+
+  Exit: ATR chandelier trailing stop (the trend-following exit that HELPED trend
+  strategies in the crypto research). Flat-only entry (no always-in flipping).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    TrendLen  - moving-average period for the trend filter (regime gate)
+    RSILen    - RSI period
+    RSIThresh - long RSI cross level (dip depth); short uses 100 - RSIThresh
+    ATRMult   - trailing-stop distance in ATR(14) multiples
+
+  Logic:
+    TrendMA = Average(Close, TrendLen) ;  RSIv = RSI(Close, RSILen)
+    Long  entry : Close > TrendMA  AND  RSIv crosses OVER  RSIThresh        (flat)
+    Short entry : Close < TrendMA  AND  RSIv crosses UNDER (100 - RSIThresh)(flat)
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: TrendLen=100, RSILen=14, RSIThresh=40, ATRMult=3.0
+  Author: generated for Tim / MultichartAI, 2026-06-23
+===============================================================================}
+
+inputs:
+    TrendLen( 100 ),
+    RSILen( 14 ),
+    RSIThresh( 40 ),
+    ATRMult( 3.0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    TrendMA( 0 ),
+    RSIv( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+{ ---- indicators ---- }
+ATRv    = AvgTrueRange( 14 ) ;
+TrendMA = Average( Close, TrendLen ) ;
+RSIv    = RSI( Close, RSILen ) ;
+
+{ ---- entries: trend-filtered RSI pullback, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    if Close > TrendMA and RSIv cross over RSIThresh then
+        Buy ( "RsiLE" ) _Crypto1MUSD contract next bar at market ;
+    if Close < TrendMA and RSIv cross under ( 100 - RSIThresh ) then
+        SellShort ( "RsiSE" ) _Crypto1MUSD contract next bar at market ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RsiLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RsiSX" ) next bar at TrailShort stop ;
+end ;

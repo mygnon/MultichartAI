@@ -251,12 +251,33 @@ Params: FastLength, SlowLength, MACDLength (all int; valid Fast<Slow). `MACD(C,F
 | BNBUSDT | Hourly | **R3 ceiling, 2 regimes.** ⭐ Obj-max Length=3 ATRLength=16 ATRMult=7 TrendLen=10 ReentryBars=17 NP=$19,141 MDD=−$3,661 Obj=100,089 212tr. 🥇 NP-max Length=2 ATRLength=12 ATRMult=16 TrendLen=15 ReentryBars=10 NP=**$24,426** MDD=−$6,394 66tr (M=16 wide-trail low-freq; M>16 worse). **TrendLen filter →floor (not helpful here); wins from WIDE trail + cooldown.** NP=highest non-CT BNB |
 | BTCUSDT | Hourly | **R2 ceiling (soft).** Obj-max Length=32 ATRLength=16 ATRMult=9 TrendLen=128 ReentryBars=3 NP=$1,337 MDD=−$449 Obj=3,981 174tr. NP-max Length=50 ATRMult=8.5 TrendLen=80 ReentryBars=0 NP=$1,446. **MID-long L + TrendLen ACTIVE (80-128, NEEDS the filter) + R~0** — opposite of BNB. ATRMult peak ~8.5-9 (M>9 worse). BNB/BTC 17× |
 | ETHUSDT | Hourly | **R2 ceiling.** ⭐ Obj-max Length=167 ATRLength=22 ATRMult=2 TrendLen=107 ReentryBars=0 NP=$1,593 MDD=−$275 Obj=9,217 402tr (MDD/NP 17.3%). NP-max Length=20 ATRMult=6 TrendLen=40 NP=$1,844 MDD=−$995. **ULTRA-LONG L + TIGHT M=2 (!) + TrendLen active** — M=2 opposite of BNB/BTC wide trail. Obj > ETH Osc |
+| BNBUSDT | Daily | **R2 ceiling (sparse 10-11tr, 5-conv).** Obj-max=NP-max Length=10 ATRLength=10 ATRMult=4.5 TrendLen=65 ReentryBars=14 NP=$19,045 MDD=−$7,041 Obj=51,509 10tr. NP-max alt ultra-short Length=2 ATRMult=5 TrendLen=5 NP=$20,461 MDD=−$9,097. **Daily < Hourly** (opposite of BNB CT/HUNTER2). TrendLen active. Wide-trail/denser worse. OOS-select script ready, not yet run |
 
-OOS (Data Range 2021/03-2026/06): **BNB WINNER DN3** (Length=4 ATRMult=7 TrendLen=5 ReentryBars=17, the R2 Obj-max M7 regime) OOS **+$5,704** held MDD −$4,678, full NP **$26,511** — only strict PASS, strongest OOS of all BNB strategies. **ETH NO PASS** (all broke; ED1/ED2 ultra-long tight-M broke hardest 2.20× = overfit; best-compromise ED3 short-L M6 OOS +$322 broke 1.40×; not deployable). BTC OOS not yet run.
+OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 TrendLen=5 ReentryBars=17, the R2 Obj-max M7 regime) OOS **+$5,704** held MDD −$4,678, full NP **$26,511** — only strict PASS, strongest OOS of all BNB strategies. **ETH NO PASS** (all broke; ED1/ED2 ultra-long tight-M broke hardest 2.20× = overfit; best-compromise ED3 short-L M6 OOS +$322 broke 1.40×; not deployable). BTC OOS not yet run.
 
 **BNB exit modules (main fixed at DN3, IS):** trend-strategy pattern — **ALL 6 modules HELP** (6/6 positive). ⭐ **M5 QuantPass_PT_Exit PT_Base=0.15 = +64.46% NP ($20,808→$34,220) AND MDD↓ (−$4,678→−$4,371)** — strongest M5 Hourly NP-boost yet; pushes Donchian v2 to Obj≈268K (> CT 173K, Osc 119K, in-sample). M6 RescueTeam +37.61% (MDD↓), M3 EXITBAR=138 +17.34%, M2 TrailingStop +8.21% (MDD↓), M1 +5.13%, M4 +3.99%. ⚠️ **Bug fixed: a module param name can COLLIDE with a main param** (RescueTeamExit's `Length` vs Donchian's `Length`) — the main-fixed-value check now excludes columns matching a module-param name. `search_bnb_donchian_v2_exit_modules.py` (chart-trims to IS first + baseline-drift>10% ABORT guard, since prior OOS run leaves chart on FULL).
 
-`search_{bnb,btc,eth}_donchian_v2_hourly{,2,3}.py` + `..._oos_champion_select.py` + `search_bnb_donchian_v2_exit_modules.py`. v1 `search_bnb_donchian_hourly.py` (all-negative, abandoned).
+`search_{bnb,btc,eth}_donchian_v2_hourly{,2,3}.py` + `search_bnb_donchian_v2_daily{,2}.py` + `..._oos_champion_select.py` + `search_bnb_donchian_v2_exit_modules.py`. v1 `search_bnb_donchian_hourly.py` (all-negative, abandoned).
+
+### `SFJ_KeltnerTrend_crypto` (Keltner EMA±ATR band breakout, STOP entries, ATR trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_KeltnerTrend_crypto.txt`). Workspace: `20260622_SFJ_KeltnerTrend_crypto_AI.wsp`. Params: EMALen (EMA+ATR period, int), BandMult (band half-width ATR mult, frac), ATRMult (trail, frac). `UpBand=EMA(EMALen)+BandMult*ATR; DnBand=EMA−BandMult*ATR`; Buy at UpBand STOP / SellShort at DnBand STOP (flat-only); ATR chandelier trail. ⚠️ `Upper`/`Lower` are PowerLanguage reserved words → renamed `UpBand`/`DnBand`.
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R2 ceiling (soft).** Stable 6-conv EMALen=100 BandMult=0.75 ATRMult=5.5 NP=$10,062 MDD=−$6,155 Obj=16,451 397tr; zoom-best EMALen=106 BandMult=1.0 ATRMult=5.34 NP=$11,602 Obj=19,328. **Short/mid-EMA ALL-LOSING; only long-EMA (~100-106) works.** **Weaker than Donchian** (NP ~½, Obj ~⅕, MDD/NP 60% vs 19-26%) — High/Low channel beats EMA±ATR band on BNB |
+
+`search_bnb_keltner_hourly{,2}.py`.
+
+### `SFJ_RSIPullback_crypto` (trend-filtered RSI pullback, market entries, ATR trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_RSIPullback_crypto.txt`). Workspace: `20260622_SFJ_RSIPullback_crypto_AI.wsp`. Params: TrendLen (MA filter, int), RSILen (int), RSIThresh (long cross level, int), ATRMult (trail, frac). Long: `Close>MA(TrendLen) AND RSI(RSILen) cross over RSIThresh`; short mirror (100−RSIThresh); ATR(14) chandelier trail; flat-only.
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R2 — STRONGEST non-CT BNB strategy.** ⭐ Best (B11) TrendLen=7 RSILen=6 RSIThresh=55 ATRMult=9.02 NP=**$25,303** MDD=−$5,800 Obj=**110,393** 179tr (MDD/NP 22.9%); stable 3-conv plateau TrendLen=8 RSIThresh=54 ATRMult=9 NP=$21,025. R1→R2 Obj +50.6%. **"Pullback" thesis FAILED → degenerated to momentum + wide trail**: TrendLen→floor (BNB dislikes trend filters, like Osc/Donchian), RSIThresh~55 (momentum cross, NOT a deep dip — deep-dip Th worse), ATRMult~9 (wide trail does the work). NP highest of all non-CT BNB; Obj #2 behind CT |
+
+`search_bnb_rsipullback_hourly{,2}.py`. **3 self-authored strategies span 2 archetypes: breakout (Donchian High/Low, Keltner EMA±ATR) vs pullback (RSIPullback). On BNB: RSIPullback (NP $25.3K) > Donchian ($24.4K) > Keltner ($11.6K); all beat the canned momentum/oscillator strategies (MACD03 $8K, Osc $15K) except CT.**
 
 ## Running the Optimizer
 
