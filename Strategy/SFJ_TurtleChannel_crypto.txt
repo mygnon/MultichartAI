@@ -1,0 +1,68 @@
+{===============================================================================
+  SFJ_TurtleChannel_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Turtle-style DUAL Donchian-channel breakout (channel entry + channel exit).
+
+  In the proven winning family (Donchian High/Low channel breakout is the only
+  self-authored strategy that is BOTH in-sample strong AND OOS-robust on BNB), but
+  with a DISTINCT exit: instead of an ATR chandelier trail (SFJ_DonchianATR), this
+  uses a SHORTER opposite Donchian channel as the trailing exit -- the classic
+  Turtle "System": enter on the EntryLen-bar breakout, exit when price reverses to
+  the ExitLen-bar opposite extreme (ExitLen < EntryLen). No indicator beyond
+  High/Low channels -> a candidate to share Donchian's OOS robustness.
+    - STOP-breakout entries (continuation only); flat-only (no always-in flip).
+    - Channel trailing exit (ExitLen-bar low for longs / high for shorts).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (both optimizable; names match the optimizer's ParamAxis exactly):
+    EntryLen - breakout (entry) Donchian lookback, bars
+    ExitLen  - trailing-exit Donchian lookback, bars (use ExitLen < EntryLen)
+
+  Logic:
+    HHe=Highest(High,EntryLen)[1]; LLe=Lowest(Low,EntryLen)[1]   (entry channel)
+    LLx=Lowest(Low,ExitLen)[1];    HHx=Highest(High,ExitLen)[1]  (exit channel)
+    Long  entry : flat -> Buy       next bar at HHe STOP
+    Short entry : flat -> SellShort  next bar at LLe STOP
+    Long  exit  : Sell       next bar at LLx STOP
+    Short exit  : BuyToCover next bar at HHx STOP
+
+  Defaults: EntryLen=20, ExitLen=10  (classic Turtle System 1)
+  Author: generated for Tim / MultichartAI, 2026-06-23
+===============================================================================}
+
+inputs:
+    EntryLen( 20 ),
+    ExitLen( 10 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    HHe( 0 ),
+    LLe( 0 ),
+    HHx( 0 ),
+    LLx( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+{ ---- dual Donchian channels (prior-bar, so the breakout is of completed bars) ---- }
+HHe = Highest( High, EntryLen )[1] ;   { entry channel top }
+LLe = Lowest ( Low , EntryLen )[1] ;   { entry channel bottom }
+HHx = Highest( High, ExitLen )[1] ;    { exit channel top (for shorts) }
+LLx = Lowest ( Low , ExitLen )[1] ;    { exit channel bottom (for longs) }
+
+{ ---- entries: channel-breakout STOP orders, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    Buy ( "TurLE" ) _Crypto1MUSD contract next bar at HHe stop ;
+    SellShort ( "TurSE" ) _Crypto1MUSD contract next bar at LLe stop ;
+end ;
+
+{ ---- channel trailing exits ---- }
+if MarketPosition = 1 then
+    Sell ( "TurLX" ) next bar at LLx stop ;
+
+if MarketPosition = -1 then
+    BuyToCover ( "TurSX" ) next bar at HHx stop ;

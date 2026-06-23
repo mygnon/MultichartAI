@@ -265,7 +265,7 @@ OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 
 
 | Instrument | TF | Status |
 |---|---|---|
-| BNBUSDT | Hourly | ⚠️ **R1/R2 IS were OOS-CONTAMINATED** (ran before the `set_instrument_data_range` Settings-tab fix — chart silently stayed on 2022/01-2026/06/23, ~6 mo of OOS included). Reported NP=$10,062-$11,602 / Obj 16,451-19,328 (EMALen~100-106 BandMult~0.75-1.0 ATRMult~5.3-5.5) is INFLATED; true clean IS unknown — **needs clean re-run**. Pattern was: short/mid-EMA all-losing, only long-EMA works; weaker than Donchian |
+| BNBUSDT | Hourly | **R2 ceiling (CONFIRMED clean — re-ran post-fix, byte-identical, so NOT contaminated; only RSIPullback was).** Obj-max=NP-max EMALen≈107 BandMult=1.0 ATRMult≈5.4 NP=$10,132 MDD=−$7,183 Obj=14,291 408tr (R2 zoom-best $11,602). Short/mid-EMA all-losing; only long-EMA (~100-106) works. **Weaker than Donchian** (NP ~½, MDD/NP 70%) — High/Low channel beats EMA±ATR band |
 
 `search_bnb_keltner_hourly{,2}.py`. ⚠️ Workspace's Binance source "not connected" → Format Instrument opened on Lookup tab → data-range trim silently failed (see Key Constraints).
 
@@ -297,7 +297,28 @@ OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 
 
 `search_bnb_adxtrend_hourly{,2}.py` + `..._oos_champion_select.py`.
 
-**6 self-authored strategies (clean-IS BNB Hourly): Donchian v2 $24.4K (only OOS PASS, DN3 +$5,704) ≈ ADXtrend $23.9K (OOS fail) >> RSIPullback ~$8K, ROCmomentum $5.6K, ParabolicSAR $4.6K (broken); Keltner contaminated/TBD. LAW: channel breakout + wide ATR trail (Donchian) is uniquely both IS-strong AND OOS-robust; ADX gate is the only filter that helps IS but still fails OOS; always-in reversal (PSAR) and momentum-threshold (ROC) whipsaw.**
+### `SFJ_BBSqueeze_crypto` (Bollinger squeeze breakout — volatility-regime filter + ATR trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_BBSqueeze_crypto.txt`). Params: BBLen (int), BBmult (std-devs frac), SqueezeLen (int), ATRMult (frac). `UpBB/DnBB=BollingerBand(C,BBLen,±BBmult)`; squeeze=`BWidth<Average(BWidth,SqueezeLen)`; while flat & squeeze Buy at UpBB STOP / SellShort at DnBB STOP; ATR(14) trail.
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R2 ceiling — 3rd-strongest self-authored, clean IS.** ⭐ BBLen=14 BBmult=1.5 SqueezeLen=50 ATRMult=8 NP=$16,119 MDD=−$7,058 Obj=36,811 185tr (3-conv; MDD/NP 44%). Squeeze filter active (SqueezeLen~50); wide ATR trail ~8. **OOS: NO PASS** (all 4 broke + OOS-loss −$1.0K..−$5.1K). < Donchian/ADXtrend |
+
+`search_bnb_bbsqueeze_hourly{,2}.py` + `..._oos_champion_select.py`.
+
+### `SFJ_TurtleChannel_crypto` (Turtle dual Donchian channel — channel entry + channel exit, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_TurtleChannel_crypto.txt`). Params: EntryLen, ExitLen (both int). Buy/SellShort at the EntryLen-bar channel STOP (flat-only); exit on the opposite ExitLen-bar channel (Turtle System 1).
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | ❌ **ALL-NEGATIVE on every combo** (6,889+, NP −$96K..−$888; 139-4,890 trades = whipsaw). Same channel ENTRY as Donchian but the **channel EXIT (shorter Donchian) whipsaws** — exits winners early, re-enters. Least-bad EntryLen=260 ExitLen=10 still −$888. **Does not work** |
+
+`search_bnb_turtlechannel_hourly.py`. **KEY LESSON: the decisive factor is the EXIT, not the channel entry** — Donchian's wide ATR chandelier trail (lets winners run) is what makes it work; the Turtle channel exit (reactive) and PSAR reversal both whipsaw on crypto.
+
+**9 self-authored strategies (clean-IS BNB Hourly), all confirmed: Donchian v2 $24.4K (ONLY OOS PASS, DN3 +$5,704) ≈ ADXtrend $23.9K (OOS fail) > BBSqueeze $16.1K (OOS fail) > Keltner $10.1K > RSIPullback ~$8K > ROCmomentum $5.6K > ParabolicSAR $4.6K (broken) ; TurtleChannel all-negative.**
+**FINAL LAWS: (1) only Donchian (channel breakout + WIDE ATR chandelier trail) is both IS-strong AND OOS-robust. (2) The EXIT is decisive — wide ATR trail >> channel exit (Turtle all-negative) / SAR reversal (broken). (3) Entry filters (ADX gate, squeeze, RSI/trend) can boost IS but ALL fail OOS; BNB dislikes most trend filters (params→floor) except the ADX gate (which still fails OOS). (4) IS strength != OOS robustness (ADXtrend/BBSqueeze tie/near Donchian IS but break OOS).**
 
 ## Running the Optimizer
 

@@ -34,7 +34,7 @@
     "attempt": 11,
     "name": "11_adaptive_zoom2"
   },
-  "run_total_sec": 565.1,
+  "run_total_sec": 595.2,
   "all_attempts": [
     {
       "attempt": 1,
@@ -59,8 +59,8 @@
         "max_drawdown": -7560.67,
         "total_trades": 397
       },
-      "elapsed_sec": 94.5,
-      "timestamp": "2026-06-23T02:11:10.648652"
+      "elapsed_sec": 100.0,
+      "timestamp": "2026-06-23T18:35:15.430673"
     },
     {
       "attempt": 2,
@@ -69,8 +69,8 @@
       "rows": 560,
       "obj_max": null,
       "np_max": null,
-      "elapsed_sec": 39.4,
-      "timestamp": "2026-06-23T02:11:50.024277"
+      "elapsed_sec": 41.4,
+      "timestamp": "2026-06-23T18:35:56.810209"
     },
     {
       "attempt": 3,
@@ -79,8 +79,8 @@
       "rows": 435,
       "obj_max": null,
       "np_max": null,
-      "elapsed_sec": 40.4,
-      "timestamp": "2026-06-23T02:12:30.381115"
+      "elapsed_sec": 41.6,
+      "timestamp": "2026-06-23T18:36:38.436623"
     },
     {
       "attempt": 4,
@@ -89,8 +89,8 @@
       "rows": 380,
       "obj_max": null,
       "np_max": null,
-      "elapsed_sec": 36.9,
-      "timestamp": "2026-06-23T02:13:07.293099"
+      "elapsed_sec": 39.6,
+      "timestamp": "2026-06-23T18:37:18.070318"
     },
     {
       "attempt": 5,
@@ -99,8 +99,8 @@
       "rows": 580,
       "obj_max": null,
       "np_max": null,
-      "elapsed_sec": 39.7,
-      "timestamp": "2026-06-23T02:13:46.996649"
+      "elapsed_sec": 42.1,
+      "timestamp": "2026-06-23T18:38:00.211513"
     },
     {
       "attempt": 6,
@@ -109,8 +109,8 @@
       "rows": 805,
       "obj_max": null,
       "np_max": null,
-      "elapsed_sec": 40.2,
-      "timestamp": "2026-06-23T02:14:27.189271"
+      "elapsed_sec": 42.3,
+      "timestamp": "2026-06-23T18:38:42.505568"
     },
     {
       "attempt": 7,
@@ -135,8 +135,8 @@
         "max_drawdown": -7127.52,
         "total_trades": 457
       },
-      "elapsed_sec": 40.5,
-      "timestamp": "2026-06-23T02:15:07.690485"
+      "elapsed_sec": 44.6,
+      "timestamp": "2026-06-23T18:39:27.175162"
     },
     {
       "attempt": 8,
@@ -161,8 +161,8 @@
         "max_drawdown": -8602.5,
         "total_trades": 147
       },
-      "elapsed_sec": 43.8,
-      "timestamp": "2026-06-23T02:15:51.537593"
+      "elapsed_sec": 46.2,
+      "timestamp": "2026-06-23T18:40:13.382243"
     },
     {
       "attempt": 9,
@@ -187,8 +187,8 @@
         "max_drawdown": -7127.52,
         "total_trades": 457
       },
-      "elapsed_sec": 46.7,
-      "timestamp": "2026-06-23T02:16:38.218493"
+      "elapsed_sec": 49.2,
+      "timestamp": "2026-06-23T18:41:02.625510"
     },
     {
       "attempt": 10,
@@ -213,8 +213,8 @@
         "max_drawdown": -6298.9,
         "total_trades": 441
       },
-      "elapsed_sec": 45.7,
-      "timestamp": "2026-06-23T02:17:23.960880"
+      "elapsed_sec": 47.8,
+      "timestamp": "2026-06-23T18:41:50.511135"
     },
     {
       "attempt": 11,
@@ -239,8 +239,8 @@
         "max_drawdown": -7183.21,
         "total_trades": 408
       },
-      "elapsed_sec": 43.1,
-      "timestamp": "2026-06-23T02:18:07.095324"
+      "elapsed_sec": 45.5,
+      "timestamp": "2026-06-23T18:42:36.021537"
     },
     {
       "attempt": 12,
@@ -265,8 +265,8 @@
         "max_drawdown": -7653.33,
         "total_trades": 397
       },
-      "elapsed_sec": 34.8,
-      "timestamp": "2026-06-23T02:18:41.879805"
+      "elapsed_sec": 42.6,
+      "timestamp": "2026-06-23T18:43:18.676013"
     }
   ]
 }

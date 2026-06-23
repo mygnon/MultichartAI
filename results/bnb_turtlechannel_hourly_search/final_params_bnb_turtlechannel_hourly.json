@@ -1,0 +1,130 @@
+{
+  "round": 1,
+  "strategy": "SFJ_TurtleChannel_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Turtle dual-channel: Buy at Highest(High,EntryLen)[1] STOP / SellShort at Lowest(Low,EntryLen)[1] STOP (flat-only); exit on opposite ExitLen-bar channel (Sell at LLx / BuyToCover at HHx); long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "EntryLen (breakout channel int), ExitLen (exit channel int); defaults 20/10"
+  },
+  "obj_max_champion": {},
+  "np_max_champion": {},
+  "run_total_sec": 478.1,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global",
+      "combos": 380,
+      "rows": 380,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 87.4,
+      "timestamp": "2026-06-23T21:27:12.346618"
+    },
+    {
+      "attempt": 2,
+      "name": "02_classic",
+      "combos": 598,
+      "rows": 598,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.7,
+      "timestamp": "2026-06-23T21:27:49.065396"
+    },
+    {
+      "attempt": 3,
+      "name": "03_short_entry",
+      "combos": 684,
+      "rows": 684,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.9,
+      "timestamp": "2026-06-23T21:28:26.032303"
+    },
+    {
+      "attempt": 4,
+      "name": "04_long_entry",
+      "combos": 528,
+      "rows": 528,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.9,
+      "timestamp": "2026-06-23T21:29:02.955777"
+    },
+    {
+      "attempt": 5,
+      "name": "05_tight_exit",
+      "combos": 240,
+      "rows": 240,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 30.7,
+      "timestamp": "2026-06-23T21:29:33.659235"
+    },
+    {
+      "attempt": 6,
+      "name": "06_wide_exit",
+      "combos": 187,
+      "rows": 187,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.9,
+      "timestamp": "2026-06-23T21:30:10.611098"
+    },
+    {
+      "attempt": 7,
+      "name": "07_vlong_entry",
+      "combos": 252,
+      "rows": 252,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 37.8,
+      "timestamp": "2026-06-23T21:30:48.424628"
+    },
+    {
+      "attempt": 8,
+      "name": "08_dense_low",
+      "combos": 506,
+      "rows": 506,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 40.8,
+      "timestamp": "2026-06-23T21:31:29.225860"
+    },
+    {
+      "attempt": 9,
+      "name": "09_adaptive_zoom1",
+      "combos": 325,
+      "rows": 325,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 46.4,
+      "timestamp": "2026-06-23T21:32:15.699680"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom2",
+      "combos": 91,
+      "rows": 91,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 39.9,
+      "timestamp": "2026-06-23T21:32:55.651048"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom3",
+      "combos": 35,
+      "rows": 35,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 37.7,
+      "timestamp": "2026-06-23T21:33:33.381505"
+    }
+  ]
+}
