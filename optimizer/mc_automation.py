@@ -1065,9 +1065,32 @@ def set_instrument_data_range(conn: MultiChartsConnection, from_date: str, to_da
     hwnd = dlg.handle
     logger.info("Format Instrument dialog hwnd=%x", hwnd)
 
-    # Settings tab (MC64: "Settings" / "設定"; some builds "資料設定")
-    _click_tab(dlg, ["Settings", "設定", "資料設定", "Data"])
-    time.sleep(0.4)
+    # Settings tab (MC64: "Settings" / "設定"; some builds "資料設定").
+    # The dialog sometimes opens on the Lookup/Add-Symbol tab (symbol & data-source
+    # selector) which has NO Data Range date pickers — clicking OK there silently
+    # sets nothing.  Retry the tab click until the date pickers are actually present.
+    _settle = []
+    for _ti in range(4):
+        _click_tab(dlg, [" Settings ", "Settings", "設定", "資料設定", "Data"])
+        time.sleep(0.6 + 0.3 * _ti)
+        _settle = [h for h, c, _ in _win32_enum_children(hwnd)
+                   if c == "SysDateTimePick32" and _win32_is_visible(h)]
+        if len(_settle) >= 2:
+            logger.info("Settings tab reached on attempt %d (%d date pickers)",
+                        _ti + 1, len(_settle))
+            break
+        logger.warning("  Settings tab attempt %d: %d date pickers (need >=2) -- retrying",
+                       _ti + 1, len(_settle))
+    if len(_settle) < 2:
+        try:
+            _click_button_in_dlg(dlg, ["Cancel", "取消"])
+        except Exception:
+            pass
+        raise RuntimeError(
+            "set_instrument_data_range: Format Instrument 'Settings' tab not reached "
+            "(found %d date pickers after 4 tries). Dialog stuck on Lookup/data-source "
+            "tab -- data range NOT changed (aborting instead of silently applying)."
+            % len(_settle))
 
     # --- DUMP structure (always) so we can verify/repair from log + screenshot ---
     uia = _uia_dlg(hwnd)
