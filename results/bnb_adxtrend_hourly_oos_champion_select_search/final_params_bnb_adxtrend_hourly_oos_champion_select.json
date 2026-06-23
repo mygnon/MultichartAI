@@ -1,0 +1,250 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_ADXtrend_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "AD1": {
+        "id": "AD1",
+        "regime": "R2 best ***",
+        "params": {
+          "DMILen": 12.0,
+          "ADXThresh": 26.0,
+          "ATRMult": 7.8
+        },
+        "timestamp": "2026-06-23T17:18:33.077524",
+        "elapsed_sec": 88.2,
+        "rows": 27,
+        "net_profit": 23938.0,
+        "max_intraday_drawdown": -6657.84,
+        "total_trades": 155,
+        "valid": true
+      },
+      "AD2": {
+        "id": "AD2",
+        "regime": "high-ADX low-freq",
+        "params": {
+          "DMILen": 14.0,
+          "ADXThresh": 34.0,
+          "ATRMult": 8.0
+        },
+        "timestamp": "2026-06-23T17:19:11.571434",
+        "elapsed_sec": 38.5,
+        "rows": 27,
+        "net_profit": 11249.6,
+        "max_intraday_drawdown": -4836.74,
+        "total_trades": 69,
+        "valid": true
+      },
+      "AD3": {
+        "id": "AD3",
+        "regime": "short-DMILen hi-freq",
+        "params": {
+          "DMILen": 5.0,
+          "ADXThresh": 30.0,
+          "ATRMult": 8.0
+        },
+        "timestamp": "2026-06-23T17:19:45.026268",
+        "elapsed_sec": 33.5,
+        "rows": 27,
+        "net_profit": 16791.3,
+        "max_intraday_drawdown": -5886.06,
+        "total_trades": 193,
+        "valid": true
+      },
+      "AD4": {
+        "id": "AD4",
+        "regime": "long-DMILen low-MDD",
+        "params": {
+          "DMILen": 24.0,
+          "ADXThresh": 22.0,
+          "ATRMult": 8.5
+        },
+        "timestamp": "2026-06-23T17:20:17.159653",
+        "elapsed_sec": 32.1,
+        "rows": 27,
+        "net_profit": 11435.6,
+        "max_intraday_drawdown": -4294.85,
+        "total_trades": 103,
+        "valid": true
+      }
+    },
+    "full": {
+      "AD1": {
+        "id": "AD1",
+        "regime": "R2 best ***",
+        "params": {
+          "DMILen": 12.0,
+          "ADXThresh": 26.0,
+          "ATRMult": 7.8
+        },
+        "timestamp": "2026-06-23T17:21:36.450411",
+        "elapsed_sec": 64.6,
+        "rows": 27,
+        "net_profit": 19370.6,
+        "max_intraday_drawdown": -8618.69,
+        "total_trades": 209,
+        "valid": true
+      },
+      "AD2": {
+        "id": "AD2",
+        "regime": "high-ADX low-freq",
+        "params": {
+          "DMILen": 14.0,
+          "ADXThresh": 34.0,
+          "ATRMult": 8.0
+        },
+        "timestamp": "2026-06-23T17:22:14.987212",
+        "elapsed_sec": 38.5,
+        "rows": 27,
+        "net_profit": 9784.12,
+        "max_intraday_drawdown": -8027.94,
+        "total_trades": 96,
+        "valid": true
+      },
+      "AD3": {
+        "id": "AD3",
+        "regime": "short-DMILen hi-freq",
+        "params": {
+          "DMILen": 5.0,
+          "ADXThresh": 30.0,
+          "ATRMult": 8.0
+        },
+        "timestamp": "2026-06-23T17:22:49.979055",
+        "elapsed_sec": 35.0,
+        "rows": 27,
+        "net_profit": 10594.5,
+        "max_intraday_drawdown": -13306.7,
+        "total_trades": 266,
+        "valid": true
+      },
+      "AD4": {
+        "id": "AD4",
+        "regime": "long-DMILen low-MDD",
+        "params": {
+          "DMILen": 24.0,
+          "ADXThresh": 22.0,
+          "ATRMult": 8.5
+        },
+        "timestamp": "2026-06-23T17:23:23.491502",
+        "elapsed_sec": 33.5,
+        "rows": 27,
+        "net_profit": 10100.0,
+        "max_intraday_drawdown": -13115.4,
+        "total_trades": 141,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "AD1": {
+      "id": "AD1",
+      "regime": "R2 best ***",
+      "params": {
+        "DMILen": 12.0,
+        "ADXThresh": 26.0,
+        "ATRMult": 7.8
+      },
+      "prior_is_np": 23938.0,
+      "prior_is_mdd": -6658.0,
+      "np_is": 23938.0,
+      "mdd_is": -6657.84,
+      "tr_is": 155,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 19370.6,
+      "mdd_full": -8618.69,
+      "tr_full": 209,
+      "oos_np": -4567.4,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "AD2": {
+      "id": "AD2",
+      "regime": "high-ADX low-freq",
+      "params": {
+        "DMILen": 14.0,
+        "ADXThresh": 34.0,
+        "ATRMult": 8.0
+      },
+      "prior_is_np": 11250.0,
+      "prior_is_mdd": -4837.0,
+      "np_is": 11249.6,
+      "mdd_is": -4836.74,
+      "tr_is": 69,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 9784.12,
+      "mdd_full": -8027.94,
+      "tr_full": 96,
+      "oos_np": -1465.48,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "AD3": {
+      "id": "AD3",
+      "regime": "short-DMILen hi-freq",
+      "params": {
+        "DMILen": 5.0,
+        "ADXThresh": 30.0,
+        "ATRMult": 8.0
+      },
+      "prior_is_np": 16791.0,
+      "prior_is_mdd": -5886.0,
+      "np_is": 16791.3,
+      "mdd_is": -5886.06,
+      "tr_is": 193,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 10594.5,
+      "mdd_full": -13306.7,
+      "tr_full": 266,
+      "oos_np": -6196.8,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "AD4": {
+      "id": "AD4",
+      "regime": "long-DMILen low-MDD",
+      "params": {
+        "DMILen": 24.0,
+        "ADXThresh": 22.0,
+        "ATRMult": 8.5
+      },
+      "prior_is_np": 11436.0,
+      "prior_is_mdd": -4295.0,
+      "np_is": 11435.6,
+      "mdd_is": -4294.85,
+      "tr_is": 103,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 10100.0,
+      "mdd_full": -13115.4,
+      "tr_full": 141,
+      "oos_np": -1335.6,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "AD4",
+    "lowest_full_mdd": "AD2"
+  },
+  "run_started_at": "2026-06-23T17:16:54.466757",
+  "run_finished_at": "2026-06-23T17:23:23.495039",
+  "run_total_sec": 389.0
+}

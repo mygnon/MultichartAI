@@ -265,9 +265,9 @@ OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 
 
 | Instrument | TF | Status |
 |---|---|---|
-| BNBUSDT | Hourly | **R2 ceiling (soft).** Stable 6-conv EMALen=100 BandMult=0.75 ATRMult=5.5 NP=$10,062 MDD=−$6,155 Obj=16,451 397tr; zoom-best EMALen=106 BandMult=1.0 ATRMult=5.34 NP=$11,602 Obj=19,328. **Short/mid-EMA ALL-LOSING; only long-EMA (~100-106) works.** **Weaker than Donchian** (NP ~½, Obj ~⅕, MDD/NP 60% vs 19-26%) — High/Low channel beats EMA±ATR band on BNB |
+| BNBUSDT | Hourly | ⚠️ **R1/R2 IS were OOS-CONTAMINATED** (ran before the `set_instrument_data_range` Settings-tab fix — chart silently stayed on 2022/01-2026/06/23, ~6 mo of OOS included). Reported NP=$10,062-$11,602 / Obj 16,451-19,328 (EMALen~100-106 BandMult~0.75-1.0 ATRMult~5.3-5.5) is INFLATED; true clean IS unknown — **needs clean re-run**. Pattern was: short/mid-EMA all-losing, only long-EMA works; weaker than Donchian |
 
-`search_bnb_keltner_hourly{,2}.py`.
+`search_bnb_keltner_hourly{,2}.py`. ⚠️ Workspace's Binance source "not connected" → Format Instrument opened on Lookup tab → data-range trim silently failed (see Key Constraints).
 
 ### `SFJ_RSIPullback_crypto` (trend-filtered RSI pullback, market entries, ATR trail, `_Crypto1MUSD`)
 
@@ -275,9 +275,29 @@ OOS (Data Range 2021/03-2026/06): **BNB Hourly WINNER DN3** (Length=4 ATRMult=7 
 
 | Instrument | TF | Status |
 |---|---|---|
-| BNBUSDT | Hourly | **R2 — STRONGEST non-CT BNB strategy.** ⭐ Best (B11) TrendLen=7 RSILen=6 RSIThresh=55 ATRMult=9.02 NP=**$25,303** MDD=−$5,800 Obj=**110,393** 179tr (MDD/NP 22.9%); stable 3-conv plateau TrendLen=8 RSIThresh=54 ATRMult=9 NP=$21,025. R1→R2 Obj +50.6%. **"Pullback" thesis FAILED → degenerated to momentum + wide trail**: TrendLen→floor (BNB dislikes trend filters, like Osc/Donchian), RSIThresh~55 (momentum cross, NOT a deep dip — deep-dip Th worse), ATRMult~9 (wide trail does the work). NP highest of all non-CT BNB; Obj #2 behind CT |
+| BNBUSDT | Hourly | ⚠️ **R1/R2 IS were OOS-CONTAMINATED** (pre-fix; the "$25,303 strongest" was inflated by ~6 mo of OOS data). **CLEAN IS re-run R1** (post-fix, Settings tab reached): Obj-max TrendLen=5 RSILen=18.5 RSIThresh=19 ATRMult=7 NP=$7,030 MDD=−$2,357 Obj=20,970 11tr; NP-max TrendLen=20 RSILen=5 RSIThresh=50 ATRMult=7 NP=$8,462 228tr. **True IS only ~$7-8.5K (weak, not converged)** — clean "pullback" Obj-max wants deep dip (Th=19). R2 contaminated dir removed |
 
-`search_bnb_rsipullback_hourly{,2}.py`. **3 self-authored strategies span 2 archetypes: breakout (Donchian High/Low, Keltner EMA±ATR) vs pullback (RSIPullback). On BNB: RSIPullback (NP $25.3K) > Donchian ($24.4K) > Keltner ($11.6K); all beat the canned momentum/oscillator strategies (MACD03 $8K, Osc $15K) except CT.**
+`search_bnb_rsipullback_hourly{,2}.py` (R2 contaminated, removed) + `..._oos_champion_select.py`.
+
+### `SFJ_ROCmomentum_crypto` (ROC momentum-magnitude breakout, ATR trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_ROCmomentum_crypto.txt`). Params: ROCLen (int), ROCThresh (% frac), ATRMult (frac). `ROCv=(C-C[ROCLen])/C[ROCLen]*100`; long ROCv cross over +ROCThresh, short cross under −ROCThresh; ATR(14) trail; flat-only. **Clean IS** (post-fix): Obj-max=NP-max ROCLen~148 ROCThresh=2.25 ATRMult=3 NP=$5,643 MDD=−$4,299 Obj=7,407 491tr (MDD/NP 76%). **Weak**: the high-threshold anti-whipsaw thesis FAILED — optimizer wants LOW threshold (2.25%) + long lookback (slow trend-follow); short/mid ROCLen all-losing. Not converged. `search_bnb_rocmomentum_hourly.py`.
+
+### `SFJ_ParabolicSAR_crypto` (Wilder PSAR stop-and-reverse, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_ParabolicSAR_crypto.txt`). Params: AfStep, AfMax (both frac). Always-in stop-and-reverse; flip → Buy/SellShort. **Clean IS** (post-fix): only the slowest near-floor point AfStep=0.002 AfMax=0.01 was positive NP=$4,626 MDD=−$12,336 (MDD/NP **267%**) — all other settings all-losing; the positive point is a razor-thin spike (zooms all-negative). **DOES NOT WORK** — always-in reversal (no filter) whipsaws on crypto, like MACD zero-cross. `search_bnb_parabolicsar_hourly.py`.
+
+### `SFJ_ADXtrend_crypto` (ADX-gated DMI crossover + ATR trail, `_Crypto1MUSD`)
+
+**Self-authored** (`Strategy/SFJ_ADXtrend_crypto.txt`). Params: DMILen (int), ADXThresh (int), ATRMult (frac). `diPlus=DMIPlus(DMILen); diMinus=DMIMinus(DMILen); adxv=ADX(DMILen)`; long flat & adxv>ADXThresh & DI+ cross over DI−; short mirror; ATR(14) trail; flat-only.
+
+| Instrument | TF | Status |
+|---|---|---|
+| BNBUSDT | Hourly | **R2 ceiling — 2nd-strongest self-authored (≈Donchian), clean IS.** ⭐ Best DMILen=12 ADXThresh=26 ATRMult=7.8 NP=**$23,938** MDD=−$6,658 Obj=86,068 155tr (MDD/NP 28%); stable 5-conv DMILen=12 ADXThresh=26 ATRMult=8 NP=$22,286. **ADX gate=26 confirmed TRUE peak (B03 full sweep)** — the ONLY self-authored where the trend-strength filter genuinely helps (vs RSIPullback TrendLen→floor). Wide ATR trail ~8 confirmed. **OOS: NO PASS** (all 4 broke + OOS-loss −$1.3K..−$6.2K; AD4 lowest-IS-MDD broke hardest 3.05× = overfit). IS strong ≠ OOS robust |
+
+`search_bnb_adxtrend_hourly{,2}.py` + `..._oos_champion_select.py`.
+
+**6 self-authored strategies (clean-IS BNB Hourly): Donchian v2 $24.4K (only OOS PASS, DN3 +$5,704) ≈ ADXtrend $23.9K (OOS fail) >> RSIPullback ~$8K, ROCmomentum $5.6K, ParabolicSAR $4.6K (broken); Keltner contaminated/TBD. LAW: channel breakout + wide ATR trail (Donchian) is uniquely both IS-strong AND OOS-robust; ADX gate is the only filter that helps IS but still fails OOS; always-in reversal (PSAR) and momentum-threshold (ROC) whipsaw.**
 
 ## Running the Optimizer
 
@@ -355,7 +375,7 @@ MC64 exports different column headers across versions. `MC_COLUMN_MAP` in `confi
 - **BAT files must be pure ASCII** — Traditional Chinese Windows uses CP950 (Big5). Non-ASCII characters such as the em dash `—` (U+2014) are invalid Big5 sequences and cause CMD misparsing (`echo` → `ec`+`ho`, `cd /d` → `cd`+`/d`), leaving the working directory wrong. Verify with: `[System.IO.File]::ReadAllBytes($path) | Where-Object { $_ -gt 127 }`.
 - **MC64 connection in search scripts**: always `conn = mc.MultiChartsConnection(); conn.connect()`. Never `mc.connect_to_mc()` — that function does not exist.
 - **MC64 export truncation** — sparse-trade grids (e.g. QPATR_Breakout Mult>2 with Len>20) export only partial rows; failed 3× across BTC/ETH/BNB Daily. Structural MC64 limitation; design grids to avoid these regions or accept the gap.
-- **TRUE OOS isolation via chart Data Range** — MC64 ignores the signal Begin-date; only the CHART's loaded data range restricts the backtest. `mc.set_instrument_data_range(conn, from, to)` sets Format Instruments → Settings → Data Range (From-To radio + both date pickers) to trim/expand the chart so an IS pass (end 2026/01) ≠ FULL pass (end 2026/06), giving OOS = NP_full − NP_is. **Critical**: `DTM_SETSYSTEMTIME` sets the picker value but does NOT fire `DTN_DATETIMECHANGE`, so OK won't apply it (3 silent failures, IS==FULL) — after the DTM set the code nudges the picker (click + Right + Up/Down, net-zero) to fire the notification. Verify first with `--probe-instrument` (sets FULL range, reopens dialog, reads pickers back) + a chart screenshot. `mc.read_instrument_data_range` reads the current range. This supersedes the earlier "OOS-only not isolable" note.
+- **TRUE OOS isolation via chart Data Range** — MC64 ignores the signal Begin-date; only the CHART's loaded data range restricts the backtest. `mc.set_instrument_data_range(conn, from, to)` sets Format Instruments → Settings → Data Range (From-To radio + both date pickers) to trim/expand the chart so an IS pass (end 2026/01) ≠ FULL pass (end 2026/06), giving OOS = NP_full − NP_is. **Critical**: `DTM_SETSYSTEMTIME` sets the picker value but does NOT fire `DTN_DATETIMECHANGE`, so OK won't apply it (3 silent failures, IS==FULL) — after the DTM set the code nudges the picker (click + Right + Up/Down, net-zero) to fire the notification. Verify first with `--probe-instrument` (sets FULL range, reopens dialog, reads pickers back) + a chart screenshot. `mc.read_instrument_data_range` reads the current range. This supersedes the earlier "OOS-only not isolable" note. **⚠️ Settings-tab silent-fail (fixed ae19bdf, 2026-06-23):** when the data source shows "not connected" (e.g. Binance on a fresh workspace), the Format Instrument dialog opens on the **Lookup/Add-Symbol tab** which has NO date pickers; the old code clicked the Settings tab once, found 0 pickers, and **still clicked OK — silently applying nothing** (both passes ran on the loaded range → IS==FULL, and IS optimizations got silently OOS-contaminated). Fix: `set_instrument_data_range` now retries the Settings-tab click (≤4×) until ≥2 `SysDateTimePick32` pickers are present, else Cancels and **raises** instead of applying nothing. Log shows `Settings tab reached on attempt N (3 date pickers)` on success. Symptom of a contaminated IS run: NP collapses (e.g. RSIPullback $20.8K→$8K) once the trim actually applies. The RSIPullback/Keltner IS rounds run before this fix are OOS-contaminated.
 
 ## Critical Rules for Adaptive Search Scripts
 

@@ -1,0 +1,162 @@
+{
+  "round": 1,
+  "strategy": "SFJ_ParabolicSAR_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Wilder Parabolic SAR stop-and-reverse (always-in); SAR accelerates by AfStep per new extreme, capped AfMax; flip -> Buy/SellShort market; long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "AfStep (accel step frac), AfMax (accel cap frac); defaults 0.02/0.20"
+  },
+  "obj_max_champion": {
+    "AfStep": 0.002,
+    "AfMax": 0.01,
+    "objective": 1734.8034377234299,
+    "net_profit": 4626.09,
+    "max_drawdown": -12336.1,
+    "total_trades": 328,
+    "attempt": 6,
+    "name": "06_vslow"
+  },
+  "np_max_champion": {
+    "AfStep": 0.002,
+    "AfMax": 0.01,
+    "objective": 1734.8034377234299,
+    "net_profit": 4626.09,
+    "max_drawdown": -12336.1,
+    "total_trades": 328,
+    "attempt": 6,
+    "name": "06_vslow"
+  },
+  "run_total_sec": 428.3,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global",
+      "combos": 380,
+      "rows": 380,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 83.1,
+      "timestamp": "2026-06-23T12:56:34.056099"
+    },
+    {
+      "attempt": 2,
+      "name": "02_fine_lowstep",
+      "combos": 475,
+      "rows": 475,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 33.9,
+      "timestamp": "2026-06-23T12:57:07.997566"
+    },
+    {
+      "attempt": 3,
+      "name": "03_classic",
+      "combos": 272,
+      "rows": 272,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 32.9,
+      "timestamp": "2026-06-23T12:57:41.017949"
+    },
+    {
+      "attempt": 4,
+      "name": "04_slow",
+      "combos": 380,
+      "rows": 380,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.4,
+      "timestamp": "2026-06-23T12:58:15.434473"
+    },
+    {
+      "attempt": 5,
+      "name": "05_wide_afmax",
+      "combos": 323,
+      "rows": 323,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 32.8,
+      "timestamp": "2026-06-23T12:58:48.233388"
+    },
+    {
+      "attempt": 6,
+      "name": "06_vslow",
+      "combos": 285,
+      "rows": 285,
+      "obj_max": {
+        "AfStep": 0.002,
+        "AfMax": 0.01,
+        "objective": 1734.8034377234299,
+        "net_profit": 4626.09,
+        "max_drawdown": -12336.1,
+        "total_trades": 328
+      },
+      "np_max": {
+        "AfStep": 0.002,
+        "AfMax": 0.01,
+        "objective": 1734.8034377234299,
+        "net_profit": 4626.09,
+        "max_drawdown": -12336.1,
+        "total_trades": 328
+      },
+      "elapsed_sec": 33.2,
+      "timestamp": "2026-06-23T12:59:21.442051"
+    },
+    {
+      "attempt": 7,
+      "name": "07_fast",
+      "combos": 525,
+      "rows": 525,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.8,
+      "timestamp": "2026-06-23T12:59:56.308699"
+    },
+    {
+      "attempt": 8,
+      "name": "08_broad",
+      "combos": 782,
+      "rows": 782,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 32.3,
+      "timestamp": "2026-06-23T13:00:28.645732"
+    },
+    {
+      "attempt": 9,
+      "name": "09_adaptive_zoom1",
+      "combos": 897,
+      "rows": 920,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 31.9,
+      "timestamp": "2026-06-23T13:01:00.608609"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom2",
+      "combos": 630,
+      "rows": 651,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.9,
+      "timestamp": "2026-06-23T13:01:35.553104"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom3",
+      "combos": 336,
+      "rows": 357,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.1,
+      "timestamp": "2026-06-23T13:02:09.677895"
+    }
+  ]
+}

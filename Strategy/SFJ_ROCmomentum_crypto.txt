@@ -1,0 +1,86 @@
+{===============================================================================
+  SFJ_ROCmomentum_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Rate-of-Change (momentum-magnitude) threshold breakout + ATR trail.
+
+  4th distinct archetype in the Strategy folder:
+    Donchian / Keltner = price-CHANNEL breakout (price extension past a band)
+    RSIPullback        = pullback (retracement entry in a trend)
+    ROCmomentum (this) = MOMENTUM-MAGNITUDE breakout (enter only when the N-bar
+                         % change exceeds a threshold, i.e. a genuinely strong move)
+
+  Why a threshold, not a zero-cross: SFJ_MACD_Strategy03 entered on every MACD
+  zero crossing and whipsawed badly on crypto. Requiring ROC to exceed +/-Thresh
+  fires ONLY on strong directional momentum, filtering the chop. Wide ATR trailing
+  exit lets the resulting trend run (the lesson that worked across crypto trend
+  strategies). Flat-only entry (no always-in flipping).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    ROCLen    - lookback for the Rate-of-Change (% change over ROCLen bars)
+    ROCThresh - momentum threshold in PERCENT (long if ROC>+Thresh, short if ROC<-Thresh)
+    ATRMult   - trailing-stop distance in ATR(14) multiples
+
+  Logic:
+    ROCv = (Close - Close[ROCLen]) / Close[ROCLen] * 100
+    Long  entry : ROCv cross over  ( ROCThresh)   -> Buy       market (flat)
+    Short entry : ROCv cross under (-ROCThresh)   -> SellShort market (flat)
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: ROCLen=20, ROCThresh=5.0, ATRMult=3.0
+  Author: generated for Tim / MultichartAI, 2026-06-23
+===============================================================================}
+
+inputs:
+    ROCLen( 20 ),
+    ROCThresh( 5.0 ),
+    ATRMult( 3.0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ROCv( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+{ ---- indicators ---- }
+ATRv = AvgTrueRange( 14 ) ;
+if Close[ROCLen] <> 0 then
+    ROCv = ( Close - Close[ROCLen] ) / Close[ROCLen] * 100
+else
+    ROCv = 0 ;
+
+{ ---- entries: momentum-magnitude breakout, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    if ROCv cross over ROCThresh then
+        Buy ( "RocLE" ) _Crypto1MUSD contract next bar at market ;
+    if ROCv cross under ( -ROCThresh ) then
+        SellShort ( "RocSE" ) _Crypto1MUSD contract next bar at market ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RocLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RocSX" ) next bar at TrailShort stop ;
+end ;
