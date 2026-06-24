@@ -1,0 +1,267 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_BollingerBreakout_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "BO1": {
+        "id": "BO1",
+        "regime": "champion (Obj-max) ***",
+        "params": {
+          "BBLen": 13.0,
+          "BBmult": 1.55,
+          "ATRMult": 7.0,
+          "ReentryBars": 13.0
+        },
+        "timestamp": "2026-06-24T23:00:25.827480",
+        "elapsed_sec": 100.1,
+        "rows": 54,
+        "net_profit": 21209.5,
+        "max_intraday_drawdown": -4711.1,
+        "total_trades": 217,
+        "valid": true
+      },
+      "BO2": {
+        "id": "BO2",
+        "regime": "short-BBLen",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 1.5,
+          "ATRMult": 7.0,
+          "ReentryBars": 14.0
+        },
+        "timestamp": "2026-06-24T23:01:07.494328",
+        "elapsed_sec": 41.7,
+        "rows": 81,
+        "net_profit": 18627.8,
+        "max_intraday_drawdown": -4813.85,
+        "total_trades": 233,
+        "valid": true
+      },
+      "BO3": {
+        "id": "BO3",
+        "regime": "low-BBmult",
+        "params": {
+          "BBLen": 9.0,
+          "BBmult": 1.05,
+          "ATRMult": 7.0,
+          "ReentryBars": 17.0
+        },
+        "timestamp": "2026-06-24T23:01:48.178688",
+        "elapsed_sec": 40.7,
+        "rows": 81,
+        "net_profit": 21254.0,
+        "max_intraday_drawdown": -5939.26,
+        "total_trades": 216,
+        "valid": true
+      },
+      "BO4": {
+        "id": "BO4",
+        "regime": "ultra-short hi-freq",
+        "params": {
+          "BBLen": 3.0,
+          "BBmult": 1.5,
+          "ATRMult": 7.0,
+          "ReentryBars": 14.0
+        },
+        "timestamp": "2026-06-24T23:02:36.594202",
+        "elapsed_sec": 48.4,
+        "rows": 81,
+        "net_profit": 12696.3,
+        "max_intraday_drawdown": -6840.71,
+        "total_trades": 263,
+        "valid": true
+      }
+    },
+    "full": {
+      "BO1": {
+        "id": "BO1",
+        "regime": "champion (Obj-max) ***",
+        "params": {
+          "BBLen": 13.0,
+          "BBmult": 1.55,
+          "ATRMult": 7.0,
+          "ReentryBars": 13.0
+        },
+        "timestamp": "2026-06-24T23:04:07.148984",
+        "elapsed_sec": 76.5,
+        "rows": 54,
+        "net_profit": 33022.7,
+        "max_intraday_drawdown": -5672.07,
+        "total_trades": 294,
+        "valid": true
+      },
+      "BO2": {
+        "id": "BO2",
+        "regime": "short-BBLen",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 1.5,
+          "ATRMult": 7.0,
+          "ReentryBars": 14.0
+        },
+        "timestamp": "2026-06-24T23:04:49.282391",
+        "elapsed_sec": 42.1,
+        "rows": 81,
+        "net_profit": 32097.3,
+        "max_intraday_drawdown": -5030.89,
+        "total_trades": 310,
+        "valid": true
+      },
+      "BO3": {
+        "id": "BO3",
+        "regime": "low-BBmult",
+        "params": {
+          "BBLen": 9.0,
+          "BBmult": 1.05,
+          "ATRMult": 7.0,
+          "ReentryBars": 17.0
+        },
+        "timestamp": "2026-06-24T23:05:38.090078",
+        "elapsed_sec": 48.8,
+        "rows": 81,
+        "net_profit": 30941.4,
+        "max_intraday_drawdown": -5939.26,
+        "total_trades": 297,
+        "valid": true
+      },
+      "BO4": {
+        "id": "BO4",
+        "regime": "ultra-short hi-freq",
+        "params": {
+          "BBLen": 3.0,
+          "BBmult": 1.5,
+          "ATRMult": 7.0,
+          "ReentryBars": 14.0
+        },
+        "timestamp": "2026-06-24T23:06:25.210773",
+        "elapsed_sec": 47.1,
+        "rows": 81,
+        "net_profit": 21301.4,
+        "max_intraday_drawdown": -6840.71,
+        "total_trades": 361,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "BO1": {
+      "id": "BO1",
+      "regime": "champion (Obj-max) ***",
+      "params": {
+        "BBLen": 13.0,
+        "BBmult": 1.55,
+        "ATRMult": 7.0,
+        "ReentryBars": 13.0
+      },
+      "prior_is_np": 21210.0,
+      "prior_is_mdd": -4711.0,
+      "np_is": 21209.5,
+      "mdd_is": -4711.1,
+      "tr_is": 217,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 33022.7,
+      "mdd_full": -5672.07,
+      "tr_full": 294,
+      "oos_np": 11813.2,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BO2": {
+      "id": "BO2",
+      "regime": "short-BBLen",
+      "params": {
+        "BBLen": 8.0,
+        "BBmult": 1.5,
+        "ATRMult": 7.0,
+        "ReentryBars": 14.0
+      },
+      "prior_is_np": 18628.0,
+      "prior_is_mdd": -4814.0,
+      "np_is": 18627.8,
+      "mdd_is": -4813.85,
+      "tr_is": 233,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 32097.3,
+      "mdd_full": -5030.89,
+      "tr_full": 310,
+      "oos_np": 13469.5,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BO3": {
+      "id": "BO3",
+      "regime": "low-BBmult",
+      "params": {
+        "BBLen": 9.0,
+        "BBmult": 1.05,
+        "ATRMult": 7.0,
+        "ReentryBars": 17.0
+      },
+      "prior_is_np": 20767.0,
+      "prior_is_mdd": -5888.0,
+      "np_is": 21254.0,
+      "mdd_is": -5939.26,
+      "tr_is": 216,
+      "is_drift_vs_prior_pct": 2.3,
+      "np_full": 30941.4,
+      "mdd_full": -5939.26,
+      "tr_full": 297,
+      "oos_np": 9687.4,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "BO4": {
+      "id": "BO4",
+      "regime": "ultra-short hi-freq",
+      "params": {
+        "BBLen": 3.0,
+        "BBmult": 1.5,
+        "ATRMult": 7.0,
+        "ReentryBars": 14.0
+      },
+      "prior_is_np": 12696.0,
+      "prior_is_mdd": -6841.0,
+      "np_is": 12696.3,
+      "mdd_is": -6840.71,
+      "tr_is": 263,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 21301.4,
+      "mdd_full": -6840.71,
+      "tr_full": 361,
+      "oos_np": 8605.1,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "BO3",
+    "best_oos_np_passing_params": {
+      "BBLen": 9.0,
+      "BBmult": 1.05,
+      "ATRMult": 7.0,
+      "ReentryBars": 17.0
+    },
+    "best_oos_np_passing_value": 9687.4,
+    "max_oos_np_any": "BO2",
+    "lowest_full_mdd": "BO2"
+  },
+  "run_started_at": "2026-06-24T22:58:30.244021",
+  "run_finished_at": "2026-06-24T23:06:25.213276",
+  "run_total_sec": 475.0
+}

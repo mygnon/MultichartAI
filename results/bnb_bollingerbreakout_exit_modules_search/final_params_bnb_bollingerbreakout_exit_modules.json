@@ -1,0 +1,186 @@
+{
+  "strategy_main": "SFJ_BollingerBreakout_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "champion_fixed": {
+    "BBLen": 8.0,
+    "BBmult": 1.5,
+    "ATRMult": 7.0,
+    "ReentryBars": 14.0
+  },
+  "baseline_reference": {
+    "net_profit": 18628.0,
+    "max_drawdown": -4814.0,
+    "total_trades": 233
+  },
+  "baseline_measured": {
+    "net_profit": 18627.8,
+    "max_drawdown": -4813.85,
+    "total_trades": 233,
+    "exact_champion_row": true,
+    "drift_vs_reference_pct": -0.001,
+    "timestamp": "2026-06-24T23:19:09.764334"
+  },
+  "mode": "independent (one module at a time)",
+  "smoke": false,
+  "modules": [
+    {
+      "module": 1,
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params_range": {
+        "STP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-24T23:20:43.506145",
+      "best_params": {
+        "STP": 6.4
+      },
+      "net_profit": 21657.9,
+      "max_drawdown": -6106.61,
+      "objective": 76812.60673434199,
+      "total_trades": 248,
+      "delta_np_vs_baseline": 3030.1,
+      "delta_np_pct": 16.27,
+      "delta_mdd_vs_baseline": -1292.76,
+      "valid": true
+    },
+    {
+      "module": 2,
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params_range": {
+        "ATRSTP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-24T23:22:40.363561",
+      "best_params": {
+        "ATRSTP": 17.3
+      },
+      "net_profit": 22274.1,
+      "max_drawdown": -4733.99,
+      "objective": 104802.82611708093,
+      "total_trades": 243,
+      "delta_np_vs_baseline": 3646.3,
+      "delta_np_pct": 19.57,
+      "delta_mdd_vs_baseline": 79.86,
+      "valid": true
+    },
+    {
+      "module": 3,
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params_range": {
+        "EXITBAR": [
+          1.0,
+          1000.0,
+          1.0
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-24T23:24:31.921763",
+      "best_params": {
+        "EXITBAR": 86.0
+      },
+      "net_profit": 21969.1,
+      "max_drawdown": -5516.45,
+      "objective": 87491.29509195224,
+      "total_trades": 246,
+      "delta_np_vs_baseline": 3341.3,
+      "delta_np_pct": 17.94,
+      "delta_mdd_vs_baseline": -702.6,
+      "valid": true
+    },
+    {
+      "module": 4,
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params_range": {
+        "DAYRANGE": [
+          0.01,
+          10.0,
+          0.01
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-24T23:26:19.271596",
+      "best_params": {
+        "DAYRANGE": 3.94
+      },
+      "net_profit": 18780.1,
+      "max_drawdown": -4788.66,
+      "objective": 73651.53425175308,
+      "total_trades": 270,
+      "delta_np_vs_baseline": 152.3,
+      "delta_np_pct": 0.82,
+      "delta_mdd_vs_baseline": 25.19,
+      "valid": true
+    },
+    {
+      "module": 5,
+      "signal": "QuantPass_PT_Exit",
+      "params_range": {
+        "PT_Base": [
+          0.001,
+          1.0,
+          0.001
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-24T23:28:28.818148",
+      "best_params": {
+        "PT_Base": 0.196
+      },
+      "net_profit": 28937.9,
+      "max_drawdown": -4904.67,
+      "objective": 170735.6573245499,
+      "total_trades": 250,
+      "delta_np_vs_baseline": 10310.1,
+      "delta_np_pct": 55.35,
+      "delta_mdd_vs_baseline": -90.82,
+      "valid": true
+    },
+    {
+      "module": 6,
+      "signal": "RescueTeamExit",
+      "params_range": {
+        "Length": [
+          20.0,
+          600.0,
+          20.0
+        ],
+        "std": [
+          3.0,
+          6.0,
+          0.1
+        ]
+      },
+      "combos": 930,
+      "rows": 930,
+      "timestamp": "2026-06-24T23:30:30.635852",
+      "best_params": {
+        "Length": 100.0,
+        "std": 3.5
+      },
+      "net_profit": 29459.0,
+      "max_drawdown": -4392.67,
+      "objective": 197563.8235970378,
+      "total_trades": 267,
+      "delta_np_vs_baseline": 10831.2,
+      "delta_np_pct": 58.15,
+      "delta_mdd_vs_baseline": 421.18,
+      "valid": true
+    }
+  ],
+  "timestamp": "2026-06-24T23:16:24.764300"
+}

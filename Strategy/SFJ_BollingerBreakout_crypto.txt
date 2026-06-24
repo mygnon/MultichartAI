@@ -1,0 +1,101 @@
+{===============================================================================
+  SFJ_BollingerBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Pure Bollinger-Band breakout (STOP) + ReentryBars cooldown
+  + ATR chandelier trail.
+
+  Tests ONE clean question with the proven engine bolted on: is the breakout
+  REFERENCE LEVEL better as a price-extreme channel (Donchian Highest/Lowest) or
+  as a STATISTICAL volatility band (Bollinger mean +/- BBmult*stdev)?
+    - SFJ_BBSqueeze tested a band breakout but only WHILE a squeeze filter was on
+      -- and the research showed entry FILTERS boost IS yet fail OOS. This strips
+      the squeeze gate: a PURE band breakout, always armed when flat.
+    - Everything else is the engine proven to work (Donchian v2 / DonchianAsymV2):
+      (1) an intrabar STOP fill AT the band edge (prior-bar band, non-lagged),
+      (2) a WIDE ATR(14) chandelier trailing exit (the decisive lever),
+      (3) a ReentryBars flat-only COOLDOWN (the only entry-side lever the
+          optimizer keeps >0 instead of driving to floor -- the real anti-chop
+          mechanism that lifted bare Donchian from all-negative to strong).
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpBB STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnBB STOP
+    - Exit  : ATR(14) chandelier trailing stop. Flat-only (no always-in flip).
+  Uses the built-in BollingerBand(Price, Length, NumDevs) (proven in _2021Basic_Osc).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    BBLen       - Bollinger period (mean + stdev lookback)
+    BBmult      - band half-width in standard deviations (breakout distance)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Logic:
+    UpBB = BollingerBand(Close, BBLen,  BBmult)[1]   (prior-bar upper band)
+    DnBB = BollingerBand(Close, BBLen, -BBmult)[1]   (prior-bar lower band)
+    flatBars counts consecutive flat bars (reset to 0 while in a position)
+    Long  entry : flat & flatBars >= ReentryBars -> Buy       next bar at UpBB STOP
+    Short entry : flat & flatBars >= ReentryBars -> SellShort  next bar at DnBB STOP
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: BBLen=20, BBmult=2.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-24
+===============================================================================}
+
+inputs:
+    BBLen( 20 ),
+    BBmult( 2.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    UpBB( 0 ),
+    DnBB( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- Bollinger bands of the COMPLETED bar (prior-bar = non-lagged STOP level) ---- }
+UpBB = BollingerBand( Close, BBLen,  BBmult )[1] ;
+DnBB = BollingerBand( Close, BBLen, -BBmult )[1] ;
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: pure Bollinger-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "BbLE" ) _Crypto1MUSD contract next bar at UpBB stop ;
+    SellShort ( "BbSE" ) _Crypto1MUSD contract next bar at DnBB stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "BbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "BbSX" ) next bar at TrailShort stop ;
+end ;

@@ -1,0 +1,130 @@
+{
+  "round": 1,
+  "strategy": "SFJ_FractalBreakout_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Williams-fractal swing-pivot breakout: lastHi/lastLo = last confirmed 2*FracLen+1 fractal; flat -> Buy STOP@lastHi / SellShort STOP@lastLo; ATR(14) chandelier trailing exit; long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "FracLen (fractal strength bars-each-side int), ATRMult (trail frac); defaults 2/3.0"
+  },
+  "obj_max_champion": {},
+  "np_max_champion": {},
+  "run_total_sec": 457.3,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global",
+      "combos": 462,
+      "rows": 462,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 92.7,
+      "timestamp": "2026-06-24T10:22:37.858850"
+    },
+    {
+      "attempt": 2,
+      "name": "02_fine_low",
+      "combos": 500,
+      "rows": 500,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.7,
+      "timestamp": "2026-06-24T10:23:14.645298"
+    },
+    {
+      "attempt": 3,
+      "name": "03_classic",
+      "combos": 238,
+      "rows": 238,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 35.9,
+      "timestamp": "2026-06-24T10:23:50.544628"
+    },
+    {
+      "attempt": 4,
+      "name": "04_wide_trail",
+      "combos": 290,
+      "rows": 290,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 35.9,
+      "timestamp": "2026-06-24T10:24:26.476743"
+    },
+    {
+      "attempt": 5,
+      "name": "05_frac_scan",
+      "combos": 175,
+      "rows": 182,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 35.3,
+      "timestamp": "2026-06-24T10:25:01.778092"
+    },
+    {
+      "attempt": 6,
+      "name": "06_trail_fine",
+      "combos": 583,
+      "rows": 583,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 38.2,
+      "timestamp": "2026-06-24T10:25:40.020051"
+    },
+    {
+      "attempt": 7,
+      "name": "07_long_frac",
+      "combos": 323,
+      "rows": 323,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 36.7,
+      "timestamp": "2026-06-24T10:26:16.681012"
+    },
+    {
+      "attempt": 8,
+      "name": "08_dense_low",
+      "combos": 225,
+      "rows": 225,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 35.9,
+      "timestamp": "2026-06-24T10:26:52.548990"
+    },
+    {
+      "attempt": 9,
+      "name": "09_adaptive_zoom1",
+      "combos": 252,
+      "rows": 252,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 31.0,
+      "timestamp": "2026-06-24T10:27:23.559722"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom2",
+      "combos": 96,
+      "rows": 96,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 35.3,
+      "timestamp": "2026-06-24T10:27:58.875349"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom3",
+      "combos": 85,
+      "rows": 85,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.1,
+      "timestamp": "2026-06-24T10:28:33.016257"
+    }
+  ]
+}

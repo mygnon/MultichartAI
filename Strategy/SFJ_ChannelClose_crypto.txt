@@ -1,0 +1,89 @@
+{===============================================================================
+  SFJ_ChannelClose_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Close-confirmed Donchian channel breakout + ATR chandelier trail.
+
+  Direct descendant of the ONLY proven OOS-robust archetype (Donchian: rolling
+  price-CHANNEL breakout + WIDE ATR chandelier trail). The research showed:
+    - the ROLLING extreme (non-lagged) channel is the edge -- a LAGGED confirmed
+      pivot (SFJ_FractalBreakout) whipsaws and loses on every combo;
+    - so this keeps Donchian's rolling Highest/Lowest channel, UNCHANGED.
+  The one new lever tests Donchian's OTHER failure mode: a STOP order at the
+  channel edge fills on any intrabar WICK that pokes through, including noise
+  spikes that immediately reverse. This variant instead requires the bar to
+  CLOSE beyond the channel and enters at next-bar MARKET -- a non-lagged
+  close-CONFIRMED breakout that filters intrabar wick false-fills while still
+  reacting on the very next bar (no fractal-style confirmation lag).
+    - Long  : flat & Close > prior ChanLen-bar high  -> Buy       next bar market
+    - Short : flat & Close < prior ChanLen-bar low   -> SellShort next bar market
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Hypothesis: close-confirmation should generalize at least as well as Donchian's
+  raw stop-breakout, possibly better OOS (fewer wick-triggered false entries).
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (both optimizable; names match the optimizer's ParamAxis exactly):
+    ChanLen - Donchian channel lookback (bars); breakout reference
+    ATRMult - trailing-stop distance in ATR(14) multiples (wider = looser stop)
+
+  Logic:
+    HH = Highest(High, ChanLen)[1] ;  LL = Lowest(Low, ChanLen)[1]   (prior-bar channel)
+    Long  entry : flat & Close > HH -> Buy       next bar at market
+    Short entry : flat & Close < LL -> SellShort  next bar at market
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: ChanLen=20, ATRMult=3.0
+  Author: generated for Tim / MultichartAI, 2026-06-24
+===============================================================================}
+
+inputs:
+    ChanLen( 20 ),
+    ATRMult( 3.0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    HH( 0 ),
+    LL( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- rolling Donchian channel of COMPLETED bars (non-lagged, prior bar) ---- }
+HH = Highest( High, ChanLen )[1] ;
+LL = Lowest ( Low , ChanLen )[1] ;
+
+{ ---- entries: CLOSE-confirmed channel breakout, market, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    if Close > HH then
+        Buy ( "CcLE" ) _Crypto1MUSD contract next bar at market ;
+    if Close < LL then
+        SellShort ( "CcSE" ) _Crypto1MUSD contract next bar at market ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "CcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "CcSX" ) next bar at TrailShort stop ;
+end ;

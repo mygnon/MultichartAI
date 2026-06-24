@@ -1,0 +1,256 @@
+{
+  "round": 1,
+  "strategy": "SFJ_DonchianAsym_crypto",
+  "symbol": "BNBUSDT HOT",
+  "timeframe": "Hourly (60 min)",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Asymmetric Donchian breakout: HHl=Highest(High,LongLen)[1] LLs=Lowest(Low,ShortLen)[1]; flat -> Buy STOP@HHl / SellShort STOP@LLs; ATR(14) chandelier trailing exits; flat-only; long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "LongLen (long-side channel int), ShortLen (short-side channel int), ATRMult (trail frac); defaults 20/20/3.0"
+  },
+  "obj_max_champion": {
+    "LongLen": 18.0,
+    "ShortLen": 252.0,
+    "ATRMult": 7.95,
+    "objective": 4113.828271521997,
+    "net_profit": 5659.06,
+    "max_drawdown": -7784.71,
+    "total_trades": 193,
+    "attempt": 10,
+    "name": "10_adaptive_zoom1"
+  },
+  "np_max_champion": {
+    "LongLen": 17.0,
+    "ShortLen": 245.76,
+    "ATRMult": 7.996,
+    "objective": 4081.168252787967,
+    "net_profit": 5754.33,
+    "max_drawdown": -8113.44,
+    "total_trades": 193,
+    "attempt": 12,
+    "name": "12_adaptive_zoom3"
+  },
+  "run_total_sec": 546.2,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_global",
+      "combos": 1089,
+      "rows": 1089,
+      "obj_max": {
+        "LongLen": 20.0,
+        "ShortLen": 110.0,
+        "ATRMult": 8.0,
+        "objective": 90.13804056187682,
+        "net_profit": 852.966,
+        "max_drawdown": -8071.52,
+        "total_trades": 191
+      },
+      "np_max": {
+        "LongLen": 20.0,
+        "ShortLen": 110.0,
+        "ATRMult": 8.0,
+        "objective": 90.13804056187682,
+        "net_profit": 852.966,
+        "max_drawdown": -8071.52,
+        "total_trades": 191
+      },
+      "elapsed_sec": 91.1,
+      "timestamp": "2026-06-24T11:31:35.159500"
+    },
+    {
+      "attempt": 2,
+      "name": "02_short_both",
+      "combos": 1024,
+      "rows": 1024,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 42.1,
+      "timestamp": "2026-06-24T11:32:17.266723"
+    },
+    {
+      "attempt": 3,
+      "name": "03_classic",
+      "combos": 726,
+      "rows": 726,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 34.8,
+      "timestamp": "2026-06-24T11:32:52.150604"
+    },
+    {
+      "attempt": 4,
+      "name": "04_wide_trail",
+      "combos": 1300,
+      "rows": 1300,
+      "obj_max": {
+        "LongLen": 10.0,
+        "ShortLen": 10.0,
+        "ATRMult": 15.0,
+        "objective": 183.43864095782575,
+        "net_profit": 1435.25,
+        "max_drawdown": -11229.6,
+        "total_trades": 79
+      },
+      "np_max": {
+        "LongLen": 10.0,
+        "ShortLen": 10.0,
+        "ATRMult": 15.0,
+        "objective": 183.43864095782575,
+        "net_profit": 1435.25,
+        "max_drawdown": -11229.6,
+        "total_trades": 79
+      },
+      "elapsed_sec": 42.4,
+      "timestamp": "2026-06-24T11:33:34.585784"
+    },
+    {
+      "attempt": 5,
+      "name": "05_long_asym",
+      "combos": 900,
+      "rows": 900,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 40.1,
+      "timestamp": "2026-06-24T11:34:14.643227"
+    },
+    {
+      "attempt": 6,
+      "name": "06_short_asym",
+      "combos": 900,
+      "rows": 900,
+      "obj_max": {
+        "LongLen": 20.0,
+        "ShortLen": 300.0,
+        "ATRMult": 7.0,
+        "objective": 696.2431498045325,
+        "net_profit": 2253.34,
+        "max_drawdown": -7292.77,
+        "total_trades": 227
+      },
+      "np_max": {
+        "LongLen": 20.0,
+        "ShortLen": 300.0,
+        "ATRMult": 7.0,
+        "objective": 696.2431498045325,
+        "net_profit": 2253.34,
+        "max_drawdown": -7292.77,
+        "total_trades": 227
+      },
+      "elapsed_sec": 40.7,
+      "timestamp": "2026-06-24T11:34:55.365577"
+    },
+    {
+      "attempt": 7,
+      "name": "07_trail_fine",
+      "combos": 1323,
+      "rows": 1323,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 42.9,
+      "timestamp": "2026-06-24T11:35:38.312844"
+    },
+    {
+      "attempt": 8,
+      "name": "08_dense_low",
+      "combos": 1600,
+      "rows": 1600,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 43.6,
+      "timestamp": "2026-06-24T11:36:21.932260"
+    },
+    {
+      "attempt": 9,
+      "name": "09_long_both",
+      "combos": 2023,
+      "rows": 2023,
+      "obj_max": null,
+      "np_max": null,
+      "elapsed_sec": 48.4,
+      "timestamp": "2026-06-24T11:37:10.290825"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom1",
+      "combos": 792,
+      "rows": 891,
+      "obj_max": {
+        "LongLen": 18.0,
+        "ShortLen": 252.0,
+        "ATRMult": 7.95,
+        "objective": 4113.828271521997,
+        "net_profit": 5659.06,
+        "max_drawdown": -7784.71,
+        "total_trades": 193
+      },
+      "np_max": {
+        "LongLen": 18.0,
+        "ShortLen": 252.0,
+        "ATRMult": 7.95,
+        "objective": 4113.828271521997,
+        "net_profit": 5659.06,
+        "max_drawdown": -7784.71,
+        "total_trades": 193
+      },
+      "elapsed_sec": 42.2,
+      "timestamp": "2026-06-24T11:37:52.475392"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom2",
+      "combos": 720,
+      "rows": 792,
+      "obj_max": {
+        "LongLen": 18.0,
+        "ShortLen": 292.56,
+        "ATRMult": 8.201,
+        "objective": 2764.4434941052937,
+        "net_profit": 4305.08,
+        "max_drawdown": -6704.32,
+        "total_trades": 190
+      },
+      "np_max": {
+        "LongLen": 17.0,
+        "ShortLen": 244.56,
+        "ATRMult": 8.201,
+        "objective": 2751.863433295936,
+        "net_profit": 4667.0,
+        "max_drawdown": -7914.96,
+        "total_trades": 189
+      },
+      "elapsed_sec": 35.2,
+      "timestamp": "2026-06-24T11:38:27.789673"
+    },
+    {
+      "attempt": 12,
+      "name": "12_adaptive_zoom3",
+      "combos": 405,
+      "rows": 405,
+      "obj_max": {
+        "LongLen": 17.0,
+        "ShortLen": 245.76,
+        "ATRMult": 7.996,
+        "objective": 4081.168252787967,
+        "net_profit": 5754.33,
+        "max_drawdown": -8113.44,
+        "total_trades": 193
+      },
+      "np_max": {
+        "LongLen": 17.0,
+        "ShortLen": 245.76,
+        "ATRMult": 7.996,
+        "objective": 4081.168252787967,
+        "net_profit": 5754.33,
+        "max_drawdown": -8113.44,
+        "total_trades": 193
+      },
+      "elapsed_sec": 33.5,
+      "timestamp": "2026-06-24T11:39:01.340961"
+    }
+  ]
+}

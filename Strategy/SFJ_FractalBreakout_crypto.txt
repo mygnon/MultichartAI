@@ -1,0 +1,109 @@
+{===============================================================================
+  SFJ_FractalBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. Williams-fractal swing-pivot breakout + ATR chandelier trail.
+
+  NEW entry archetype in the one PROVEN OOS-robust family. The crypto research
+  concluded only Donchian (price-CHANNEL breakout + WIDE ATR chandelier trail)
+  is both IS-strong AND OOS-robust; every other entry (band, pullback, ROC, SAR,
+  HA flip, vol-buffer) is IS-strong-but-OOS-fragile. This system stays in the
+  channel-breakout family but replaces Donchian's ROLLING Highest/Lowest with a
+  STRUCTURE-CONFIRMED swing pivot (a Williams fractal):
+    - An up-fractal (swing high) is High[FracLen] that is the highest of the
+      surrounding 2*FracLen+1 bars; confirmed FracLen bars after it prints.
+    - The most recent confirmed swing high / swing low become the breakout
+      levels. Buy STOP at the last swing high; SellShort STOP at the last swing
+      low (flat-only). The fractal waits for a CONFIRMED structure, so the
+      breakout level is a real prior pivot, not just any N-bar extreme -- the
+      hypothesis is this generalizes at least as well as Donchian's channel.
+    - Exit = ATR(14) chandelier trailing stop (the decisive exit). No entry
+      buffer (the research showed vol buffers get driven to zero), so the level
+      is the raw pivot.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (both optimizable; names match the optimizer's ParamAxis exactly):
+    FracLen - bars on EACH side of the pivot (fractal strength; larger = rarer,
+              more significant swings; classic Williams fractal = 2)
+    ATRMult - trailing-stop distance in ATR(14) multiples (wider = looser stop)
+
+  Logic:
+    up-fractal at offset FracLen: High[FracLen] >= High[FracLen +/- i], i=1..FracLen
+    dn-fractal at offset FracLen: Low[FracLen]  <= Low[FracLen +/- i],  i=1..FracLen
+    lastHi / lastLo = most recent confirmed up / dn fractal price
+    Long  entry : flat & lastHi>0 -> Buy       next bar at lastHi STOP
+    Short entry : flat & lastLo>0 -> SellShort  next bar at lastLo STOP
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over running extreme
+
+  Defaults: FracLen=2, ATRMult=3.0
+  Author: generated for Tim / MultichartAI, 2026-06-24
+===============================================================================}
+
+inputs:
+    FracLen( 2 ),
+    ATRMult( 3.0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    isHi( false ),
+    isLo( false ),
+    ii( 0 ),
+    lastHi( 0 ),
+    lastLo( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- Williams fractal detection at offset FracLen (needs 2*FracLen+1 bars) ---- }
+if CurrentBar > 2 * FracLen then
+begin
+    isHi = true ;
+    isLo = true ;
+    for ii = 1 to FracLen
+    begin
+        if High[FracLen] < High[FracLen + ii] or High[FracLen] < High[FracLen - ii] then
+            isHi = false ;
+        if Low[FracLen] > Low[FracLen + ii] or Low[FracLen] > Low[FracLen - ii] then
+            isLo = false ;
+    end ;
+    if isHi then
+        lastHi = High[FracLen] ;
+    if isLo then
+        lastLo = Low[FracLen] ;
+end ;
+
+{ ---- entries: confirmed swing-pivot breakout STOP orders, only when flat ---- }
+if MarketPosition = 0 then
+begin
+    if lastHi > 0 then
+        Buy ( "FrLE" ) _Crypto1MUSD contract next bar at lastHi stop ;
+    if lastLo > 0 then
+        SellShort ( "FrSE" ) _Crypto1MUSD contract next bar at lastLo stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "FrLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "FrSX" ) next bar at TrailShort stop ;
+end ;
