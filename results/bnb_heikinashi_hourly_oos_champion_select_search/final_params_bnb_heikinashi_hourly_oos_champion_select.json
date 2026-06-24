@@ -1,0 +1,238 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_HeikinAshi_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "HA1": {
+        "id": "HA1",
+        "regime": "wide-trail champion ***",
+        "params": {
+          "HASmooth": 3.0,
+          "ATRMult": 8.25
+        },
+        "timestamp": "2026-06-24T00:54:27.206392",
+        "elapsed_sec": 87.1,
+        "rows": 9,
+        "net_profit": 20688.8,
+        "max_intraday_drawdown": -6347.95,
+        "total_trades": 196,
+        "valid": true
+      },
+      "HA2": {
+        "id": "HA2",
+        "regime": "raw-HA wide-trail",
+        "params": {
+          "HASmooth": 1.0,
+          "ATRMult": 9.0
+        },
+        "timestamp": "2026-06-24T00:54:57.302159",
+        "elapsed_sec": 30.1,
+        "rows": 6,
+        "net_profit": 18879.4,
+        "max_intraday_drawdown": -6563.44,
+        "total_trades": 169,
+        "valid": true
+      },
+      "HA3": {
+        "id": "HA3",
+        "regime": "ultra-wide low-freq",
+        "params": {
+          "HASmooth": 4.0,
+          "ATRMult": 16.0
+        },
+        "timestamp": "2026-06-24T00:55:27.663378",
+        "elapsed_sec": 30.4,
+        "rows": 9,
+        "net_profit": 15472.9,
+        "max_intraday_drawdown": -7114.97,
+        "total_trades": 71,
+        "valid": true
+      },
+      "HA4": {
+        "id": "HA4",
+        "regime": "tight-trail high-freq",
+        "params": {
+          "HASmooth": 3.0,
+          "ATRMult": 7.0
+        },
+        "timestamp": "2026-06-24T00:55:58.229521",
+        "elapsed_sec": 30.6,
+        "rows": 9,
+        "net_profit": 8035.82,
+        "max_intraday_drawdown": -9566.53,
+        "total_trades": 244,
+        "valid": true
+      }
+    },
+    "full": {
+      "HA1": {
+        "id": "HA1",
+        "regime": "wide-trail champion ***",
+        "params": {
+          "HASmooth": 3.0,
+          "ATRMult": 8.25
+        },
+        "timestamp": "2026-06-24T00:57:26.840687",
+        "elapsed_sec": 61.9,
+        "rows": 9,
+        "net_profit": 15358.8,
+        "max_intraday_drawdown": -16073.1,
+        "total_trades": 260,
+        "valid": true
+      },
+      "HA2": {
+        "id": "HA2",
+        "regime": "raw-HA wide-trail",
+        "params": {
+          "HASmooth": 1.0,
+          "ATRMult": 9.0
+        },
+        "timestamp": "2026-06-24T00:57:56.443898",
+        "elapsed_sec": 29.6,
+        "rows": 6,
+        "net_profit": 230.196,
+        "max_intraday_drawdown": -25007.8,
+        "total_trades": 235,
+        "valid": true
+      },
+      "HA3": {
+        "id": "HA3",
+        "regime": "ultra-wide low-freq",
+        "params": {
+          "HASmooth": 4.0,
+          "ATRMult": 16.0
+        },
+        "timestamp": "2026-06-24T00:58:26.213098",
+        "elapsed_sec": 29.8,
+        "rows": 9,
+        "net_profit": 17626.3,
+        "max_intraday_drawdown": -11150.8,
+        "total_trades": 94,
+        "valid": true
+      },
+      "HA4": {
+        "id": "HA4",
+        "regime": "tight-trail high-freq",
+        "params": {
+          "HASmooth": 3.0,
+          "ATRMult": 7.0
+        },
+        "timestamp": "2026-06-24T00:58:56.624965",
+        "elapsed_sec": 30.4,
+        "rows": 9,
+        "net_profit": 8293.07,
+        "max_intraday_drawdown": -15121.5,
+        "total_trades": 335,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "HA1": {
+      "id": "HA1",
+      "regime": "wide-trail champion ***",
+      "params": {
+        "HASmooth": 3.0,
+        "ATRMult": 8.25
+      },
+      "prior_is_np": 20688.8,
+      "prior_is_mdd": -6347.95,
+      "np_is": 20688.8,
+      "mdd_is": -6347.95,
+      "tr_is": 196,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 15358.8,
+      "mdd_full": -16073.1,
+      "tr_full": 260,
+      "oos_np": -5330.0,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "HA2": {
+      "id": "HA2",
+      "regime": "raw-HA wide-trail",
+      "params": {
+        "HASmooth": 1.0,
+        "ATRMult": 9.0
+      },
+      "prior_is_np": 18879.4,
+      "prior_is_mdd": -6563.44,
+      "np_is": 18879.4,
+      "mdd_is": -6563.44,
+      "tr_is": 169,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 230.196,
+      "mdd_full": -25007.8,
+      "tr_full": 235,
+      "oos_np": -18649.2,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "HA3": {
+      "id": "HA3",
+      "regime": "ultra-wide low-freq",
+      "params": {
+        "HASmooth": 4.0,
+        "ATRMult": 16.0
+      },
+      "prior_is_np": 15473.0,
+      "prior_is_mdd": -7115.0,
+      "np_is": 15472.9,
+      "mdd_is": -7114.97,
+      "tr_is": 71,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 17626.3,
+      "mdd_full": -11150.8,
+      "tr_full": 94,
+      "oos_np": 2153.4,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "HA4": {
+      "id": "HA4",
+      "regime": "tight-trail high-freq",
+      "params": {
+        "HASmooth": 3.0,
+        "ATRMult": 7.0
+      },
+      "prior_is_np": 8036.0,
+      "prior_is_mdd": -9567.0,
+      "np_is": 8035.82,
+      "mdd_is": -9566.53,
+      "tr_is": 244,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 8293.07,
+      "mdd_full": -15121.5,
+      "tr_full": 335,
+      "oos_np": 257.25,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "HA3",
+    "lowest_full_mdd": "HA3"
+  },
+  "run_started_at": "2026-06-24T00:52:47.881994",
+  "run_finished_at": "2026-06-24T00:58:56.626964",
+  "run_total_sec": 368.7
+}

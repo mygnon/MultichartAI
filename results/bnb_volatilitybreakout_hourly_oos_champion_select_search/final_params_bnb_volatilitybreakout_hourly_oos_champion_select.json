@@ -1,0 +1,250 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_VolatilityBreakout_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "VB1": {
+        "id": "VB1",
+        "regime": "wide-trail champion ***",
+        "params": {
+          "ATRLen": 45.0,
+          "EntryMult": 0.05,
+          "TrailMult": 16.5
+        },
+        "timestamp": "2026-06-24T08:50:35.531599",
+        "elapsed_sec": 95.9,
+        "rows": 27,
+        "net_profit": 21628.1,
+        "max_intraday_drawdown": -8161.09,
+        "total_trades": 102,
+        "valid": true
+      },
+      "VB2": {
+        "id": "VB2",
+        "regime": "short-ATRLen wide-trail",
+        "params": {
+          "ATRLen": 10.0,
+          "EntryMult": 0.05,
+          "TrailMult": 16.5
+        },
+        "timestamp": "2026-06-24T08:51:10.565189",
+        "elapsed_sec": 35.0,
+        "rows": 27,
+        "net_profit": 17097.4,
+        "max_intraday_drawdown": -6183.61,
+        "total_trades": 141,
+        "valid": true
+      },
+      "VB3": {
+        "id": "VB3",
+        "regime": "long-ATRLen tight-trail",
+        "params": {
+          "ATRLen": 125.0,
+          "EntryMult": 2.25,
+          "TrailMult": 8.0
+        },
+        "timestamp": "2026-06-24T08:51:51.115915",
+        "elapsed_sec": 40.5,
+        "rows": 27,
+        "net_profit": 11577.5,
+        "max_intraday_drawdown": -5494.02,
+        "total_trades": 171,
+        "valid": true
+      },
+      "VB4": {
+        "id": "VB4",
+        "regime": "short-ATRLen tight-trail",
+        "params": {
+          "ATRLen": 10.0,
+          "EntryMult": 1.0,
+          "TrailMult": 9.25
+        },
+        "timestamp": "2026-06-24T08:52:33.660867",
+        "elapsed_sec": 42.5,
+        "rows": 27,
+        "net_profit": 11534.5,
+        "max_intraday_drawdown": -6023.6,
+        "total_trades": 168,
+        "valid": true
+      }
+    },
+    "full": {
+      "VB1": {
+        "id": "VB1",
+        "regime": "wide-trail champion ***",
+        "params": {
+          "ATRLen": 45.0,
+          "EntryMult": 0.05,
+          "TrailMult": 16.5
+        },
+        "timestamp": "2026-06-24T08:53:56.780205",
+        "elapsed_sec": 69.3,
+        "rows": 27,
+        "net_profit": 6931.81,
+        "max_intraday_drawdown": -18847.4,
+        "total_trades": 152,
+        "valid": true
+      },
+      "VB2": {
+        "id": "VB2",
+        "regime": "short-ATRLen wide-trail",
+        "params": {
+          "ATRLen": 10.0,
+          "EntryMult": 0.05,
+          "TrailMult": 16.5
+        },
+        "timestamp": "2026-06-24T08:54:33.775130",
+        "elapsed_sec": 37.0,
+        "rows": 27,
+        "net_profit": 8397.05,
+        "max_intraday_drawdown": -17648.9,
+        "total_trades": 195,
+        "valid": true
+      },
+      "VB3": {
+        "id": "VB3",
+        "regime": "long-ATRLen tight-trail",
+        "params": {
+          "ATRLen": 125.0,
+          "EntryMult": 2.25,
+          "TrailMult": 8.0
+        },
+        "timestamp": "2026-06-24T08:55:11.205861",
+        "elapsed_sec": 37.4,
+        "rows": 27,
+        "net_profit": 16501.6,
+        "max_intraday_drawdown": -7175.33,
+        "total_trades": 219,
+        "valid": true
+      },
+      "VB4": {
+        "id": "VB4",
+        "regime": "short-ATRLen tight-trail",
+        "params": {
+          "ATRLen": 10.0,
+          "EntryMult": 1.0,
+          "TrailMult": 9.25
+        },
+        "timestamp": "2026-06-24T08:55:48.496669",
+        "elapsed_sec": 37.3,
+        "rows": 27,
+        "net_profit": 14281.6,
+        "max_intraday_drawdown": -9360.65,
+        "total_trades": 223,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "VB1": {
+      "id": "VB1",
+      "regime": "wide-trail champion ***",
+      "params": {
+        "ATRLen": 45.0,
+        "EntryMult": 0.05,
+        "TrailMult": 16.5
+      },
+      "prior_is_np": 21628.0,
+      "prior_is_mdd": -8161.0,
+      "np_is": 21628.1,
+      "mdd_is": -8161.09,
+      "tr_is": 102,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 6931.81,
+      "mdd_full": -18847.4,
+      "tr_full": 152,
+      "oos_np": -14696.29,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "VB2": {
+      "id": "VB2",
+      "regime": "short-ATRLen wide-trail",
+      "params": {
+        "ATRLen": 10.0,
+        "EntryMult": 0.05,
+        "TrailMult": 16.5
+      },
+      "prior_is_np": 17097.0,
+      "prior_is_mdd": -6184.0,
+      "np_is": 17097.4,
+      "mdd_is": -6183.61,
+      "tr_is": 141,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 8397.05,
+      "mdd_full": -17648.9,
+      "tr_full": 195,
+      "oos_np": -8700.35,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "VB3": {
+      "id": "VB3",
+      "regime": "long-ATRLen tight-trail",
+      "params": {
+        "ATRLen": 125.0,
+        "EntryMult": 2.25,
+        "TrailMult": 8.0
+      },
+      "prior_is_np": 11578.0,
+      "prior_is_mdd": -5494.0,
+      "np_is": 11577.5,
+      "mdd_is": -5494.02,
+      "tr_is": 171,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 16501.6,
+      "mdd_full": -7175.33,
+      "tr_full": 219,
+      "oos_np": 4924.1,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "VB4": {
+      "id": "VB4",
+      "regime": "short-ATRLen tight-trail",
+      "params": {
+        "ATRLen": 10.0,
+        "EntryMult": 1.0,
+        "TrailMult": 9.25
+      },
+      "prior_is_np": 11534.0,
+      "prior_is_mdd": -6024.0,
+      "np_is": 11534.5,
+      "mdd_is": -6023.6,
+      "tr_is": 168,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 14281.6,
+      "mdd_full": -9360.65,
+      "tr_full": 223,
+      "oos_np": 2747.1,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "VB3",
+    "lowest_full_mdd": "VB3"
+  },
+  "run_started_at": "2026-06-24T08:48:48.159980",
+  "run_finished_at": "2026-06-24T08:55:48.498680",
+  "run_total_sec": 420.3
+}
