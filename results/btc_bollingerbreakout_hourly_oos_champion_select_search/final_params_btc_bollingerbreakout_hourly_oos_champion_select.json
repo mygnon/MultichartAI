@@ -1,0 +1,262 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "SFJ_BollingerBreakout_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "CO1": {
+        "id": "CO1",
+        "regime": "Obj-max (lowest MDD) ***",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 1.5,
+          "ATRMult": 15.0,
+          "ReentryBars": 22.0
+        },
+        "timestamp": "2026-06-25T00:23:37.402929",
+        "elapsed_sec": 102.5,
+        "rows": 81,
+        "net_profit": 2235.7,
+        "max_intraday_drawdown": -424.564,
+        "total_trades": 98,
+        "valid": true
+      },
+      "CO2": {
+        "id": "CO2",
+        "regime": "NP-max short-BBLen",
+        "params": {
+          "BBLen": 4.0,
+          "BBmult": 1.5,
+          "ATRMult": 14.0,
+          "ReentryBars": 21.0
+        },
+        "timestamp": "2026-06-25T00:24:25.069557",
+        "elapsed_sec": 47.7,
+        "rows": 81,
+        "net_profit": 2307.77,
+        "max_intraday_drawdown": -859.42,
+        "total_trades": 113,
+        "valid": true
+      },
+      "CO3": {
+        "id": "CO3",
+        "regime": "wide-band tight-trail",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 2.25,
+          "ATRMult": 9.0,
+          "ReentryBars": 23.0
+        },
+        "timestamp": "2026-06-25T00:25:11.148530",
+        "elapsed_sec": 46.1,
+        "rows": 81,
+        "net_profit": 2090.54,
+        "max_intraday_drawdown": -408.999,
+        "total_trades": 173,
+        "valid": true
+      },
+      "CO4": {
+        "id": "CO4",
+        "regime": "long-BBLen hi-freq",
+        "params": {
+          "BBLen": 13.0,
+          "BBmult": 1.8,
+          "ATRMult": 7.8,
+          "ReentryBars": 21.0
+        },
+        "timestamp": "2026-06-25T00:25:57.986266",
+        "elapsed_sec": 46.8,
+        "rows": 81,
+        "net_profit": 1703.19,
+        "max_intraday_drawdown": -529.117,
+        "total_trades": 216,
+        "valid": true
+      }
+    },
+    "full": {
+      "CO1": {
+        "id": "CO1",
+        "regime": "Obj-max (lowest MDD) ***",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 1.5,
+          "ATRMult": 15.0,
+          "ReentryBars": 22.0
+        },
+        "timestamp": "2026-06-25T00:27:26.587660",
+        "elapsed_sec": 73.6,
+        "rows": 81,
+        "net_profit": 2810.12,
+        "max_intraday_drawdown": -913.475,
+        "total_trades": 120,
+        "valid": true
+      },
+      "CO2": {
+        "id": "CO2",
+        "regime": "NP-max short-BBLen",
+        "params": {
+          "BBLen": 4.0,
+          "BBmult": 1.5,
+          "ATRMult": 14.0,
+          "ReentryBars": 21.0
+        },
+        "timestamp": "2026-06-25T00:28:13.853057",
+        "elapsed_sec": 47.3,
+        "rows": 189,
+        "net_profit": 2120.4,
+        "max_intraday_drawdown": -930.46,
+        "total_trades": 147,
+        "valid": true
+      },
+      "CO3": {
+        "id": "CO3",
+        "regime": "wide-band tight-trail",
+        "params": {
+          "BBLen": 8.0,
+          "BBmult": 2.25,
+          "ATRMult": 9.0,
+          "ReentryBars": 23.0
+        },
+        "timestamp": "2026-06-25T00:29:00.970189",
+        "elapsed_sec": 47.1,
+        "rows": 81,
+        "net_profit": 363.618,
+        "max_intraday_drawdown": -2072.82,
+        "total_trades": 241,
+        "valid": true
+      },
+      "CO4": {
+        "id": "CO4",
+        "regime": "long-BBLen hi-freq",
+        "params": {
+          "BBLen": 13.0,
+          "BBmult": 1.8,
+          "ATRMult": 7.8,
+          "ReentryBars": 21.0
+        },
+        "timestamp": "2026-06-25T00:29:46.079055",
+        "elapsed_sec": 45.1,
+        "rows": 81,
+        "net_profit": 1822.3,
+        "max_intraday_drawdown": -714.192,
+        "total_trades": 280,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "CO1": {
+      "id": "CO1",
+      "regime": "Obj-max (lowest MDD) ***",
+      "params": {
+        "BBLen": 8.0,
+        "BBmult": 1.5,
+        "ATRMult": 15.0,
+        "ReentryBars": 22.0
+      },
+      "prior_is_np": 2236.0,
+      "prior_is_mdd": -425.0,
+      "np_is": 2235.7,
+      "mdd_is": -424.564,
+      "tr_is": 98,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2810.12,
+      "mdd_full": -913.475,
+      "tr_full": 120,
+      "oos_np": 574.42,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CO2": {
+      "id": "CO2",
+      "regime": "NP-max short-BBLen",
+      "params": {
+        "BBLen": 4.0,
+        "BBmult": 1.5,
+        "ATRMult": 14.0,
+        "ReentryBars": 21.0
+      },
+      "prior_is_np": 2308.0,
+      "prior_is_mdd": -859.0,
+      "np_is": 2307.77,
+      "mdd_is": -859.42,
+      "tr_is": 113,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2120.4,
+      "mdd_full": -930.46,
+      "tr_full": 147,
+      "oos_np": -187.37,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CO3": {
+      "id": "CO3",
+      "regime": "wide-band tight-trail",
+      "params": {
+        "BBLen": 8.0,
+        "BBmult": 2.25,
+        "ATRMult": 9.0,
+        "ReentryBars": 23.0
+      },
+      "prior_is_np": 2091.0,
+      "prior_is_mdd": -409.0,
+      "np_is": 2090.54,
+      "mdd_is": -408.999,
+      "tr_is": 173,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 363.618,
+      "mdd_full": -2072.82,
+      "tr_full": 241,
+      "oos_np": -1726.92,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CO4": {
+      "id": "CO4",
+      "regime": "long-BBLen hi-freq",
+      "params": {
+        "BBLen": 13.0,
+        "BBmult": 1.8,
+        "ATRMult": 7.8,
+        "ReentryBars": 21.0
+      },
+      "prior_is_np": 1703.0,
+      "prior_is_mdd": -529.0,
+      "np_is": 1703.19,
+      "mdd_is": -529.117,
+      "tr_is": 216,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1822.3,
+      "mdd_full": -714.192,
+      "tr_full": 280,
+      "oos_np": 119.11,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "CO1",
+    "lowest_full_mdd": "CO4"
+  },
+  "run_started_at": "2026-06-25T00:21:44.836674",
+  "run_finished_at": "2026-06-25T00:29:46.081562",
+  "run_total_sec": 481.2
+}
