@@ -1,0 +1,241 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "QuantPassATR_Breakout",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "QB1": {
+        "id": "QB1",
+        "regime": "Obj-max ceiling (90tr) ***",
+        "params": {
+          "Len": 212.0,
+          "Multiple": 3.27
+        },
+        "timestamp": "2026-06-25T20:35:47.912342",
+        "elapsed_sec": 119.2,
+        "rows": 9,
+        "net_profit": 2748.17,
+        "max_intraday_drawdown": -689.122,
+        "total_trades": 90,
+        "valid": true
+      },
+      "QB2": {
+        "id": "QB2",
+        "regime": "alt low-MDD (94tr)",
+        "params": {
+          "Len": 210.0,
+          "Multiple": 3.24
+        },
+        "timestamp": "2026-06-25T20:36:27.222937",
+        "elapsed_sec": 39.3,
+        "rows": 9,
+        "net_profit": 2660.01,
+        "max_intraday_drawdown": -689.122,
+        "total_trades": 94,
+        "valid": true
+      },
+      "QB3": {
+        "id": "QB3",
+        "regime": "short-Len high-freq (190tr)",
+        "params": {
+          "Len": 7.0,
+          "Multiple": 2.56
+        },
+        "timestamp": "2026-06-25T20:37:11.546035",
+        "elapsed_sec": 44.3,
+        "rows": 9,
+        "net_profit": 1592.08,
+        "max_intraday_drawdown": -754.591,
+        "total_trades": 190,
+        "valid": true
+      },
+      "QB4": {
+        "id": "QB4",
+        "regime": "short-Len alt (186tr)",
+        "params": {
+          "Len": 8.0,
+          "Multiple": 2.6
+        },
+        "timestamp": "2026-06-25T20:37:50.663779",
+        "elapsed_sec": 39.1,
+        "rows": 9,
+        "net_profit": 1521.89,
+        "max_intraday_drawdown": -880.323,
+        "total_trades": 186,
+        "valid": true
+      }
+    },
+    "full": {
+      "QB1": {
+        "id": "QB1",
+        "regime": "Obj-max ceiling (90tr) ***",
+        "params": {
+          "Len": 212.0,
+          "Multiple": 3.27
+        },
+        "timestamp": "2026-06-25T20:39:27.893476",
+        "elapsed_sec": 71.3,
+        "rows": 9,
+        "net_profit": 2544.21,
+        "max_intraday_drawdown": -967.215,
+        "total_trades": 109,
+        "valid": true
+      },
+      "QB2": {
+        "id": "QB2",
+        "regime": "alt low-MDD (94tr)",
+        "params": {
+          "Len": 210.0,
+          "Multiple": 3.24
+        },
+        "timestamp": "2026-06-25T20:40:06.971608",
+        "elapsed_sec": 39.1,
+        "rows": 9,
+        "net_profit": 2465.69,
+        "max_intraday_drawdown": -967.215,
+        "total_trades": 113,
+        "valid": true
+      },
+      "QB3": {
+        "id": "QB3",
+        "regime": "short-Len high-freq (190tr)",
+        "params": {
+          "Len": 7.0,
+          "Multiple": 2.56
+        },
+        "timestamp": "2026-06-25T20:40:46.407560",
+        "elapsed_sec": 39.4,
+        "rows": 9,
+        "net_profit": 2411.32,
+        "max_intraday_drawdown": -754.591,
+        "total_trades": 231,
+        "valid": true
+      },
+      "QB4": {
+        "id": "QB4",
+        "regime": "short-Len alt (186tr)",
+        "params": {
+          "Len": 8.0,
+          "Multiple": 2.6
+        },
+        "timestamp": "2026-06-25T20:41:24.847096",
+        "elapsed_sec": 38.4,
+        "rows": 9,
+        "net_profit": 2469.26,
+        "max_intraday_drawdown": -880.323,
+        "total_trades": 227,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "QB1": {
+      "id": "QB1",
+      "regime": "Obj-max ceiling (90tr) ***",
+      "params": {
+        "Len": 212.0,
+        "Multiple": 3.27
+      },
+      "prior_is_np": 2748.0,
+      "prior_is_mdd": -689.0,
+      "np_is": 2748.17,
+      "mdd_is": -689.122,
+      "tr_is": 90,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2544.21,
+      "mdd_full": -967.215,
+      "tr_full": 109,
+      "oos_np": -203.96,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "QB2": {
+      "id": "QB2",
+      "regime": "alt low-MDD (94tr)",
+      "params": {
+        "Len": 210.0,
+        "Multiple": 3.24
+      },
+      "prior_is_np": 2690.0,
+      "prior_is_mdd": -660.0,
+      "np_is": 2660.01,
+      "mdd_is": -689.122,
+      "tr_is": 94,
+      "is_drift_vs_prior_pct": -1.1,
+      "np_full": 2465.69,
+      "mdd_full": -967.215,
+      "tr_full": 113,
+      "oos_np": -194.32,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "QB3": {
+      "id": "QB3",
+      "regime": "short-Len high-freq (190tr)",
+      "params": {
+        "Len": 7.0,
+        "Multiple": 2.56
+      },
+      "prior_is_np": 1592.0,
+      "prior_is_mdd": -755.0,
+      "np_is": 1592.08,
+      "mdd_is": -754.591,
+      "tr_is": 190,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2411.32,
+      "mdd_full": -754.591,
+      "tr_full": 231,
+      "oos_np": 819.24,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "QB4": {
+      "id": "QB4",
+      "regime": "short-Len alt (186tr)",
+      "params": {
+        "Len": 8.0,
+        "Multiple": 2.6
+      },
+      "prior_is_np": 1522.0,
+      "prior_is_mdd": -880.0,
+      "np_is": 1521.89,
+      "mdd_is": -880.323,
+      "tr_is": 186,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2469.26,
+      "mdd_full": -880.323,
+      "tr_full": 227,
+      "oos_np": 947.37,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "QB4",
+    "best_oos_np_passing_params": {
+      "Len": 8.0,
+      "Multiple": 2.6
+    },
+    "best_oos_np_passing_value": 947.37,
+    "max_oos_np_any": "QB4",
+    "lowest_full_mdd": "QB3"
+  },
+  "run_started_at": "2026-06-25T20:33:39.091498",
+  "run_finished_at": "2026-06-25T20:41:24.849606",
+  "run_total_sec": 465.8
+}
