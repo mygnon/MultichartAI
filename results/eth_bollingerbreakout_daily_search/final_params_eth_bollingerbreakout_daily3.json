@@ -1,0 +1,378 @@
+{
+  "round": 3,
+  "strategy": "SFJ_BollingerBreakout_crypto",
+  "symbol": "ETHUSDT HOT",
+  "timeframe": "Daily",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "target_np": 100000.0,
+  "target_met": false,
+  "objective_def": "NetProfit^2 / |MaxDrawdown|",
+  "notes": {
+    "logic": "Pure Bollinger-band breakout + ReentryBars cooldown: UpBB=BollingerBand(Close,BBLen,BBmult)[1] DnBB=BollingerBand(Close,BBLen,-BBmult)[1]; flat & flatBars>=ReentryBars -> Buy STOP@UpBB / SellShort STOP@DnBB; ATR(14) chandelier trailing exits; flat-only; long+short",
+    "contract": "_Crypto1MUSD = Round(1000000/C, 0) ~ $1M notional/trade",
+    "params": "BBLen (Bollinger period int), BBmult (band stdev mult frac), ATRMult (trail frac), ReentryBars (flat cooldown int); defaults 20/2.0/3.0/0"
+  },
+  "obj_max_champion": {
+    "BBLen": 10.0,
+    "BBmult": 1.4,
+    "ATRMult": 3.0,
+    "ReentryBars": 14.0,
+    "objective": 12247.346463086278,
+    "net_profit": 2291.1,
+    "max_drawdown": -428.594,
+    "total_trades": 21,
+    "attempt": 1,
+    "name": "01_retest_seed"
+  },
+  "np_max_champion": {
+    "BBLen": 10.0,
+    "BBmult": 1.4,
+    "ATRMult": 3.0,
+    "ReentryBars": 14.0,
+    "objective": 12247.346463086278,
+    "net_profit": 2291.1,
+    "max_drawdown": -428.594,
+    "total_trades": 21,
+    "attempt": 1,
+    "name": "01_retest_seed"
+  },
+  "run_total_sec": 629.6,
+  "all_attempts": [
+    {
+      "attempt": 1,
+      "name": "01_retest_seed",
+      "combos": 81,
+      "rows": 81,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 103.9,
+      "timestamp": "2026-06-25T11:57:39.402314"
+    },
+    {
+      "attempt": 2,
+      "name": "02_bbmult_fine",
+      "combos": 891,
+      "rows": 891,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 43.9,
+      "timestamp": "2026-06-25T11:58:23.314238"
+    },
+    {
+      "attempt": 3,
+      "name": "03_bbmult_x_len",
+      "combos": 1989,
+      "rows": 1989,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 48.3,
+      "timestamp": "2026-06-25T11:59:11.631898"
+    },
+    {
+      "attempt": 4,
+      "name": "04_atrmult_fine",
+      "combos": 975,
+      "rows": 975,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 42.6,
+      "timestamp": "2026-06-25T11:59:54.224216"
+    },
+    {
+      "attempt": 5,
+      "name": "05_bbmult_vlow",
+      "combos": 585,
+      "rows": 585,
+      "obj_max": {
+        "BBLen": 11.0,
+        "BBmult": 0.6,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 5702.918769929993,
+        "net_profit": 1673.52,
+        "max_drawdown": -491.094,
+        "total_trades": 25
+      },
+      "np_max": {
+        "BBLen": 8.0,
+        "BBmult": 0.6,
+        "ATRMult": 2.75,
+        "ReentryBars": 14.0,
+        "objective": 4345.336160052185,
+        "net_profit": 1680.6,
+        "max_drawdown": -649.988,
+        "total_trades": 30
+      },
+      "elapsed_sec": 50.3,
+      "timestamp": "2026-06-25T12:00:44.540847"
+    },
+    {
+      "attempt": 6,
+      "name": "06_reentry_fine",
+      "combos": 837,
+      "rows": 837,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 42.9,
+      "timestamp": "2026-06-25T12:01:27.410269"
+    },
+    {
+      "attempt": 7,
+      "name": "07_bblen_fine",
+      "combos": 513,
+      "rows": 513,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 50.4,
+      "timestamp": "2026-06-25T12:02:17.859416"
+    },
+    {
+      "attempt": 8,
+      "name": "08_combo_tight",
+      "combos": 315,
+      "rows": 315,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 1.4,
+        "ATRMult": 3.0,
+        "ReentryBars": 14.0,
+        "objective": 12247.346463086278,
+        "net_profit": 2291.1,
+        "max_drawdown": -428.594,
+        "total_trades": 21
+      },
+      "elapsed_sec": 43.0,
+      "timestamp": "2026-06-25T12:03:00.893362"
+    },
+    {
+      "attempt": 9,
+      "name": "09_bbmult_high",
+      "combos": 360,
+      "rows": 360,
+      "obj_max": {
+        "BBLen": 10.0,
+        "BBmult": 2.5,
+        "ATRMult": 2.75,
+        "ReentryBars": 15.0,
+        "objective": 10470.736712514901,
+        "net_profit": 2036.13,
+        "max_drawdown": -395.944,
+        "total_trades": 23
+      },
+      "np_max": {
+        "BBLen": 10.0,
+        "BBmult": 2.5,
+        "ATRMult": 2.75,
+        "ReentryBars": 14.0,
+        "objective": 10065.163532969393,
+        "net_profit": 2071.32,
+        "max_drawdown": -426.259,
+        "total_trades": 23
+      },
+      "elapsed_sec": 50.6,
+      "timestamp": "2026-06-25T12:03:51.547578"
+    },
+    {
+      "attempt": 10,
+      "name": "10_adaptive_zoom1",
+      "combos": 1176,
+      "rows": 1715,
+      "obj_max": {
+        "BBLen": 14.0,
+        "BBmult": 2.15,
+        "ATRMult": 1.5,
+        "ReentryBars": 22.4,
+        "objective": 7726.739391976014,
+        "net_profit": 1743.85,
+        "max_drawdown": -393.57,
+        "total_trades": 29
+      },
+      "np_max": {
+        "BBLen": 5.0,
+        "BBmult": 0.65,
+        "ATRMult": 3.0,
+        "ReentryBars": 5.6,
+        "objective": 5942.424824067118,
+        "net_profit": 1948.46,
+        "max_drawdown": -638.88,
+        "total_trades": 34
+      },
+      "elapsed_sec": 44.0,
+      "timestamp": "2026-06-25T12:04:35.601734"
+    },
+    {
+      "attempt": 11,
+      "name": "11_adaptive_zoom2",
+      "combos": 875,
+      "rows": 875,
+      "obj_max": {
+        "BBLen": 8.0,
+        "BBmult": 0.9,
+        "ATRMult": 2.75,
+        "ReentryBars": 19.6,
+        "objective": 10118.332060667592,
+        "net_profit": 2062.92,
+        "max_drawdown": -420.587,
+        "total_trades": 23
+      },
+      "np_max": {
+        "BBLen": 8.0,
+        "BBmult": 0.9,
+        "ATRMult": 2.75,
+        "ReentryBars": 19.6,
+        "objective": 10118.332060667592,
+        "net_profit": 2062.92,
+        "max_drawdown": -420.587,
+        "total_trades": 23
+      },
+      "elapsed_sec": 48.2,
+      "timestamp": "2026-06-25T12:05:23.794981"
+    },
+    {
+      "attempt": 12,
+      "name": "12_adaptive_zoom3",
+      "combos": 500,
+      "rows": 625,
+      "obj_max": {
+        "BBLen": 12.0,
+        "BBmult": 1.0,
+        "ATRMult": 2.5,
+        "ReentryBars": 10.5,
+        "objective": 6684.395674683058,
+        "net_profit": 1761.06,
+        "max_drawdown": -463.966,
+        "total_trades": 29
+      },
+      "np_max": {
+        "BBLen": 12.0,
+        "BBmult": 1.0,
+        "ATRMult": 2.5,
+        "ReentryBars": 10.5,
+        "objective": 6684.395674683058,
+        "net_profit": 1761.06,
+        "max_drawdown": -463.966,
+        "total_trades": 29
+      },
+      "elapsed_sec": 52.0,
+      "timestamp": "2026-06-25T12:06:15.830668"
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "strategy_main": "SFJ_BollingerBreakout_crypto",
+  "symbol": "ETHUSDT HOT",
+  "timeframe": "Daily",
+  "is_window": "2022/01/01 - 2026/01/01 (chart-trimmed)",
+  "champion_fixed": {
+    "BBLen": 2.0,
+    "BBmult": 3.0,
+    "ATRMult": 2.0,
+    "ReentryBars": 11.0
+  },
+  "baseline_reference": {
+    "net_profit": 1609.0,
+    "max_drawdown": -500.0,
+    "total_trades": 45
+  },
+  "baseline_measured": {
+    "net_profit": 1608.86,
+    "max_drawdown": -500.181,
+    "total_trades": 45,
+    "exact_champion_row": true,
+    "drift_vs_reference_pct": -0.009,
+    "timestamp": "2026-06-25T13:09:46.669293"
+  },
+  "mode": "independent (one module at a time)",
+  "smoke": false,
+  "modules": [
+    {
+      "module": 1,
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params_range": {
+        "STP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-25T13:11:31.882624",
+      "best_params": {
+        "STP": 3.3
+      },
+      "net_profit": 1608.86,
+      "max_drawdown": -500.181,
+      "objective": 5174.987653669371,
+      "total_trades": 45,
+      "delta_np_vs_baseline": 0.0,
+      "delta_np_pct": 0.0,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 2,
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params_range": {
+        "ATRSTP": [
+          0.1,
+          100.0,
+          0.1
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-25T13:13:22.663958",
+      "best_params": {
+        "ATRSTP": 3.3
+      },
+      "net_profit": 1670.73,
+      "max_drawdown": -499.419,
+      "objective": 5589.172083761331,
+      "total_trades": 49,
+      "delta_np_vs_baseline": 61.87,
+      "delta_np_pct": 3.85,
+      "delta_mdd_vs_baseline": 0.76,
+      "valid": true
+    },
+    {
+      "module": 3,
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params_range": {
+        "EXITBAR": [
+          1.0,
+          1000.0,
+          1.0
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-25T13:15:16.067325",
+      "best_params": {
+        "EXITBAR": 19.0
+      },
+      "net_profit": 1704.31,
+      "max_drawdown": -500.181,
+      "objective": 5807.242930259245,
+      "total_trades": 47,
+      "delta_np_vs_baseline": 95.45,
+      "delta_np_pct": 5.93,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 4,
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params_range": {
+        "DAYRANGE": [
+          0.01,
+          10.0,
+          0.01
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-25T13:17:16.652408",
+      "best_params": {
+        "DAYRANGE": 4.27
+      },
+      "net_profit": 1608.86,
+      "max_drawdown": -500.181,
+      "objective": 5174.987653669371,
+      "total_trades": 45,
+      "delta_np_vs_baseline": 0.0,
+      "delta_np_pct": 0.0,
+      "delta_mdd_vs_baseline": 0.0,
+      "valid": true
+    },
+    {
+      "module": 5,
+      "signal": "QuantPass_PT_Exit",
+      "params_range": {
+        "PT_Base": [
+          0.001,
+          1.0,
+          0.001
+        ]
+      },
+      "combos": 1000,
+      "rows": 1000,
+      "timestamp": "2026-06-25T13:19:30.523580",
+      "best_params": {
+        "PT_Base": 0.503
+      },
+      "net_profit": 2090.17,
+      "max_drawdown": -462.656,
+      "objective": 9442.89197351812,
+      "total_trades": 45,
+      "delta_np_vs_baseline": 481.31,
+      "delta_np_pct": 29.92,
+      "delta_mdd_vs_baseline": 37.52,
+      "valid": true
+    },
+    {
+      "module": 6,
+      "signal": "RescueTeamExit",
+      "params_range": {
+        "Length": [
+          20.0,
+          600.0,
+          20.0
+        ],
+        "std": [
+          3.0,
+          6.0,
+          0.1
+        ]
+      },
+      "combos": 930,
+      "rows": 432,
+      "timestamp": "2026-06-25T13:21:39.115770",
+      "valid": false
+    }
+  ],
+  "timestamp": "2026-06-25T13:06:49.803496"
+}
