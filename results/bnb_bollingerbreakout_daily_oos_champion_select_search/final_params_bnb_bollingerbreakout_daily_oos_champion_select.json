@@ -1,0 +1,257 @@
+{
+  "symbol": "BNBUSDT HOT",
+  "signal": "SFJ_BollingerBreakout_crypto",
+  "timeframe": "Daily",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "BD1": {
+        "id": "BD1",
+        "regime": "R1 champ (13tr) ***",
+        "params": {
+          "BBLen": 3.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:08:48.608387",
+        "elapsed_sec": 112.6,
+        "rows": 60,
+        "net_profit": 25147.3,
+        "max_intraday_drawdown": -6839.04,
+        "total_trades": 10,
+        "valid": true
+      },
+      "BD2": {
+        "id": "BD2",
+        "regime": "R2 champ BBLen=2 (11tr)",
+        "params": {
+          "BBLen": 2.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:09:35.026255",
+        "elapsed_sec": 46.4,
+        "rows": 39,
+        "net_profit": 25576.1,
+        "max_intraday_drawdown": -6839.04,
+        "total_trades": 11,
+        "valid": true
+      },
+      "BD3": {
+        "id": "BD3",
+        "regime": "high-freq (28tr)",
+        "params": {
+          "BBLen": 2.0,
+          "BBmult": 0.75,
+          "ATRMult": 3.9,
+          "ReentryBars": 7.0
+        },
+        "timestamp": "2026-06-25T19:10:26.685885",
+        "elapsed_sec": 51.7,
+        "rows": 54,
+        "net_profit": 13649.9,
+        "max_intraday_drawdown": -6692.7,
+        "total_trades": 22,
+        "valid": true
+      },
+      "BD4": {
+        "id": "BD4",
+        "regime": "longer-BBLen (11tr)",
+        "params": {
+          "BBLen": 6.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:11:19.446713",
+        "elapsed_sec": 52.8,
+        "rows": 52,
+        "valid": false
+      }
+    },
+    "full": {
+      "BD1": {
+        "id": "BD1",
+        "regime": "R1 champ (13tr) ***",
+        "params": {
+          "BBLen": 3.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:12:52.785263",
+        "elapsed_sec": 79.8,
+        "rows": 81,
+        "net_profit": 30214.0,
+        "max_intraday_drawdown": -6839.04,
+        "total_trades": 15,
+        "valid": true
+      },
+      "BD2": {
+        "id": "BD2",
+        "regime": "R2 champ BBLen=2 (11tr)",
+        "params": {
+          "BBLen": 2.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:13:46.511664",
+        "elapsed_sec": 53.7,
+        "rows": 54,
+        "net_profit": 30718.2,
+        "max_intraday_drawdown": -6839.04,
+        "total_trades": 16,
+        "valid": true
+      },
+      "BD3": {
+        "id": "BD3",
+        "regime": "high-freq (28tr)",
+        "params": {
+          "BBLen": 2.0,
+          "BBmult": 0.75,
+          "ATRMult": 3.9,
+          "ReentryBars": 7.0
+        },
+        "timestamp": "2026-06-25T19:14:35.425343",
+        "elapsed_sec": 48.9,
+        "rows": 54,
+        "net_profit": 13237.4,
+        "max_intraday_drawdown": -8285.5,
+        "total_trades": 36,
+        "valid": true
+      },
+      "BD4": {
+        "id": "BD4",
+        "regime": "longer-BBLen (11tr)",
+        "params": {
+          "BBLen": 6.0,
+          "BBmult": 1.0,
+          "ATRMult": 5.0,
+          "ReentryBars": 12.0
+        },
+        "timestamp": "2026-06-25T19:15:25.168056",
+        "elapsed_sec": 49.7,
+        "rows": 81,
+        "net_profit": 27592.7,
+        "max_intraday_drawdown": -7399.63,
+        "total_trades": 13,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "BD1": {
+      "id": "BD1",
+      "regime": "R1 champ (13tr) ***",
+      "params": {
+        "BBLen": 3.0,
+        "BBmult": 1.0,
+        "ATRMult": 5.0,
+        "ReentryBars": 12.0
+      },
+      "prior_is_np": 27720.0,
+      "prior_is_mdd": -6839.0,
+      "np_is": 25147.3,
+      "mdd_is": -6839.04,
+      "tr_is": 10,
+      "is_drift_vs_prior_pct": -9.3,
+      "np_full": 30214.0,
+      "mdd_full": -6839.04,
+      "tr_full": 15,
+      "oos_np": 5066.7,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "BD2": {
+      "id": "BD2",
+      "regime": "R2 champ BBLen=2 (11tr)",
+      "params": {
+        "BBLen": 2.0,
+        "BBmult": 1.0,
+        "ATRMult": 5.0,
+        "ReentryBars": 12.0
+      },
+      "prior_is_np": 25576.0,
+      "prior_is_mdd": -6839.0,
+      "np_is": 25576.1,
+      "mdd_is": -6839.04,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 30718.2,
+      "mdd_full": -6839.04,
+      "tr_full": 16,
+      "oos_np": 5142.1,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "BD3": {
+      "id": "BD3",
+      "regime": "high-freq (28tr)",
+      "params": {
+        "BBLen": 2.0,
+        "BBmult": 0.75,
+        "ATRMult": 3.9,
+        "ReentryBars": 7.0
+      },
+      "prior_is_np": 16619.0,
+      "prior_is_mdd": -9178.0,
+      "np_is": 13649.9,
+      "mdd_is": -6692.7,
+      "tr_is": 22,
+      "is_drift_vs_prior_pct": -17.9,
+      "np_full": 13237.4,
+      "mdd_full": -8285.5,
+      "tr_full": 36,
+      "oos_np": -412.5,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "BD4": {
+      "id": "BD4",
+      "regime": "longer-BBLen (11tr)",
+      "params": {
+        "BBLen": 6.0,
+        "BBmult": 1.0,
+        "ATRMult": 5.0,
+        "ReentryBars": 12.0
+      },
+      "prior_is_np": 26828.0,
+      "prior_is_mdd": -7400.0,
+      "np_full": 27592.7,
+      "mdd_full": -7399.63,
+      "tr_full": 13,
+      "valid": false
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "BD2",
+    "best_oos_np_passing_params": {
+      "BBLen": 2.0,
+      "BBmult": 1.0,
+      "ATRMult": 5.0,
+      "ReentryBars": 12.0
+    },
+    "best_oos_np_passing_value": 5142.1,
+    "max_oos_np_any": "BD2",
+    "lowest_full_mdd": "BD1"
+  },
+  "run_started_at": "2026-06-25T19:06:46.030648",
+  "run_finished_at": "2026-06-25T19:15:25.176861",
+  "run_total_sec": 519.1
+}
