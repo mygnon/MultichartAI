@@ -22,8 +22,8 @@
           "ATRLength": 4.0,
           "Multiplier": 4.5
         },
-        "timestamp": "2026-06-16T21:08:27.729489",
-        "elapsed_sec": 103.0,
+        "timestamp": "2026-06-26T16:17:51.625039",
+        "elapsed_sec": 91.5,
         "rows": 9,
         "net_profit": 2412.77,
         "max_intraday_drawdown": -854.96,
@@ -37,8 +37,8 @@
           "ATRLength": 4.0,
           "Multiplier": 1.0
         },
-        "timestamp": "2026-06-16T21:09:01.246576",
-        "elapsed_sec": 33.5,
+        "timestamp": "2026-06-26T16:18:21.069334",
+        "elapsed_sec": 29.4,
         "rows": 9,
         "net_profit": 1457.43,
         "max_intraday_drawdown": -797.345,
@@ -52,8 +52,8 @@
           "ATRLength": 280.0,
           "Multiplier": 1.5
         },
-        "timestamp": "2026-06-16T21:09:33.945832",
-        "elapsed_sec": 32.7,
+        "timestamp": "2026-06-26T16:18:50.111242",
+        "elapsed_sec": 29.0,
         "rows": 9,
         "net_profit": 1415.38,
         "max_intraday_drawdown": -769.716,
@@ -67,8 +67,8 @@
           "ATRLength": 26.0,
           "Multiplier": 4.375
         },
-        "timestamp": "2026-06-16T21:10:07.600551",
-        "elapsed_sec": 33.7,
+        "timestamp": "2026-06-26T16:19:20.443169",
+        "elapsed_sec": 30.3,
         "rows": 9,
         "net_profit": 1536.06,
         "max_intraday_drawdown": -1026.25,
@@ -84,8 +84,8 @@
           "ATRLength": 4.0,
           "Multiplier": 4.5
         },
-        "timestamp": "2026-06-16T21:22:52.698065",
-        "elapsed_sec": 103.2,
+        "timestamp": "2026-06-26T16:20:34.285215",
+        "elapsed_sec": 64.8,
         "rows": 9,
         "net_profit": 2856.68,
         "max_intraday_drawdown": -949.034,
@@ -99,8 +99,8 @@
           "ATRLength": 4.0,
           "Multiplier": 1.0
         },
-        "timestamp": "2026-06-16T21:23:26.353131",
-        "elapsed_sec": 33.7,
+        "timestamp": "2026-06-26T16:21:03.973953",
+        "elapsed_sec": 29.7,
         "rows": 9,
         "net_profit": 1663.91,
         "max_intraday_drawdown": -797.345,
@@ -114,8 +114,8 @@
           "ATRLength": 280.0,
           "Multiplier": 1.5
         },
-        "timestamp": "2026-06-16T21:23:59.564697",
-        "elapsed_sec": 33.2,
+        "timestamp": "2026-06-26T16:21:33.482911",
+        "elapsed_sec": 29.5,
         "rows": 9,
         "net_profit": 1582.75,
         "max_intraday_drawdown": -867.582,
@@ -129,8 +129,8 @@
           "ATRLength": 26.0,
           "Multiplier": 4.375
         },
-        "timestamp": "2026-06-16T21:24:33.227989",
-        "elapsed_sec": 33.7,
+        "timestamp": "2026-06-26T16:22:03.314966",
+        "elapsed_sec": 29.8,
         "rows": 9,
         "net_profit": 1120.07,
         "max_intraday_drawdown": -1026.25,
@@ -235,7 +235,7 @@
     "max_oos_np_any": "EDS1",
     "lowest_full_mdd": "EDS2"
   },
-  "run_started_at": "2026-06-16T21:20:52.300420",
-  "run_finished_at": "2026-06-16T21:24:33.229996",
-  "run_total_sec": 220.9
+  "run_started_at": "2026-06-26T16:16:06.788033",
+  "run_finished_at": "2026-06-26T16:22:03.317474",
+  "run_total_sec": 356.5
 }
