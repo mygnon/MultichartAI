@@ -1,0 +1,250 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "SFJ_CloseChannelBreakout_crypto",
+  "timeframe": "Hourly (60 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; 3D micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "CC1": {
+        "id": "CC1",
+        "regime": "Obj-max champion ***",
+        "params": {
+          "Length": 7.0,
+          "ATRMult": 8.0,
+          "ReentryBars": 19.0
+        },
+        "timestamp": "2026-06-26T21:43:05.700158",
+        "elapsed_sec": 98.7,
+        "rows": 27,
+        "net_profit": 1866.26,
+        "max_intraday_drawdown": -363.657,
+        "total_trades": 223,
+        "valid": true
+      },
+      "CC2": {
+        "id": "CC2",
+        "regime": "NP-max high-trail",
+        "params": {
+          "Length": 5.0,
+          "ATRMult": 10.25,
+          "ReentryBars": 19.0
+        },
+        "timestamp": "2026-06-26T21:43:43.836376",
+        "elapsed_sec": 38.1,
+        "rows": 27,
+        "net_profit": 1974.89,
+        "max_intraday_drawdown": -586.795,
+        "total_trades": 162,
+        "valid": true
+      },
+      "CC3": {
+        "id": "CC3",
+        "regime": "short-len high-freq",
+        "params": {
+          "Length": 2.0,
+          "ATRMult": 9.0,
+          "ReentryBars": 22.0
+        },
+        "timestamp": "2026-06-26T21:44:20.707126",
+        "elapsed_sec": 36.9,
+        "rows": 18,
+        "net_profit": 1722.11,
+        "max_intraday_drawdown": -571.117,
+        "total_trades": 214,
+        "valid": true
+      },
+      "CC4": {
+        "id": "CC4",
+        "regime": "wide-trail low-freq",
+        "params": {
+          "Length": 11.0,
+          "ATRMult": 14.5,
+          "ReentryBars": 10.0
+        },
+        "timestamp": "2026-06-26T21:44:57.746953",
+        "elapsed_sec": 37.0,
+        "rows": 27,
+        "net_profit": 1657.58,
+        "max_intraday_drawdown": -493.0,
+        "total_trades": 106,
+        "valid": true
+      }
+    },
+    "full": {
+      "CC1": {
+        "id": "CC1",
+        "regime": "Obj-max champion ***",
+        "params": {
+          "Length": 7.0,
+          "ATRMult": 8.0,
+          "ReentryBars": 19.0
+        },
+        "timestamp": "2026-06-26T21:46:21.633637",
+        "elapsed_sec": 70.2,
+        "rows": 27,
+        "net_profit": 1651.47,
+        "max_intraday_drawdown": -1085.17,
+        "total_trades": 290,
+        "valid": true
+      },
+      "CC2": {
+        "id": "CC2",
+        "regime": "NP-max high-trail",
+        "params": {
+          "Length": 5.0,
+          "ATRMult": 10.25,
+          "ReentryBars": 19.0
+        },
+        "timestamp": "2026-06-26T21:46:58.929807",
+        "elapsed_sec": 37.3,
+        "rows": 27,
+        "net_profit": 1500.02,
+        "max_intraday_drawdown": -710.338,
+        "total_trades": 219,
+        "valid": true
+      },
+      "CC3": {
+        "id": "CC3",
+        "regime": "short-len high-freq",
+        "params": {
+          "Length": 2.0,
+          "ATRMult": 9.0,
+          "ReentryBars": 22.0
+        },
+        "timestamp": "2026-06-26T21:47:34.882962",
+        "elapsed_sec": 35.9,
+        "rows": 18,
+        "net_profit": 2020.45,
+        "max_intraday_drawdown": -807.243,
+        "total_trades": 287,
+        "valid": true
+      },
+      "CC4": {
+        "id": "CC4",
+        "regime": "wide-trail low-freq",
+        "params": {
+          "Length": 11.0,
+          "ATRMult": 14.5,
+          "ReentryBars": 10.0
+        },
+        "timestamp": "2026-06-26T21:48:15.129101",
+        "elapsed_sec": 40.2,
+        "rows": 27,
+        "net_profit": 2152.84,
+        "max_intraday_drawdown": -687.797,
+        "total_trades": 132,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "CC1": {
+      "id": "CC1",
+      "regime": "Obj-max champion ***",
+      "params": {
+        "Length": 7.0,
+        "ATRMult": 8.0,
+        "ReentryBars": 19.0
+      },
+      "prior_is_np": 1866.3,
+      "prior_is_mdd": -363.7,
+      "np_is": 1866.26,
+      "mdd_is": -363.657,
+      "tr_is": 223,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 1651.47,
+      "mdd_full": -1085.17,
+      "tr_full": 290,
+      "oos_np": -214.79,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CC2": {
+      "id": "CC2",
+      "regime": "NP-max high-trail",
+      "params": {
+        "Length": 5.0,
+        "ATRMult": 10.25,
+        "ReentryBars": 19.0
+      },
+      "prior_is_np": 1974.9,
+      "prior_is_mdd": -586.8,
+      "np_is": 1974.89,
+      "mdd_is": -586.795,
+      "tr_is": 162,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 1500.02,
+      "mdd_full": -710.338,
+      "tr_full": 219,
+      "oos_np": -474.87,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CC3": {
+      "id": "CC3",
+      "regime": "short-len high-freq",
+      "params": {
+        "Length": 2.0,
+        "ATRMult": 9.0,
+        "ReentryBars": 22.0
+      },
+      "prior_is_np": 1722.0,
+      "prior_is_mdd": -571.0,
+      "np_is": 1722.11,
+      "mdd_is": -571.117,
+      "tr_is": 214,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2020.45,
+      "mdd_full": -807.243,
+      "tr_full": 287,
+      "oos_np": 298.34,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    },
+    "CC4": {
+      "id": "CC4",
+      "regime": "wide-trail low-freq",
+      "params": {
+        "Length": 11.0,
+        "ATRMult": 14.5,
+        "ReentryBars": 10.0
+      },
+      "prior_is_np": 1658.0,
+      "prior_is_mdd": -493.0,
+      "np_is": 1657.58,
+      "mdd_is": -493.0,
+      "tr_is": 106,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2152.84,
+      "mdd_full": -687.797,
+      "tr_full": 132,
+      "oos_np": 495.26,
+      "mdd_break": true,
+      "pass": false,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": null,
+    "best_oos_np_passing_params": null,
+    "best_oos_np_passing_value": null,
+    "max_oos_np_any": "CC4",
+    "lowest_full_mdd": "CC4"
+  },
+  "run_started_at": "2026-06-26T21:41:17.245925",
+  "run_finished_at": "2026-06-26T21:48:15.133641",
+  "run_total_sec": 417.9
+}
