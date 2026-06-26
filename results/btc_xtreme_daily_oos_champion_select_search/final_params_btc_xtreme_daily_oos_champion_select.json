@@ -1,0 +1,254 @@
+{
+  "symbol": "BTCUSDT HOT",
+  "signal": "SFJ_XtremeStop_Crypto",
+  "timeframe": "Daily (1440 min)",
+  "method": "MERGED auto-range; set_instrument_data_range per pass; micro-grid MCReport CSV; metric=Max Intraday Drawdown; OOS_NP=NP_full-NP_is; PASS=abs(MDD_full)<=abs(MDD_is).",
+  "ranges": {
+    "is": [
+      "2022/01/01",
+      "2026/01/01"
+    ],
+    "full": [
+      "2021/03/01",
+      "2026/06/10"
+    ]
+  },
+  "results": {
+    "is": {
+      "CD1": {
+        "id": "CD1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 268.0,
+          "LY": 2.3,
+          "SY": 0.1
+        },
+        "timestamp": "2026-06-26T02:18:04.303759",
+        "elapsed_sec": 127.7,
+        "rows": 12,
+        "net_profit": 4020.55,
+        "max_intraday_drawdown": -1741.61,
+        "total_trades": 11,
+        "valid": true
+      },
+      "CD2": {
+        "id": "CD2",
+        "regime": "dense low-MDD high-freq",
+        "params": {
+          "X": 42.0,
+          "LY": 0.5,
+          "SY": 0.2
+        },
+        "timestamp": "2026-06-26T02:18:51.337521",
+        "elapsed_sec": 47.0,
+        "rows": 27,
+        "net_profit": 1796.27,
+        "max_intraday_drawdown": -831.325,
+        "total_trades": 105,
+        "valid": true
+      },
+      "CD3": {
+        "id": "CD3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 29.0,
+          "LY": 0.5,
+          "SY": 6.0
+        },
+        "timestamp": "2026-06-26T02:19:44.034531",
+        "elapsed_sec": 52.7,
+        "rows": 27,
+        "net_profit": 1852.33,
+        "max_intraday_drawdown": -674.2,
+        "total_trades": 48,
+        "valid": true
+      },
+      "CD4": {
+        "id": "CD4",
+        "regime": "mid-X high-pct",
+        "params": {
+          "X": 55.0,
+          "LY": 8.0,
+          "SY": 6.5
+        },
+        "timestamp": "2026-06-26T02:20:34.662886",
+        "elapsed_sec": 50.6,
+        "rows": 27,
+        "net_profit": 1964.4,
+        "max_intraday_drawdown": -864.707,
+        "total_trades": 13,
+        "valid": true
+      }
+    },
+    "full": {
+      "CD1": {
+        "id": "CD1",
+        "regime": "long-X asym champion ***",
+        "params": {
+          "X": 268.0,
+          "LY": 2.3,
+          "SY": 0.1
+        },
+        "timestamp": "2026-06-26T02:22:23.894047",
+        "elapsed_sec": 83.2,
+        "rows": 18,
+        "net_profit": 4288.96,
+        "max_intraday_drawdown": -1741.61,
+        "total_trades": 32,
+        "valid": true
+      },
+      "CD2": {
+        "id": "CD2",
+        "regime": "dense low-MDD high-freq",
+        "params": {
+          "X": 42.0,
+          "LY": 0.5,
+          "SY": 0.2
+        },
+        "timestamp": "2026-06-26T02:23:11.340175",
+        "elapsed_sec": 47.4,
+        "rows": 27,
+        "net_profit": 2081.37,
+        "max_intraday_drawdown": -831.325,
+        "total_trades": 154,
+        "valid": true
+      },
+      "CD3": {
+        "id": "CD3",
+        "regime": "short-X high-freq",
+        "params": {
+          "X": 29.0,
+          "LY": 0.5,
+          "SY": 6.0
+        },
+        "timestamp": "2026-06-26T02:23:59.573417",
+        "elapsed_sec": 48.2,
+        "rows": 27,
+        "net_profit": 1938.05,
+        "max_intraday_drawdown": -674.2,
+        "total_trades": 74,
+        "valid": true
+      },
+      "CD4": {
+        "id": "CD4",
+        "regime": "mid-X high-pct",
+        "params": {
+          "X": 55.0,
+          "LY": 8.0,
+          "SY": 6.5
+        },
+        "timestamp": "2026-06-26T02:24:49.422564",
+        "elapsed_sec": 49.8,
+        "rows": 27,
+        "net_profit": 2496.51,
+        "max_intraday_drawdown": -864.707,
+        "total_trades": 24,
+        "valid": true
+      }
+    }
+  },
+  "candidates": {
+    "CD1": {
+      "id": "CD1",
+      "regime": "long-X asym champion ***",
+      "params": {
+        "X": 268.0,
+        "LY": 2.3,
+        "SY": 0.1
+      },
+      "prior_is_np": 4020.6,
+      "prior_is_mdd": -1741.61,
+      "np_is": 4020.55,
+      "mdd_is": -1741.61,
+      "tr_is": 11,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 4288.96,
+      "mdd_full": -1741.61,
+      "tr_full": 32,
+      "oos_np": 268.41,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "CD2": {
+      "id": "CD2",
+      "regime": "dense low-MDD high-freq",
+      "params": {
+        "X": 42.0,
+        "LY": 0.5,
+        "SY": 0.2
+      },
+      "prior_is_np": 1796.3,
+      "prior_is_mdd": -831.3,
+      "np_is": 1796.27,
+      "mdd_is": -831.325,
+      "tr_is": 105,
+      "is_drift_vs_prior_pct": -0.0,
+      "np_full": 2081.37,
+      "mdd_full": -831.325,
+      "tr_full": 154,
+      "oos_np": 285.1,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "CD3": {
+      "id": "CD3",
+      "regime": "short-X high-freq",
+      "params": {
+        "X": 29.0,
+        "LY": 0.5,
+        "SY": 6.0
+      },
+      "prior_is_np": 1852.3,
+      "prior_is_mdd": -674.2,
+      "np_is": 1852.33,
+      "mdd_is": -674.2,
+      "tr_is": 48,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 1938.05,
+      "mdd_full": -674.2,
+      "tr_full": 74,
+      "oos_np": 85.72,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    },
+    "CD4": {
+      "id": "CD4",
+      "regime": "mid-X high-pct",
+      "params": {
+        "X": 55.0,
+        "LY": 8.0,
+        "SY": 6.5
+      },
+      "prior_is_np": 1964.4,
+      "prior_is_mdd": -864.7,
+      "np_is": 1964.4,
+      "mdd_is": -864.707,
+      "tr_is": 13,
+      "is_drift_vs_prior_pct": 0.0,
+      "np_full": 2496.51,
+      "mdd_full": -864.707,
+      "tr_full": 24,
+      "oos_np": 532.11,
+      "mdd_break": false,
+      "pass": true,
+      "valid": true
+    }
+  },
+  "winner": {
+    "best_oos_np_passing": "CD4",
+    "best_oos_np_passing_params": {
+      "X": 55.0,
+      "LY": 8.0,
+      "SY": 6.5
+    },
+    "best_oos_np_passing_value": 532.11,
+    "max_oos_np_any": "CD4",
+    "lowest_full_mdd": "CD3"
+  },
+  "run_started_at": "2026-06-26T02:15:47.103262",
+  "run_finished_at": "2026-06-26T02:24:49.424585",
+  "run_total_sec": 542.3
+}

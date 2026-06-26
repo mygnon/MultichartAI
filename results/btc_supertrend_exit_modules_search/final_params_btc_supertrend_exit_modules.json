@@ -17,7 +17,7 @@
     "total_trades": 127,
     "exact_champion_row": true,
     "drift_vs_reference_pct": -0.021,
-    "timestamp": "2026-06-16T13:07:59.192752"
+    "timestamp": "2026-06-26T14:55:18.085224"
   },
   "mode": "independent (one module at a time)",
   "smoke": false,
@@ -34,7 +34,7 @@
       },
       "combos": 1000,
       "rows": 1000,
-      "timestamp": "2026-06-16T13:09:46.509306",
+      "timestamp": "2026-06-26T14:55:18.129600",
       "best_params": {
         "STP": 25.7
       },
@@ -59,7 +59,7 @@
       },
       "combos": 1000,
       "rows": 1000,
-      "timestamp": "2026-06-16T13:11:51.614698",
+      "timestamp": "2026-06-26T14:55:18.183731",
       "best_params": {
         "ATRSTP": 51.7
       },
@@ -84,7 +84,7 @@
       },
       "combos": 1000,
       "rows": 1000,
-      "timestamp": "2026-06-16T13:14:10.033404",
+      "timestamp": "2026-06-26T14:55:18.216493",
       "best_params": {
         "EXITBAR": 425.0
       },
@@ -109,7 +109,7 @@
       },
       "combos": 1000,
       "rows": 1000,
-      "timestamp": "2026-06-16T13:16:12.914057",
+      "timestamp": "2026-06-26T14:55:18.242059",
       "best_params": {
         "DAYRANGE": 6.21
       },
@@ -134,7 +134,7 @@
       },
       "combos": 1000,
       "rows": 1000,
-      "timestamp": "2026-06-16T13:18:20.261945",
+      "timestamp": "2026-06-26T14:55:18.256791",
       "best_params": {
         "PT_Base": 0.65
       },
@@ -164,7 +164,7 @@
       },
       "combos": 930,
       "rows": 930,
-      "timestamp": "2026-06-16T13:20:36.507651",
+      "timestamp": "2026-06-26T14:55:18.281361",
       "best_params": {
         "Length": 140.0,
         "std": 3.0
@@ -179,5 +179,5 @@
       "valid": true
     }
   ],
-  "timestamp": "2026-06-16T13:05:13.525559"
+  "timestamp": "2026-06-26T14:55:09.121016"
 }
