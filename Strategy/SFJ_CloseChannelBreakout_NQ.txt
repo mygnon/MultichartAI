@@ -1,0 +1,101 @@
+{===============================================================================
+  SFJ_CloseChannelBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. CLOSE-channel breakout (Highest/Lowest of CLOSE) entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of SFJ_CloseChannelBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The research established two OOS-robust breakout engines that share the same
+  skeleton (rolling/non-lagged level + intrabar STOP fill at the edge + WIDE ATR
+  chandelier trail + post-exit ReentryBars cooldown):
+    - Donchian v2 / DonchianAsymV2 : reference = rolling HIGH/LOW channel
+    - BollingerBreakout            : reference = statistical band (MA +/- k*stdev)
+  Both work; Bollinger is the better risk-adjusted of the two. The breakout
+  REFERENCE is the open question this strategy probes: a CLOSE-based channel
+  (Highest/Lowest of the CLOSE, not the High/Low). A close channel ignores
+  intrabar wick spikes, so its level is "harder" to reach -> fewer, more
+  committed breakouts than the High/Low channel.
+
+  CRITICAL: this is NOT the failed SFJ_ChannelClose_crypto. That one degenerated
+  because it (a) used the HIGH/LOW channel and (b) entered next-bar at MARKET
+  AFTER a close confirmation -> a late fill at a worse price. This strategy fixes
+  BOTH: the reference is the CLOSE channel, and entry is an intrabar STOP at the
+  channel edge (fills at the level, not after it). Plus the two proven levers
+  (wide ATR trail + ReentryBars cooldown) that bare breakouts lack.
+
+    - Long  : flat & cooldown done -> Buy       next bar at Highest(Close,Length)[1] STOP
+    - Short : flat & cooldown done -> SellShort  next bar at Lowest (Close,Length)[1] STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - close-channel lookback for both long & short breakouts (bars)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Logic:
+    flatBars counts consecutive flat bars (reset to 0 while in a position)
+    UpChan = Highest(Close, Length)[1] ; DnChan = Lowest(Close, Length)[1]  (prior-bar)
+    Long  entry : flat & flatBars >= ReentryBars -> Buy       next bar at UpChan STOP
+    Short entry : flat & flatBars >= ReentryBars -> SellShort  next bar at DnChan STOP
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over the running extreme
+
+  Defaults: Length=20, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-27
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    UpChan( 0 ),
+    DnChan( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- rolling CLOSE channel of COMPLETED bars (non-lagged, wick-immune) ---- }
+UpChan = Highest( Close, Length )[1] ;   { long breakout level }
+DnChan = Lowest ( Close, Length )[1] ;   { short breakout level }
+
+{ ---- entries: close-channel STOP at the edge, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "CcLE" ) next bar at UpChan stop ;
+    SellShort ( "CcSE" ) next bar at DnChan stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "CcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "CcSX" ) next bar at TrailShort stop ;
+end ;
