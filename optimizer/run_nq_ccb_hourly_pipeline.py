@@ -1,6 +1,6 @@
 """
-run_btc_ccb_nq_hourly_pipeline.py -- ONE-BAT unattended 4-stage pipeline for the
-FUTURES port SFJ_CloseChannelBreakout_NQ tested on BTCUSDT HOT HOURLY.
+run_nq_ccb_hourly_pipeline.py -- ONE-BAT unattended 4-stage pipeline for the
+FUTURES strategy SFJ_CloseChannelBreakout_NQ on CME.NQ HOT HOURLY.
 
   Stage 1  IS optimization (R1 broad + confirm rounds until converged, Obj-max)  2019/01-2025/01
   Stage 2  OOS champion-select among Stage-1 candidates              IS vs FULL 2018/01-2026/01
@@ -16,18 +16,18 @@ Programmatic Format-Objects setting (main after Stage 2; 6 modules after Stage 3
 validation -> ABORT loudly if a held value is wrong (never silently skip). state.json after every stage;
 --from-stage N resumes.
 
-NOTE: the strategy is the futures port (no _Crypto1MUSD sizing) -> orders use the chart's default
-sizing (Format Signals -> Properties -> default contracts). It is exercised here on BTCUSDT HOT data.
+NOTE: the strategy is the futures version (no _Crypto1MUSD sizing) -> orders use the chart's default
+sizing (Format Signals -> Properties -> default contracts). Run on CME.NQ HOT data.
 
 PREREQUISITES (MC64 as Administrator):
-  SFJ_CloseChannelBreakout_AI.wsp open; BTCUSDT HOT HOURLY tab active+visible;
-  data to 2026/01/01; Binance connected; Study Editor CLOSED; main SFJ_CloseChannelBreakout_NQ
+  SFJ_CloseChannelBreakout_AI.wsp open; CME.NQ HOT HOURLY tab active+visible;
+  data to 2026/01/01; data feed connected; Study Editor CLOSED; main SFJ_CloseChannelBreakout_NQ
   + 6 module signals inserted (Status arbitrary -- the orchestrator sets all Status & fixed inputs).
 
 CLI:
-  py run_btc_ccb_nq_hourly_pipeline.py                 # full pipeline (auto-elevates)
-  py run_btc_ccb_nq_hourly_pipeline.py --from-stage 3  # resume from stage 3 (uses state.json)
-  py run_btc_ccb_nq_hourly_pipeline.py --from-csv      # re-analyse existing CSVs, no MC64
+  py run_nq_ccb_hourly_pipeline.py                 # full pipeline (auto-elevates)
+  py run_nq_ccb_hourly_pipeline.py --from-stage 3  # resume from stage 3 (uses state.json)
+  py run_nq_ccb_hourly_pipeline.py --from-csv      # re-analyse existing CSVs, no MC64
 """
 from __future__ import annotations
 import argparse, ctypes, json, logging, sys, time
@@ -46,9 +46,9 @@ import plateau as plateau_mod
 from config import DateRange, ParamAxis, StrategyConfig
 
 WORKSPACE   = r"C:\Users\Tim\Downloads\Multichart64\Tim\SFJ_CloseChannelBreakout_AI.wsp"
-SYMBOL      = "BTCUSDT HOT"
+SYMBOL      = "CME.NQ HOT"
 MAIN_SIGNAL = "SFJ_CloseChannelBreakout_NQ"
-OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\btc_ccb_nq_hourly_pipeline")
+OUTPUT_DIR  = Path(r"C:\Users\Tim\MultichartAI\results\nq_ccb_hourly_pipeline")
 INSAMPLE    = DateRange("2017/01/01", "2027/01/01")          # wide no-op; chart-trim is control
 IS_RANGE    = ("2019/01/01", "2025/01/01")
 FULL_RANGE  = ("2018/01/01", "2026/01/01")
