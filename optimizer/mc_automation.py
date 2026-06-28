@@ -724,6 +724,76 @@ def ensure_chart_ready(conn: MultiChartsConnection, cfg: StrategyConfig) -> None
     logger.info("Chart ready for: %s", cfg.name)
 
 
+def list_chart_windows(conn: "MultiChartsConnection") -> List[Tuple[int, str]]:
+    """Read-only: [(hwnd, title)] for every MDI chart child of the MC main window."""
+    if not conn._hwnd:
+        return []
+    return [(h, txt) for (h, cls, txt) in _win32_enum_children(conn._hwnd)
+            if cls == "ATL_MCMDIChildFrame"]
+
+
+def activate_chart_by_symbol(conn: "MultiChartsConnection", symbol: str,
+                             match_tokens: Optional[List[str]] = None) -> int:
+    """Activate + maximize the MDI chart child whose title matches *symbol*.
+
+    With several instrument charts open in one workspace, the optimization wizard
+    operates on whatever chart is currently active (it right-clicks the first visible
+    ATL_MCGraphPanel). This finds the chart child by its title, MDI-activates and
+    MAXIMIZES it so it sits on top of the z-order and becomes the chart the wizard
+    hits, then verifies the active child's title -> raises MCUIError on no-match /
+    mismatch (never silently run the wrong instrument). Returns the child hwnd.
+    """
+    import win32gui
+    WM_MDIACTIVATE, WM_MDIMAXIMIZE, WM_MDIGETACTIVE = 0x0222, 0x0225, 0x0229
+    if not conn._hwnd:
+        raise MCUIError("activate_chart_by_symbol: no MC window connected")
+    toks = [t.lower() for t in (match_tokens or [symbol, symbol.split()[0]])]
+    frames = list_chart_windows(conn)
+    if not frames:
+        raise MCUIError("activate_chart_by_symbol: no ATL_MCMDIChildFrame children found")
+    target = None
+    for h, txt in frames:
+        tl = (txt or "").lower()
+        if any(t in tl for t in toks):
+            target = (h, txt); break
+    if target is None:
+        titles = " | ".join(t for _, t in frames)
+        raise MCUIError(f"activate_chart_by_symbol: no chart matches '{symbol}'. Open charts: {titles}")
+    child, ctitle = target
+    client = win32gui.GetParent(child)
+    for _try in range(3):
+        try:
+            win32gui.SendMessage(client, WM_MDIACTIVATE, child, 0)
+            win32gui.SendMessage(client, WM_MDIMAXIMIZE, child, 0)
+        except Exception as e:
+            logger.debug("MDI activate/maximize msg failed: %s", e)
+        time.sleep(0.4)
+        try:
+            active = win32gui.SendMessage(client, WM_MDIGETACTIVE, 0, 0)
+            atitle = win32gui.GetWindowText(active) if active else ""
+        except Exception:
+            atitle = ""
+        if any(t in (atitle or "").lower() for t in toks):
+            logger.info("Activated+maximized chart: %s", ctitle)
+            return child
+        try:                       # fallback: click the child frame to activate
+            _win32_click_hwnd(child)
+        except Exception:
+            pass
+        time.sleep(0.3)
+    # final verify
+    try:
+        active = win32gui.SendMessage(client, WM_MDIGETACTIVE, 0, 0)
+        atitle = win32gui.GetWindowText(active) if active else ""
+    except Exception:
+        atitle = ""
+    if not any(t in (atitle or "").lower() for t in toks):
+        raise MCUIError(f"activate_chart_by_symbol: could not activate '{symbol}' "
+                        f"(active='{atitle}', wanted='{ctitle}')")
+    logger.info("Activated+maximized chart: %s", ctitle)
+    return child
+
+
 def _open_workspace_file(conn: MultiChartsConnection, workspace_path: str) -> None:
     """Open a workspace file via File > Open Workspace using pyautogui."""
     main = conn.main_window()
@@ -2129,6 +2199,35 @@ def set_signal_status(format_dlg, signal_name: str, enabled: bool) -> bool:
 
 
 def set_signal_statuses(
+    conn: "MultiChartsConnection",
+    status_map: Dict[str, bool],
+    verify: bool = True,
+    protected: Optional[List[str]] = None,
+    retries: int = 3,
+) -> Dict[str, Optional[bool]]:
+    """Robust wrapper: retry the full apply+verify up to *retries* times. The
+    M5 QuantPass_PT_Exit / M6 RescueTeamExit Status checkbox occasionally reverts
+    after OK, and the Format dialog occasionally fails to open — both raise MCUIError;
+    a fresh reopen+re-toggle usually succeeds. Re-settles (Escape stray dialogs)
+    between attempts; raises the last MCUIError if all retries fail."""
+    last_err: Optional[Exception] = None
+    for _attempt in range(1, max(1, retries) + 1):
+        try:
+            return _set_signal_statuses_once(conn, status_map, verify=verify, protected=protected)
+        except MCUIError as e:
+            last_err = e
+            logger.warning("set_signal_statuses attempt %d/%d failed: %s", _attempt, retries, e)
+            for _ in range(2):
+                try:
+                    _pg_press("escape")
+                except Exception:
+                    pass
+                time.sleep(0.3)
+            time.sleep(1.0)
+    raise last_err if last_err else MCUIError("set_signal_statuses failed")
+
+
+def _set_signal_statuses_once(
     conn: "MultiChartsConnection",
     status_map: Dict[str, bool],
     verify: bool = True,

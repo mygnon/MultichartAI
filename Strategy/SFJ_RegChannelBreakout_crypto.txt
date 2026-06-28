@@ -1,0 +1,116 @@
+{===============================================================================
+  SFJ_RegChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. LINEAR-REGRESSION channel breakout entered intrabar via STOP
+  + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The research established that the OOS-robust breakout engine is the same skeleton
+  everywhere — a rolling/non-lagged reference LEVEL + an intrabar STOP fill AT that
+  level + a WIDE ATR(14) chandelier trailing exit + a post-exit ReentryBars
+  cooldown. What varies between the working strategies is only the breakout
+  REFERENCE:
+    - Donchian v2 / DonchianAsymV2 : rolling HIGH/LOW channel  (Highest/Lowest)
+    - BollingerBreakout            : statistical band          (SMA +/- k*stdev)
+    - CloseChannelBreakout         : rolling CLOSE channel     (Highest/Lowest of C)
+    - Keltner / VolatilityBreakout : EMA/Close +/- k*ATR
+  This probes a 5th reference: the LINEAR-REGRESSION channel. The regression line
+  (least-squares fit over RegLen bars) LEADS a simple moving average — it projects
+  the current trend slope to the latest bar instead of lagging it — so its band is
+  a "harder", trend-aware breakout level. The band half-width is BandMult * the
+  standard deviation of price around the window (same volatility unit as Bollinger,
+  but centered on the regression line, not the flat mean).
+
+  This is NOT mean-reversion: it BUYS the UPPER band break and SHORTS the LOWER
+  band break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpReg STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnReg STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    RegLen      - linear-regression lookback (mean + stdev + slope window, bars)
+    BandMult    - channel half-width in standard deviations (breakout distance)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Logic:
+    MidReg = LinearRegValue(Close, RegLen, 0)        (regression value at this bar)
+    Band   = BandMult * StandardDev(Close, RegLen, 2)
+    UpReg  = (MidReg + Band)[1] ; DnReg = (MidReg - Band)[1]   (prior-bar = non-lagged)
+    flatBars counts consecutive flat bars (reset to 0 while in a position)
+    Long  entry : flat & flatBars >= ReentryBars -> Buy       next bar at UpReg STOP
+    Short entry : flat & flatBars >= ReentryBars -> SellShort  next bar at DnReg STOP
+    Exit  : ATR chandelier trail (ATRMult * ATR(14)) under/over the running extreme
+
+  ⚠️ Reserved-word note: `Upper`/`Lower` are PowerLanguage reserved words -> use
+     `UpReg`/`DnReg`.
+
+  Defaults: RegLen=20, BandMult=2.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-28
+===============================================================================}
+
+inputs:
+    RegLen( 20 ),
+    BandMult( 2.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    MidReg( 0 ),
+    Band( 0 ),
+    UpReg( 0 ),
+    DnReg( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- linear-regression channel of the COMPLETED bar (prior-bar = non-lagged STOP level) ---- }
+MidReg = LinearRegValue( Close, RegLen, 0 ) ;
+Band   = BandMult * StandardDev( Close, RegLen, 2 ) ;
+UpReg  = ( MidReg + Band )[1] ;   { long breakout level }
+DnReg  = ( MidReg - Band )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: regression-channel breakout STOP at the edge, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "RcLE" ) _Crypto1MUSD contract next bar at UpReg stop ;
+    SellShort ( "RcSE" ) _Crypto1MUSD contract next bar at DnReg stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RcSX" ) next bar at TrailShort stop ;
+end ;

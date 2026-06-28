@@ -223,6 +223,7 @@ Common engine that works = rolling/non-lagged breakout level + intrabar STOP fil
 |---|---|---|
 | **Donchian v2** (Length, ATRLength, ATRMult, TrendLen, ReentryBars) | NP-max **$24,426** (2/12/16/15/10 wide-trail 66tr); Obj-max 3/16/7/10/17 Obj=100,089 | v1 all-negative (no anti-chop); **OOS WINNER DN3 4/—/7/5/17 +$5,704 = only PASS**. BTC mid-long+TrendLen-active; ETH ultra-long+tight M=2. BNB Daily 10/10/4.5/65/14 $19,045. Exit modules 6/6 HELP (M5 PT=0.15 +64% NP & MDD↓) |
 | **ADXtrend** (DMILen, ADXThresh, ATRMult) | **$23,938** (12/26/7.8 Obj=86,068) | 2nd-strongest; ADX gate=26 the ONLY filter that genuinely helps. OOS: NO PASS (all broke) |
+| **RegChannelBreakout** (RegLen, BandMult, ATRMult, ReentryBars) | **$23,576** (14/1.19/7/12 **Obj=110,693 #1 risk-adj**) | linear-regression channel = 5th breakout reference; see matrix below. Exit modules 6/6 HURT everywhere → MAIN only. BTC = only strict OOS PASS |
 | **VolatilityBreakout** (ATRLen, EntryMult, TrailMult) | **$22,046** (45/~0.01/16.5) | EntryMult→floor (buffer rejected) → degenerates to wide trail. OOS: NO PASS; IS champ VB1 worst −$14,696; best VB3 125/2.25/8 +$4,924 (1.31×) |
 | **CloseChannelBreakout** (Length, ATRMult, ReentryBars) | **$22,008** (8/7/14 Obj=98,395 **#1 risk-adj**) | see dedicated matrix below |
 | **BollingerBreakout** (BBLen, BBmult, ATRMult, ReentryBars) | **$21,210** (13/1.55/7/13 Obj=95,486) | see dedicated matrix below |
@@ -267,9 +268,24 @@ Crypto = `SFJ_CloseChannelBreakout_crypto` (`_Crypto1MUSD`). Futures = `SFJ_Clos
 
 **Matrix verdict: ALL 3 coins' DAILY pass OOS; Hourly only BNB → DAILY broadly more OOS-robust** (wide ATR trail, less hi-freq noise). BNB = only coin passing both TFs + only Daily>Hourly. Exit modules HELP (6/6); winner flips by TF: **M6 RescueTeam on Hourly (all coins), M5 PT_Exit on Daily** (M6 too sparse to fire).
 
+### RegChannelBreakout 6-instrument Hourly matrix (`SFJ_RegChannelBreakout_{crypto,NQ}`; RegLen, BandMult, ATRMult, ReentryBars)
+
+5th breakout reference = **linear-regression channel** (`MidReg=LinearRegValue; band=BandMult*StdDev`; the regression line LEADS an SMA). Crypto charts `_crypto`/`_Crypto1MUSD`, futures `_NQ`/default contracts. All 6 ran in ONE workspace via the 6-instrument orchestrator `run_rcb_allinst_pipeline.py` (`mc.activate_chart_by_symbol` MDI-activates+maximizes each chart). Crypto IS 2022-2026/FULL 2021/03-2026/06; futures IS 2019-2025/FULL 2018-2026.
+
+| Inst | IS champ (Reg/Band/Atr/Re) NP Obj | OOS WINNER / deploy |
+|---|---|---|
+| **BNB** | 14/1.19/7/12 $23,576 **Obj 110,693 #1 self-authored** | de-facto 14/1.19/7/12 OOS +$4,005 (break 1.45×); MAIN only |
+| **BTC** | 7/0.938/9/5 $2,626 Obj 16,813 | **✅ only strict PASS: 7/0.938/9/5 OOS +$1,322, MDD held 1.00×, full RoMaD 9.62**; MAIN only |
+| ETH | 63/1.0/12/19 $4,650 Obj 49,172 | de-facto 40/1.0/16/5 OOS +$221 (break 1.85×); MAIN only |
+| TWF.TXF | 9/1.31/5/12 4.03M TWD Obj 45.7M | de-facto 9/1.25/5/12 OOS +117,400 (break 2.55×); MAIN only |
+| CME.NQ | 14/0.81/8.25/9 $458,725 Obj 4.27M | de-facto 13/1.0/8.5/8 OOS −11,265 (least-bad, all broke); MAIN only |
+| CME.GC | 22/0.625/17/7 $199,010 Obj 1.63M | de-facto 20/1.0/16/10 OOS +93,480 (break 2.78×); MAIN only |
+
+**Verdict: valid 5th breakout reference (BNB Obj 110,693 = #1 self-authored).** OOS-fragile like other breakouts — all break MDD EXCEPT **BTC (only strict PASS; short-Reg/narrow-Band/high-freq champ holds — rare, BTC usually the fragile coin)**; 5/6 OOS-profitable (only NQ −). **Exit modules 6/6 HURT on ALL 6 (most go NEGATIVE) → Stage-4 cumulative kept=∅ everywhere → deploy MAIN ONLY.** Infra: `mc.set_signal_statuses` now retries (M5/M6 checkbox-revert + Format-dialog-open flakiness) + orchestrator `--resume-gaps`; the first run lost BTC/BNB/NQ to those flakes, the hardened resume recovered all 3 with zero ABORT.
+
 ### Self-authored ranking + FINAL LAWS
 
-IS ranking (BNB Hourly, clean): Donchian v2 $24.4K (OOS PASS) ≈ ADXtrend $23.9K > VolatilityBreakout ≈ CloseChannelBreakout $22.0K (Obj 98K #1; OOS strong) > BollingerBreakout $21.2K (OOS PASS) > HeikinAshi $20.7K > BBSqueeze $16.1K > DonchianAsymV2 $15.0K > Keltner $10.1K > RSIPullback ~$8K > DonchianAsym $5.7K > ROCmomentum $5.6K > ParabolicSAR (broken); Turtle/Fractal all-negative; ChannelClose degenerate.
+IS ranking (BNB Hourly, clean): Donchian v2 $24.4K (OOS PASS) ≈ ADXtrend $23.9K ≈ RegChannelBreakout $23.6K (**Obj 110,693 #1 risk-adj**; OOS BTC-only PASS) > VolatilityBreakout ≈ CloseChannelBreakout $22.0K (Obj 98K; OOS strong) > BollingerBreakout $21.2K (OOS PASS) > HeikinAshi $20.7K > BBSqueeze $16.1K > DonchianAsymV2 $15.0K > Keltner $10.1K > RSIPullback ~$8K > DonchianAsym $5.7K > ROCmomentum $5.6K > ParabolicSAR (broken); Turtle/Fractal all-negative; ChannelClose degenerate. Breakout references that work: rolling extreme (Donchian), statistical band (Bollinger), close channel (CloseChannel), **regression channel (RegChannel)** — all need rolling/non-lagged level + intrabar STOP + wide ATR trail; exit modules help only on CloseChannel/Bollinger/SuperTrend, HURT on RegChannel/CC-futures/sparse-daily.
 
 **LAWS:** (1) Two self-authored are both IS-strong AND OOS-robust: **Donchian v2 + BollingerBreakout** (rolling breakout + wide ATR trail + cooldown). (2) Breakout REFERENCE: rolling extreme (Donchian) and statistical band (Bollinger) both work (Bollinger lowest MDD); a LAGGED pivot (Fractal) and CLOSE-confirmed MARKET entry (ChannelClose) both break it. (3) The EXIT is decisive — wide ATR chandelier trail ≫ channel exit / SAR. (4) Entry FILTERS fail OOS (ADX/squeeze/RSI/trend/vol-buffer → floor); the ReentryBars COOLDOWN is the one entry-side lever kept >0. (5) Asymmetry is necessary-not-sufficient (needs the cooldown). (6) **IS strength ≠ OOS robustness** — the IS NP/Obj champion (lowest IS-MDD) is repeatedly OOS-worst; IS-inferior higher-freq / tighter-band / wider-MDD regimes generalize best (thin-edge coins). Exception: thick-edge BNB Daily — the sparse wide-trail champion itself holds OOS.
 
