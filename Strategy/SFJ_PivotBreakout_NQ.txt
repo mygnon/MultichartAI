@@ -1,0 +1,101 @@
+{===============================================================================
+  SFJ_PivotBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. DAILY PIVOT-POINT breakout entered intrabar via STOP
+  + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of SFJ_PivotBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the breakout
+  REFERENCE:
+    - Donchian v2 / DonchianAsymV2 : rolling HIGH/LOW channel  (Highest/Lowest)
+    - BollingerBreakout            : statistical band          (SMA +/- k*stdev)
+    - CloseChannelBreakout         : rolling CLOSE channel     (Highest/Lowest of C)
+    - Keltner / VolatilityBreakout : EMA/Close +/- k*ATR
+    - RegChannelBreakout           : linear-regression channel (reg line +/- k*stdev)
+  This probes a 6th reference: the DAILY PIVOT POINT, anchored to the COMPLETED prior
+  session's High/Low/Close (HighD(1)/LowD(1)/CloseD(1)) — a session-level breakout
+  constant within the day:
+    PP  = (HighD(1) + LowD(1) + CloseD(1)) / 3
+    Rng = HighD(1) - LowD(1)
+    UpLvl = PP + PivMult*Rng ; DnLvl = PP - PivMult*Rng
+  Non-lagged within the session; filled with an intrabar STOP at the level.
+
+  This is NOT mean-reversion: it BUYS the upper-pivot break and SHORTS the lower-pivot
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    PivMult     - pivot band half-width as a multiple of the prior-day range
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Defaults: PivMult=0.5, ATRMult=3.0, ReentryBars=0
+  Requires an INTRADAY chart (HighD/LowD/CloseD read completed-day values).
+  Author: generated for Tim / MultichartAI, 2026-06-28
+===============================================================================}
+
+inputs:
+    PivMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    PP( 0 ),
+    Rng( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- daily pivot levels from the COMPLETED prior session (non-lagged within the day) ---- }
+PP    = ( HighD( 1 ) + LowD( 1 ) + CloseD( 1 ) ) / 3 ;
+Rng   = HighD( 1 ) - LowD( 1 ) ;
+UpLvl = PP + PivMult * Rng ;   { long breakout level }
+DnLvl = PP - PivMult * Rng ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: daily-pivot breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars and Rng > 0 then
+begin
+    Buy ( "PvLE" ) next bar at UpLvl stop ;
+    SellShort ( "PvSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "PvLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "PvSX" ) next bar at TrailShort stop ;
+end ;
