@@ -1,0 +1,106 @@
+{===============================================================================
+  SFJ_MidChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. DONCHIAN-MIDPOINT +/- ATR-band breakout entered intrabar via STOP
+  + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the breakout
+  REFERENCE:
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - Keltner / VolatilityBreakout : EMA / Close center +/- k*ATR
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout                : prior-session pivot +/- k*range
+  This probes a 7th reference: a CENTER = the DONCHIAN RANGE MIDPOINT,
+      MidPt = ( Highest(High,Length) + Lowest(Low,Length) ) / 2
+  i.e. the middle of the last Length-bar range, with the breakout an ATR band beyond it:
+      UpMid = MidPt + BandMult*ATR ; DnMid = MidPt - BandMult*ATR
+  Unlike the SMA (Bollinger) / EMA (Keltner) centers — which lag and drift with price —
+  the range-midpoint re-centers on the recent high-low envelope (mean-reversion-resistant
+  in trends, symmetric to the range). This tests whether a range-midpoint center beats a
+  moving-average center for the same ATR-band breakout.
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpMid STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnMid STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - lookback for the range midpoint (Highest(High)+Lowest(Low))/2, bars
+    BandMult    - breakout distance from the midpoint in ATR(14) multiples
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Reserved-word note: `Mid` may collide -> use `MidPt`. `Upper`/`Lower` reserved -> `UpMid`/`DnMid`.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-29
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    MidPt( 0 ),
+    UpMid( 0 ),
+    DnMid( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- Donchian range-midpoint of the COMPLETED bars +/- ATR band (prior-bar = non-lagged STOP level) ---- }
+MidPt = ( Highest( High, Length ) + Lowest( Low, Length ) ) / 2 ;
+UpMid = ( MidPt + BandMult * ATRv )[1] ;   { long breakout level }
+DnMid = ( MidPt - BandMult * ATRv )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: midpoint ATR-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "McLE" ) _Crypto1MUSD contract next bar at UpMid stop ;
+    SellShort ( "McSE" ) _Crypto1MUSD contract next bar at DnMid stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "McLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "McSX" ) next bar at TrailShort stop ;
+end ;
