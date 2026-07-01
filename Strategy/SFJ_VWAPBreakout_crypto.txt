@@ -1,0 +1,114 @@
+{===============================================================================
+  SFJ_VWAPBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. ROLLING-VWAP +/- ATR-band breakout entered intrabar via STOP
+  + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the REFERENCE
+  CENTER (every one of the 7 prior references weights price equally):
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - Keltner / VolatilityBreakout : EMA / Close center +/- k*ATR
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout                : prior-session pivot +/- k*range
+    - MidChannelBreakout           : range-midpoint (HH+LL)/2 +/- k*ATR
+  This probes an 8th reference and the FIRST to use VOLUME: a ROLLING VWAP center,
+      RollVW = Sum(Close*Volume, Length) / Sum(Volume, Length)
+  i.e. the volume-weighted average price over the last Length bars (pulled toward the
+  high-volume price levels, unlike the equal-weight SMA/EMA), with the breakout an ATR
+  band beyond it:
+      UpVW = RollVW + BandMult*ATR ; DnVW = RollVW - BandMult*ATR
+  Tests whether a volume-weighted center beats the equal-weight centers for the same
+  ATR-band breakout. Degrades gracefully to a simple Average(Close,Length) center if the
+  data feed reports no volume (Sum(Volume)=0).
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpVW STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnVW STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - rolling-VWAP lookback (volume-weighted price window), bars
+    BandMult    - breakout distance from the VWAP center in ATR(14) multiples
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Reserved-word note: `VWAP` is a built-in -> use `RollVW`. `Upper`/`Lower` reserved -> `UpVW`/`DnVW`.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-30
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    VolSum( 0 ),
+    RollVW( 0 ),
+    UpVW( 0 ),
+    DnVW( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- rolling VWAP center of the COMPLETED bars (volume-weighted; falls back to SMA if no volume) ---- }
+VolSum = Summation( Volume, Length ) ;
+if VolSum > 0 then
+    RollVW = Summation( Close * Volume, Length ) / VolSum
+else
+    RollVW = Average( Close, Length ) ;
+
+UpVW = ( RollVW + BandMult * ATRv )[1] ;   { long breakout level }
+DnVW = ( RollVW - BandMult * ATRv )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: VWAP ATR-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "VwLE" ) _Crypto1MUSD contract next bar at UpVW stop ;
+    SellShort ( "VwSE" ) _Crypto1MUSD contract next bar at DnVW stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "VwLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "VwSX" ) next bar at TrailShort stop ;
+end ;

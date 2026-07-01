@@ -2465,6 +2465,108 @@ def _wizard_on_param_page(dlg) -> bool:
         return False
 
 
+def _select_regular_optimization(wizard, dpi_scale: float = 1.0) -> bool:
+    """On the wizard's 'choose the optimization type' page, positively SELECT the
+    'Regular Optimization' radio (NOT Walk-Forward / Cluster).
+
+    The options are radio buttons / list items, so a Button-only click misses them and
+    MC keeps its default selection (often Walk-Forward Optimization). This finds the
+    'regular' option by name and selects it (UIA .select()/.click_input(), else a
+    DPI-adjusted coordinate click, else a Win32 child click). Returns True on success.
+    """
+    _POS = ("regular", "標準", "一般", "正常")
+    _NEG = ("walk", "順推", "前推", "cluster", "叢集", "集群", "genetic", "基因")
+    hwnd = wizard.handle if hasattr(wizard, "handle") else None
+    if not hwnd:
+        return False
+
+    def _match(nm: str) -> bool:
+        nm = (nm or "").lower()
+        return any(k in nm for k in _POS) and not any(k in nm for k in _NEG)
+
+    def _is_sel(radio) -> Optional[bool]:
+        for meth in ("is_selected", "get_toggle_state"):
+            try:
+                v = getattr(radio, meth)()
+                return bool(v)   # get_toggle_state: 1==on
+            except Exception:
+                pass
+        return None
+
+    def _sel_label(pairs) -> Optional[str]:
+        for radio, label in pairs:
+            if _is_sel(radio):
+                return label
+        return None
+
+    def _click_radio(radio) -> None:
+        # PHYSICAL click on the radio circle (WPF hit-test toggles it). .select() is a
+        # no-op on these radios, so click_input (DPI-correct) is primary, coord fallback.
+        try:
+            radio.click_input()
+            return
+        except Exception:
+            pass
+        try:
+            r = radio.rectangle()
+            pyautogui.click(int(((r.left + r.right) / 2) / dpi_scale),
+                            int(((r.top + r.bottom) / 2) / dpi_scale))
+        except Exception:
+            pass
+
+    uia = _uia_dlg(hwnd)
+    if uia is not None:
+        # The RadioButtons carry EMPTY names; the label ("Regular Optimization") is a
+        # SEPARATE sibling Text right AFTER its radio in tree order (RadioButton -> Image
+        # -> Text-label). Pair each radio with the FIRST non-empty Text that follows it.
+        try:
+            desc = list(uia.descendants())
+        except Exception:
+            desc = []
+        pairs = []   # [(radio_element, label_text)]
+        pending = None
+        for el in desc:
+            try:
+                ct = el.element_info.control_type
+                nm = (el.element_info.name or "").strip()
+            except Exception:
+                continue
+            if ct == "RadioButton":
+                pending = el
+            elif pending is not None and ct == "Text" and nm:
+                pairs.append((pending, nm)); pending = None
+        target, tlabel = None, None
+        for radio, label in pairs:
+            if _match(label):
+                target, tlabel = radio, label; break
+        if target is None and pairs:      # Regular is the FIRST option
+            target, tlabel = pairs[0]
+        if target is not None:
+            sel = None
+            for attempt in range(1, 4):
+                if _is_sel(target):       # already selected -> done
+                    logger.info("'Regular Optimization' already selected (label '%s')", tlabel)
+                    return True
+                _click_radio(target)
+                time.sleep(0.4)
+                sel = _sel_label(pairs)
+                logger.info("Regular-select attempt %d: clicked '%s' -> selected='%s'", attempt, tlabel, sel)
+                if _is_sel(target) or (sel and _match(sel)):
+                    logger.info("Selected 'Regular Optimization' radio (verified, label '%s')", tlabel)
+                    return True
+            logger.warning("Regular radio clicked but not verified selected (last selected='%s')", sel)
+            return True   # click was issued; proceed (verification may be unsupported)
+    # Win32 fallback: a visible child whose text says 'regular'
+    for h, c, t in _win32_enum_children(hwnd):
+        if t and _match(t) and _win32_is_visible(h):
+            _win32_click_hwnd(h)
+            logger.info("Selected 'Regular Optimization' via Win32 child ('%s')", t)
+            time.sleep(0.3)
+            return True
+    logger.warning("Could not find a 'Regular Optimization' option to select (leaving wizard default)")
+    return False
+
+
 def _set_cell_value_at_coords(x: int, y: int, value: str) -> None:
     """Double-click a list-view cell at screen coords and type a value."""
     pyautogui.doubleClick(x, y)
@@ -2872,8 +2974,8 @@ def configure_optimization(
     # _wizard_on_param_page() returns True immediately and we skip this block.
     _early_dpi = _get_dpi_scale(wizard.handle)
     if not _wizard_on_param_page(wizard):
-        logger.info("Wizard on Page 1 (type selection) — clicking Regular Optimization + Next")
-        _click_button_in_dlg(wizard, ["Regular Optimization", "標準優化", "一般優化", "最佳化", "Optimization"])
+        logger.info("Wizard on Page 1 (type selection) — selecting Regular Optimization + Next")
+        _select_regular_optimization(wizard, _early_dpi)
         time.sleep(0.4)
         _click_next_in_wizard(wizard, _early_dpi)
         time.sleep(1.0)

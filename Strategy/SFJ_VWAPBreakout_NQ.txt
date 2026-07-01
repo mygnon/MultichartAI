@@ -1,0 +1,108 @@
+{===============================================================================
+  SFJ_VWAPBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. ROLLING-VWAP +/- ATR-band breakout entered intrabar via STOP
+  + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of SFJ_VWAPBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the REFERENCE
+  CENTER (every one of the 7 prior references weights price equally):
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - Keltner / VolatilityBreakout : EMA / Close center +/- k*ATR
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout                : prior-session pivot +/- k*range
+    - MidChannelBreakout           : range-midpoint (HH+LL)/2 +/- k*ATR
+  This probes an 8th reference and the FIRST to use VOLUME: a ROLLING VWAP center,
+      RollVW = Sum(Close*Volume, Length) / Sum(Volume, Length)
+  the volume-weighted average price over the last Length bars (pulled toward high-volume
+  price levels, unlike the equal-weight SMA/EMA), with the breakout an ATR band beyond it:
+      UpVW = RollVW + BandMult*ATR ; DnVW = RollVW - BandMult*ATR
+  Degrades gracefully to Average(Close,Length) if the feed reports no volume.
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpVW STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnVW STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - rolling-VWAP lookback (volume-weighted price window), bars
+    BandMult    - breakout distance from the VWAP center in ATR(14) multiples
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Reserved-word note: `VWAP` is a built-in -> use `RollVW`. `Upper`/`Lower` reserved -> `UpVW`/`DnVW`.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-06-30
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    VolSum( 0 ),
+    RollVW( 0 ),
+    UpVW( 0 ),
+    DnVW( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- rolling VWAP center of the COMPLETED bars (volume-weighted; falls back to SMA if no volume) ---- }
+VolSum = Summation( Volume, Length ) ;
+if VolSum > 0 then
+    RollVW = Summation( Close * Volume, Length ) / VolSum
+else
+    RollVW = Average( Close, Length ) ;
+
+UpVW = ( RollVW + BandMult * ATRv )[1] ;   { long breakout level }
+DnVW = ( RollVW - BandMult * ATRv )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: VWAP ATR-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "VwLE" ) next bar at UpVW stop ;
+    SellShort ( "VwSE" ) next bar at DnVW stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "VwLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "VwSX" ) next bar at TrailShort stop ;
+end ;
