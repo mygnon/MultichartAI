@@ -167,7 +167,7 @@ def _main_cfg(name, Pv, A, Re):
                           chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE)
 
 
-def _module_cfg(name, signal, axes):
+def _module_cfg(name, signal, axes, fixed_inputs=None):
     combos = 1
     for (_, s, e, st) in axes:
         combos *= n_vals(s, e, st)
@@ -175,7 +175,7 @@ def _module_cfg(name, signal, axes):
         log.warning("  %s: %d combos >5000!", name, combos)
     return StrategyConfig(name=name, mc_signal_name=signal, timeframe=TF, bar_period=BARP,
                           params=[ParamAxis(p, s, e, st) for (p, s, e, st) in axes],
-                          chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE)
+                          chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE, fixed_inputs=fixed_inputs)
 
 
 def csv_for(name):
@@ -398,14 +398,14 @@ def stage2(conn, from_csv, state):
 
 
 # ----------------------------------------------------------------------------- set inputs
-def _set_signal_inputs(conn, signal, params):
+def _set_signal_inputs(conn, signal, params, commit=True):
     cfg = StrategyConfig(name=f"SET_{signal[:20]}", mc_signal_name=signal, timeframe=TF,
                          bar_period=BARP, params=[ParamAxis(k, v, v, 1.0) for k, v in params.items()],
                          chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE)
     last = None
     for a in range(1, 4):
         try:
-            mc.set_params_and_date_for_single_run(conn, cfg, params, DateRange(*IS_RANGE)); return
+            mc.set_signal_input_strings(conn, signal, params, commit=commit); return
         except Exception as e:
             last = e; log.warning("_set_signal_inputs %s attempt %d failed: %s", signal, a, e)
             try:
@@ -455,7 +455,8 @@ def stage3(conn, from_csv, state):
         if conn is not None:
             _activate(conn)
             mc.set_signal_statuses(conn, {n: (n == signal) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
-        cfg = _module_cfg(f"S3_{label}_{signal[:24]}", signal, axes)
+        cfg = _module_cfg(f"S3_{label}_{signal[:24]}", signal, axes,
+                          fixed_inputs={MAIN_SIGNAL: champ})
         df = run_or_load(cfg, conn, from_csv)
         if df is None or df.empty or not _valid_main_fixed(df, champ, [signal]):
             log.error("  [%s] Stage3 %s INVALID -- ABORT", SYMBOL, label); return None
@@ -481,9 +482,9 @@ def stage4(conn, from_csv, state):
     if conn is not None:
         _activate(conn)
         mc.set_instrument_data_range(conn, *FULL_RANGE)
-        _set_signal_inputs(conn, MAIN_SIGNAL, champ)
-        for label, info in mods.items():
-            _set_signal_inputs(conn, info["signal"], info["params"])
+        _s4sigs = [(MAIN_SIGNAL, champ)] + [(info["signal"], info["params"]) for label, info in mods.items()]
+        for _i, (_sig, _prm) in enumerate(_s4sigs):
+            _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(_s4sigs) - 1))
         mc.set_signal_statuses(conn, {n: False for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
     df0 = run_or_load(_micro_main_cfg("S4_A00", *ct), conn, from_csv)
     row0 = _pick_main(df0, *ct) if df0 is not None and not df0.empty else None
@@ -499,9 +500,16 @@ def stage4(conn, from_csv, state):
         if conn is not None:
             _activate(conn)
             mc.set_signal_statuses(conn, {n: (n in enabled) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+        _fx = {MAIN_SIGNAL: dict(champ)}
+        for k in kept:
+            _fx.setdefault(mods[k]["signal"], {}).update(mods[k]["params"])
+        _cand_rest = {p: v for p, v in info["params"].items() if p != vax}
+        if _cand_rest:
+            _fx.setdefault(signal, {}).update(_cand_rest)
         cfg = StrategyConfig(name=f"S4_S{step}_{label}", mc_signal_name=signal, timeframe=TF, bar_period=BARP,
                              params=[ParamAxis(vax, max(0.0, round(vval - vstep, 8)), round(vval + vstep, 8), vstep)],
-                             chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE)
+                             chart_workspace=WORKSPACE, chart_symbol=SYMBOL, insample=INSAMPLE,
+                             fixed_inputs=_fx)
         df = run_or_load(cfg, conn, from_csv)
         row = None
         if df is not None and not df.empty and _valid_main_fixed(df, champ, enabled):
@@ -532,11 +540,16 @@ def stage4(conn, from_csv, state):
         try:        # best-effort write-back: results are already saved per step, so a stale-handle
                     # teardown must NOT fail the (complete) instrument
             _activate(conn)
-            _set_signal_inputs(conn, MAIN_SIGNAL, champ)
-            for k in kept:
-                _set_signal_inputs(conn, mods[k]["signal"], mods[k]["params"])
+            _t0 = time.time()
+            _tdsigs = [(MAIN_SIGNAL, champ)] + [(mods[k]["signal"], mods[k]["params"]) for k in kept]
+            for _i, (_sig, _prm) in enumerate(_tdsigs):
+                _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(_tdsigs) - 1))
+                log.info("[TIMING] teardown inputs %s done (+%.1fs)", _sig, time.time() - _t0)
             kept_signals = {mods[k]["signal"] for k in kept}
-            mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in ALL_MODULE_NAMES}, verify=False, protected=[MAIN_SIGNAL])
+            mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+            for _i, (_sig, _prm) in enumerate(_tdsigs):   # post-statuses re-verify (fast path)
+                _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(_tdsigs) - 1))
+            log.info("[TIMING] teardown inputs re-verified (+%.1fs)", time.time() - _t0)
             log.info("[%s] Final Format Objects inputs applied: main=%s kept=%s", SYMBOL, champ, {k: mods[k]["params"] for k in kept})
         except Exception as e:
             log.warning("[%s] Stage4 teardown write-back failed (results already saved): %s", SYMBOL, e)
@@ -545,6 +558,35 @@ def stage4(conn, from_csv, state):
 
 
 # ----------------------------------------------------------------------------- per-instrument driver
+
+def apply_final_only(conn, state):
+    """Re-apply the final deploy to the chart from state.json: write main champion
+    + kept-module params into Format Objects inputs (read-back verified) and
+    enable exactly the KEPT modules. Usable standalone via --apply-final."""
+    champ = state["stage2"]["main_champ"]
+    mods = state["stage3"]["modules"]
+    kept = state["stage4"]["final_kept"]
+    _activate(conn)
+    _t0 = time.time()
+    # ONE Format Objects session: set all signals' inputs, commit ONCE on the last
+    sigs = [(MAIN_SIGNAL, champ)] + [(mods[k]["signal"], mods[k]["params"]) for k in kept]
+    for _i, (_sig, _prm) in enumerate(sigs):
+        _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(sigs) - 1))
+        log.info("[TIMING] apply-final inputs %s done (+%.1fs)", _sig, time.time() - _t0)
+    kept_signals = {mods[k]["signal"] for k in kept}
+    mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in ALL_MODULE_NAMES},
+                           verify=True, protected=[MAIN_SIGNAL])
+    # POST-STATUSES RE-VERIFY: the statuses session touches the same dialog; if
+    # anything reverted the input strings, this pass re-fixes it (fast-path skip
+    # when all correct, so it costs only one quick read-through).
+    for _i, (_sig, _prm) in enumerate(sigs):
+        _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(sigs) - 1))
+    log.info("[TIMING] apply-final inputs re-verified (+%.1fs)", time.time() - _t0)
+    log.info("[%s] APPLY-FINAL done: main=%s kept=%s", SYMBOL, champ,
+             {k: mods[k]["params"] for k in kept})
+    return state
+
+
 def run_instrument(inst, conn, args):
     _apply_ctx(inst)
     log.info("######################## INSTRUMENT %s (%s) ########################", inst[0].upper(), SYMBOL)
@@ -554,6 +596,8 @@ def run_instrument(inst, conn, args):
         except Exception as e:
             log.warning("reconnect failed: %s", e)
     state = _load_state()
+    if getattr(args, "apply_final", False):
+        return apply_final_only(conn, state)
     if args.from_stage <= 1:
         state = stage1(conn, args.from_csv, state)
         if state is None: return None
@@ -592,6 +636,7 @@ def main():
     ap.add_argument("--from-csv", action="store_true")
     ap.add_argument("--probe-windows", action="store_true")
     ap.add_argument("--force", action="store_true", help="ignore cached *_raw.csv and re-optimize")
+    ap.add_argument("--apply-final", action="store_true", help="only re-apply final params+statuses to the chart from state.json")
     ap.add_argument("--resume-gaps", action="store_true",
                     help="resume any instrument missing a complete stage4 (in one process)")
     ap.add_argument("--_elevated", action="store_true", help=argparse.SUPPRESS)

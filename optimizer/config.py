@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List
+from typing import Dict, List, Optional
 import numpy as np
 
 
@@ -36,6 +36,13 @@ class StrategyConfig:
     chart_symbol: str           # symbol shown in chart title (for window matching)
     insample: DateRange = field(default_factory=lambda: DateRange("2019/01/01", "2026/01/01"))
     outsample: DateRange = field(default_factory=lambda: DateRange("2018/01/01", "2019/01/01"))
+    # Fixed (non-optimized) inputs to write into the wizard grid's Current Value
+    # column, keyed {signal_name: {input_name: value}}. Read-back verified; the
+    # run ABORTS on mismatch. This is how a multi-signal chart pins the MAIN
+    # signal's champion params during an exit-module optimization — the
+    # Format-Objects setter (set_params_and_date_for_single_run) fails silently
+    # on WPF Format dialogs, so the wizard grid is the reliable place to fix them.
+    fixed_inputs: Optional[Dict[str, Dict[str, float]]] = None
 
     def total_runs(self) -> int:
         n = 1

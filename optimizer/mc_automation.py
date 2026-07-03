@@ -2227,6 +2227,331 @@ def set_signal_status(format_dlg, signal_name: str, enabled: bool) -> bool:
     return False
 
 
+def set_signal_input_strings(conn: MultiChartsConnection, signal_name: str,
+                             values, commit: bool = True) -> None:
+    """Set a signal's input values via Format Objects -> Signals.
+
+    Route: open the signal's PROPERTIES dialog (row gear icon / double-click /
+    'Format...' button), write each input value inside it, OK it, then VERIFY
+    against the row's read-only 'Input Strings' cell text in the Signals grid
+    (the ground truth). Raises MCUIError when verification fails.
+
+    *values*: dict {input_name: value} (rows matched by name) or ordered list
+    (positional). NOTE: the row's PENCIL icon opens the Study Editor (source
+    code!) — never click it; only the gear/double-click/'Format...' paths.
+    """
+    import re as _re
+
+    if isinstance(values, dict):
+        names = list(values.keys())
+        want = [float(v) for v in values.values()]
+    else:
+        names = None
+        want = [float(v) for v in values]
+    val_str = ", ".join(f"{v:g}" for v in want)
+
+    def _cell_nums(txt):
+        return [float(x) for x in _re.findall(r"[-+]?\d*\.?\d+(?:[eE][-+]?\d+)?", txt or "")]
+
+    def _find_row(uia_dlg):
+        """Return (row_item, name_text_element) for the signal row."""
+        for it in uia_dlg.descendants(control_type="DataItem"):
+            try:
+                for d in it.descendants(control_type="Text"):
+                    if (d.window_text() or "").strip() == signal_name:
+                        return it, d
+            except Exception:
+                pass
+        return None, None
+
+    def _cell_text(row_item):
+        for d in row_item.descendants(control_type="Text"):
+            t = (d.window_text() or "").strip()
+            if t.startswith("("):
+                return t
+        return ""
+
+    def _close_study_editor():
+        for w in _safe_desktop_windows():
+            try:
+                if "Study Editor" in (w.window_text() or "") and w.is_visible():
+                    logger.warning("set_signal_input_strings: closing Study Editor (blocks automation)")
+                    _user32.PostMessageW(ctypes.c_void_p(w.handle), 0x0010, 0, 0)
+                    time.sleep(1.2)
+            except Exception:
+                pass
+
+    fmt_dlg = _open_format_signals(conn)
+    hwnd = fmt_dlg.handle if hasattr(fmt_dlg, "handle") else None
+    uia = _uia_dlg(hwnd)
+    if uia is None:
+        raise MCUIError("set_signal_input_strings: no UIA wrapper for Format Objects")
+    dpi = _get_dpi_scale(hwnd)
+    _close_study_editor()
+
+    def _win_title(h) -> str:
+        try:
+            buf = ctypes.create_unicode_buffer(256)
+            _user32.GetWindowTextW(ctypes.c_void_p(h), buf, 256)
+            return buf.value or ""
+        except Exception:
+            return ""
+
+    def _find_props_window():
+        """An already-open 'Format Signal: <name>' properties dialog, if any
+        (a prior attempt may have opened it and crashed before using it)."""
+        for w in _safe_desktop_windows():
+            try:
+                t = w.window_text() or ""
+                if w.handle != hwnd and w.is_visible() and t.startswith("Format Signal"):
+                    if signal_name in t or ":" not in t:
+                        return w.handle
+            except Exception:
+                pass
+        return None
+
+    def _wait_new_window(pre, timeout=5.0):
+        deadline = time.time() + timeout
+        while time.time() < deadline:
+            hit = _find_props_window()
+            if hit is not None:
+                return hit
+            for w in _safe_desktop_windows():
+                try:
+                    if w.handle in pre or w.handle == hwnd or not w.is_visible():
+                        continue
+                    try:
+                        if "tooltip" in (w.class_name() or "").lower():
+                            continue   # the gear's hover ToolTip is NOT a dialog
+                    except Exception:
+                        pass
+                    title = w.window_text() or ""
+                    if "Study Editor" in title:
+                        logger.warning("set_signal_input_strings: misfire opened Study Editor — closing")
+                        _user32.PostMessageW(ctypes.c_void_p(w.handle), 0x0010, 0, 0)
+                        time.sleep(1.0)
+                        return None
+                    return w.handle
+                except Exception:
+                    pass
+            time.sleep(0.25)
+        return None
+
+    def _set_values_in_props(ph):
+        """Write the input values into the Win32 properties dialog.
+
+        Structure (from UIA dump): SysListView32 with columns [Name | Value],
+        one ListItem per input (UIA texts EMPTY — read texts via the win32
+        ListViewWrapper instead). Cell position = ListItem rect (row y) x
+        'Value' HeaderItem rect (column x). Per-row read-back verified.
+        """
+        wrap = _HwndWrapper(ph)
+        try:
+            _click_tab(wrap, ["Inputs", "輸入"])
+            time.sleep(0.4)
+        except Exception:
+            pass
+        wuia = _uia_dlg(ph)
+        pdpi = _get_dpi_scale(ph)
+        rows = []
+        val_x = None
+        # Poll: the dialog needs a moment to render its ListView — reading too
+        # early sees no ListItems and wasted a whole close/reopen cycle.
+        _poll_end = time.time() + 3.5
+        while time.time() < _poll_end:
+            if wuia is None:
+                wuia = _uia_dlg(ph)
+            if wuia is not None:
+                try:
+                    rows = list(wuia.descendants(control_type="ListItem"))
+                    for hi in wuia.descendants(control_type="HeaderItem"):
+                        if (hi.window_text() or "").strip().lower() == "value":
+                            hr = hi.rectangle()
+                            val_x = int((hr.left + hr.right) / 2 / pdpi)
+                            break
+                except Exception:
+                    pass
+            if rows and val_x is not None:
+                break
+            time.sleep(0.3)
+        lv = None
+        lv_hwnd = _get_listview_hwnd(ph)
+        if lv_hwnd:
+            try:
+                from pywinauto.controls.common_controls import ListViewWrapper
+                lv = ListViewWrapper(lv_hwnd)
+            except Exception as e:
+                logger.debug("props: ListViewWrapper failed: %s", e)
+
+        def _lv_text(i, col):
+            if lv is None:
+                return None
+            try:
+                return (lv.get_item(i, col).text() or "").strip()
+            except Exception:
+                return None
+
+        if not rows or val_x is None:
+            try:
+                _d = [(e.element_info.control_type, (e.element_info.name or "")[:25],
+                       (e.element_info.class_name or "")[:15])
+                      for e in list(wuia.descendants())[:100]] if wuia else []
+                logger.error("props-dialog UIA dump (first 100): %s", _d)
+            except Exception:
+                pass
+            logger.warning("props: no ListItems/Value header — cannot set values safely")
+            return
+
+        # Row index per param: match by Name-column text when readable, else positional
+        idx_by_name = {}
+        if lv is not None:
+            for i in range(len(rows)):
+                nm = _lv_text(i, 0)
+                if nm:
+                    idx_by_name.setdefault(nm, i)
+
+        n = min(len(rows), len(want))
+        for k in range(len(want)):
+            v = want[k]
+            tgt = f"{v:g}"
+            i = None
+            if names is not None and idx_by_name:
+                i = idx_by_name.get(names[k])
+            if i is None:
+                i = k if k < n else None
+            if i is None:
+                logger.warning("props: no row for param %d — skipped", k)
+                continue
+            done = False
+            for t in range(1, 4):
+                cur = _lv_text(i, 1)
+                try:
+                    if cur is not None and abs(float(cur.replace(",", "")) - v) <= max(1e-9, abs(v) * 1e-6):
+                        done = True
+                        break
+                except Exception:
+                    pass
+                try:
+                    rr = rows[i].rectangle()
+                    ry = int((rr.top + rr.bottom) / 2 / pdpi)
+                    pyautogui.doubleClick(val_x, ry)
+                    time.sleep(0.35)
+                    _pg_hotkey("ctrl", "a")
+                    time.sleep(0.06)
+                    _cb_paste(tgt)
+                    time.sleep(0.06)
+                    pyautogui.press("enter")
+                    time.sleep(0.35)
+                except Exception as e:
+                    logger.warning("props: row %d edit failed: %s", i, e)
+                if not _win32_is_visible(ph):
+                    logger.warning("props: dialog closed unexpectedly during edit")
+                    return
+            rb = _lv_text(i, 1)
+            logger.info("props: '%s' row %d Value -> %s (read-back '%s')%s",
+                        names[k] if names else k, i, tgt, rb,
+                        "" if done or rb is None else " [UNVERIFIED]")
+
+    ok = False
+    for attempt in range(1, 4):
+        row, name_el = _find_row(uia)
+        if row is None:
+            raise MCUIError(f"set_signal_input_strings: signal '{signal_name}' not found in Signals grid")
+        # Fast path: cell already equals the target — nothing to do (makes
+        # pipeline-level retries and re-runs nearly free).
+        _got0 = _cell_text(row)
+        _nums0 = _cell_nums(_got0)
+        if len(_nums0) == len(want) and all(abs(a - b) <= max(1e-9, abs(b) * 1e-6)
+                                            for a, b in zip(_nums0, want)):
+            logger.info("Input Strings '%s' already %s — skip (try %d)", signal_name, _got0, attempt)
+            ok = True
+            break
+        try:
+            # Reuse a properties dialog left open by a previous attempt
+            props = _find_props_window()
+            if props is None:
+                nr = name_el.rectangle()
+                nx = int((nr.left + nr.right) / 2 / dpi)
+                ny = int((nr.top + nr.bottom) / 2 / dpi)
+                pre = {w.handle for w in _safe_desktop_windows()}
+                pyautogui.click(nx, ny)          # select the row
+                time.sleep(0.35)
+                if attempt == 1:
+                    # gear icon = LEFTMOST of the row's icon buttons. NEVER the pencil
+                    # (2nd: opens Study Editor) and NEVER the last (X: removes the signal).
+                    btns = []
+                    for b in row.descendants(control_type="Button"):
+                        try:
+                            br = b.rectangle()
+                            if br.width() > 2 and br.height() > 2:
+                                btns.append((br.left, br))
+                        except Exception:
+                            pass
+                    btns.sort(key=lambda t: t[0])
+                    if btns:
+                        _, gr = btns[0]
+                        pyautogui.click(int((gr.left + gr.right) / 2 / dpi),
+                                        int((gr.top + gr.bottom) / 2 / dpi))
+                    else:
+                        pyautogui.doubleClick(nx, ny)
+                elif attempt == 2:
+                    pyautogui.doubleClick(nx, ny)
+                else:
+                    _click_button_in_dlg(fmt_dlg, ["Format...", "Format", "格式"])
+                props = _wait_new_window(pre)
+            if props is None:
+                logger.warning("set_signal_input_strings: properties dialog did not open (try %d)", attempt)
+                continue
+            logger.info("set_signal_input_strings: properties dialog hwnd=%x '%s'",
+                        props, _win_title(props)[:40])
+            _set_values_in_props(props)
+            wrap = _HwndWrapper(props)
+            if not _click_button_in_dlg(wrap, ["OK", "確定"]):
+                pyautogui.press("enter")
+            time.sleep(0.9)
+            if _win32_is_visible(props):
+                _user32.PostMessageW(ctypes.c_void_p(props), 0x0010, 0, 0)
+                time.sleep(0.8)
+            row2, _ = _find_row(uia)
+            got = _cell_text(row2) if row2 is not None else ""
+            nums = _cell_nums(got)
+            if len(nums) == len(want) and all(abs(a - b) <= max(1e-9, abs(b) * 1e-6)
+                                              for a, b in zip(nums, want)):
+                logger.info("Input Strings '%s' = %s (verified, try %d)", signal_name, got, attempt)
+                ok = True
+                break
+            logger.warning("Input Strings '%s' read-back %s != want (%s) (try %d)",
+                           signal_name, got, val_str, attempt)
+        except Exception as e:
+            logger.warning("set_signal_input_strings: attempt %d failed: %s", attempt, e)
+            time.sleep(0.5)
+    if not ok:
+        try:
+            _sp = str(Path(__file__).parent.parent / "results" /
+                      f"INPUTSTR_FAIL_{int(time.time())}.png")
+            pyautogui.screenshot(_sp)
+            logger.error("set_signal_input_strings failure screenshot: %s", _sp)
+        except Exception:
+            pass
+        raise MCUIError(
+            f"set_signal_input_strings: could not set '{signal_name}' Input Strings to "
+            f"({val_str}) — aborting instead of keeping stale params")
+    if commit:
+        # This Format Objects dialog has a CLOSE button, not OK (grid edits are
+        # applied on cell commit; Close just dismisses). Try all labels and
+        # judge success by the dialog actually CLOSING — the button-click return
+        # value alone caused false "could not commit" retries costing ~30-50s each.
+        committed = False
+        for _c_try in range(3):
+            _click_button_in_dlg(fmt_dlg, ["OK", "確定", "Close", "關閉"])
+            time.sleep(0.7)
+            if not _win32_is_visible(hwnd):
+                committed = True
+                break
+        if not committed:
+            raise MCUIError("set_signal_input_strings: Format Objects did not close on OK/Close — commit unconfirmed")
+
+
 def set_signal_statuses(
     conn: "MultiChartsConnection",
     status_map: Dict[str, bool],
@@ -3267,6 +3592,93 @@ def configure_optimization(
 
         logger.info("[TIMING] cfg.step5a_uncheck_all=%.2fs", time.time() - _step5_t0)
 
+        # Step 0b: pin FIXED (non-optimized) inputs via the grid's Current Value
+        # column — edits layout per row: [0]=Current, [1]=Start, [2]=End, [3]=Step.
+        # This is the reliable replacement for the silently-failing Format-Objects
+        # setter: unchecked rows keep their Current Value during the optimization,
+        # so writing the champion here pins the MAIN signal's params for module
+        # runs. Read back each cell and ABORT on mismatch — a module optimized
+        # against wrong main params poisons every downstream stage.
+        _fixed = getattr(cfg, "fixed_inputs", None)
+        if _fixed:
+            _fx_t0 = time.time()
+
+            def _read_edit_value(_ed) -> Optional[str]:
+                for _getter in ("get_value", "window_text"):
+                    try:
+                        v = getattr(_ed, _getter)()
+                        if v is not None and str(v).strip() != "":
+                            return str(v).strip()
+                    except Exception:
+                        pass
+                try:
+                    v = _ed.iface_value.CurrentValue
+                    if v is not None and str(v).strip() != "":
+                        return str(v).strip()
+                except Exception:
+                    pass
+                return None
+
+            def _num_eq(a: str, b: float) -> bool:
+                try:
+                    fa = float(str(a).replace(",", ""))
+                    return abs(fa - b) <= max(1e-9, abs(b) * 1e-6)
+                except Exception:
+                    return False
+
+            for _fx_sig, _fx_params in _fixed.items():
+                for _fx_name, _fx_val in _fx_params.items():
+                    _fx_row = None
+                    for _item_fx in list(_wiz_uia.descendants(control_type="DataItem")):
+                        try:
+                            _txts_fx = [d.window_text() for d in _item_fx.descendants(control_type="Text")]
+                            if _fx_name in _txts_fx and any(t == _fx_sig for t in _txts_fx):
+                                _fx_row = _item_fx
+                                break
+                        except Exception:
+                            pass
+                    if _fx_row is None:
+                        raise MCUIError(
+                            f"fixed_inputs: no wizard row for signal '{_fx_sig}' input "
+                            f"'{_fx_name}' — cannot pin main params, aborting")
+                    _ok = False
+                    for _fx_try in range(1, 4):
+                        try:
+                            _fx_edits = list(_fx_row.descendants(control_type="Edit"))
+                            if not _fx_edits:
+                                time.sleep(0.3)
+                                continue
+                            _cur = _fx_edits[0]
+                            _cr = _cur.rectangle()
+                            _cx = int((_cr.left + _cr.right) / 2 / _dpi_scale)
+                            _cy = int((_cr.top + _cr.bottom) / 2 / _dpi_scale)
+                            pyautogui.click(_cx, _cy)
+                            time.sleep(0.15)
+                            pyautogui.hotkey('ctrl', 'a')
+                            time.sleep(0.08)
+                            _cb_paste(str(_fx_val))
+                            time.sleep(0.08)
+                            pyautogui.press('tab')
+                            time.sleep(0.15)
+                            _rb = _read_edit_value(_fx_edits[0])
+                            if _rb is not None and _num_eq(_rb, float(_fx_val)):
+                                logger.info("  Fixed '%s'.%s Current=%s (verified, try %d)",
+                                            _fx_sig, _fx_name, _rb, _fx_try)
+                                _ok = True
+                                break
+                            logger.warning("  Fixed '%s'.%s read-back '%s' != %s (try %d)",
+                                           _fx_sig, _fx_name, _rb, _fx_val, _fx_try)
+                        except Exception as _fxe:
+                            logger.warning("  Fixed '%s'.%s attempt %d failed: %s",
+                                           _fx_sig, _fx_name, _fx_try, _fxe)
+                            time.sleep(0.3)
+                    if not _ok:
+                        raise MCUIError(
+                            f"fixed_inputs: could not set+verify '{_fx_sig}'.'{_fx_name}' "
+                            f"= {_fx_val} in wizard Current Value — aborting to avoid "
+                            f"optimizing modules against wrong main params")
+            logger.info("[TIMING] cfg.step5a2_fixed_inputs=%.2fs", time.time() - _fx_t0)
+
         for _pi, _param in enumerate(cfg.params):
             _param_t0 = time.time()
             # Find the row containing this param's input name
@@ -3640,58 +4052,148 @@ def set_params_and_date_for_single_run(
     time.sleep(0.3)
 
     sig_hwnd = signal_dlg.handle
-    lv_hwnd = _get_listview_hwnd(sig_hwnd)
+    _dpi_fi = _get_dpi_scale(sig_hwnd)
 
-    # Try UIA to read param names and set values
-    inputs_set = False
+    # --- Set + READ-BACK-VERIFY each input on the WPF Inputs pane. -------------
+    # The old 3-tier path (child_window DataGrid / SysListView32 / pywinauto)
+    # silently failed on this WPF dialog ("Could not set inputs" warning, then
+    # claimed success) — Stage-3 module optimizations then ran against DEFAULT
+    # main params, poisoning every allinst Stage-3/4 result. This rewrite uses
+    # the wizard-proven row matching, verifies every value, and RAISES on failure.
+    def _fi_read(el) -> Optional[str]:
+        for g in ("get_value", "window_text"):
+            try:
+                v = getattr(el, g)()
+                if v is not None and str(v).strip() != "":
+                    return str(v).strip()
+            except Exception:
+                pass
+        try:
+            v = el.iface_value.CurrentValue
+            if v is not None and str(v).strip() != "":
+                return str(v).strip()
+        except Exception:
+            pass
+        return None
+
+    def _fi_eq(txt: str, want: float) -> bool:
+        try:
+            return abs(float(str(txt).replace(",", "")) - want) <= max(1e-9, abs(want) * 1e-6)
+        except Exception:
+            return False
+
+    def _fi_dump(uia_dlg) -> None:
+        try:
+            _d = [(e.element_info.control_type, (e.element_info.name or "")[:25],
+                   (e.element_info.class_name or "")[:15])
+                  for e in list(uia_dlg.descendants())[:120]]
+            logger.error("Inputs-dialog UIA dump (first 120): %s", _d)
+        except Exception:
+            pass
+
+    failed: List[str] = []
     uia = _uia_dlg(sig_hwnd)
-    if uia is not None:
-        try:
-            for ct in ["DataGrid", "List", "Table"]:
-                grid = uia.child_window(control_type=ct)
-                if not grid.exists(timeout=2):
-                    continue
-                for item in grid.descendants(control_type="DataItem"):
-                    cell_text = item.window_text().strip()
-                    if cell_text in params:
-                        item.click_input()
-                        time.sleep(0.15)
-                        _pg_hotkey("ctrl", "a")
-                        time.sleep(0.05)
-                        _cb_paste(str(params[cell_text]))   # clipboard paste bypasses IME
-                        pyautogui.press("tab")
-                        time.sleep(0.1)
-                        inputs_set = True
-                break
-        except Exception as e:
-            logger.debug("UIA inputs set failed: %s", e)
+    if uia is None:
+        raise MCUIError(f"set inputs: no UIA wrapper for signal dialog of '{cfg.mc_signal_name}'")
 
-    if not inputs_set and lv_hwnd:
-        # Ctypes + estimated coords — use cfg.params ordering
-        for row_idx, (pname, pval) in enumerate(params.items()):
-            # Click at value column (col 1)
-            cx, cy = _estimate_cell_coords(lv_hwnd, row_idx, col=1)
-            _set_cell_value_at_coords(cx, cy, str(pval))
-        inputs_set = True
-
-    if not inputs_set:
-        # Last resort: pywinauto (may fail for admin windows)
-        try:
-            lv = signal_dlg.child_window(class_name="SysListView32")
-            count = lv.item_count()
-            for i in range(count):
-                for col in range(0, 3):
+    for pname, pval in params.items():
+        want = float(pval)
+        ok = False
+        for attempt in range(1, 4):
+            try:
+                # Strategy A: DataItem row whose Texts contain the param name
+                target_el = None   # the editable Edit, once located
+                click_rect = None  # where to click to spawn/focus the editor
+                rows = list(uia.descendants(control_type="DataItem"))
+                row = None
+                for it in rows:
                     try:
-                        cell_text = lv.get_item(i, col).text().strip()
-                        if cell_text in params:
-                            val_col = col + 1 if col < 2 else col
-                            _set_cell_value(signal_dlg, lv, i, val_col,
-                                            str(params[cell_text]))
+                        txts = [d.window_text() for d in it.descendants(control_type="Text")]
+                        if pname in txts:
+                            row = it
                             break
                     except Exception:
                         pass
-        except Exception as e:
-            logger.warning("Could not set inputs: %s", e)
+                if row is not None:
+                    eds = list(row.descendants(control_type="Edit"))
+                    if eds:
+                        target_el = eds[0]
+                    else:
+                        click_rect = row.rectangle()   # click right half = value cell
+                else:
+                    # Strategy B: flat pane — Text(name) followed by an Edit sibling
+                    desc = list(uia.descendants())
+                    for i, el in enumerate(desc):
+                        try:
+                            if el.element_info.control_type == "Text" and \
+                               (el.window_text() or "").strip() == pname:
+                                for el2 in desc[i + 1: i + 8]:
+                                    if el2.element_info.control_type == "Edit":
+                                        target_el = el2
+                                        break
+                                break
+                        except Exception:
+                            pass
+                if target_el is None and click_rect is None:
+                    raise MCUIError(f"no row/edit found for input '{pname}'")
+
+                if target_el is not None:
+                    r = target_el.rectangle()
+                    cx = int((r.left + r.right) / 2 / _dpi_fi)
+                    cy = int((r.top + r.bottom) / 2 / _dpi_fi)
+                    pyautogui.click(cx, cy)
+                else:
+                    cx = int((click_rect.left + click_rect.right * 3) / 4 / _dpi_fi)
+                    cy = int((click_rect.top + click_rect.bottom) / 2 / _dpi_fi)
+                    pyautogui.doubleClick(cx, cy)
+                time.sleep(0.2)
+                _pg_hotkey("ctrl", "a")
+                time.sleep(0.06)
+                _cb_paste(str(pval))
+                time.sleep(0.06)
+                pyautogui.press("tab")
+                time.sleep(0.2)
+
+                # Read back (re-locate: the editor may be recreated on commit)
+                rb = None
+                rows2 = list(uia.descendants(control_type="DataItem"))
+                for it in rows2:
+                    try:
+                        txts = [d.window_text() for d in it.descendants(control_type="Text")]
+                        if pname in txts:
+                            eds2 = list(it.descendants(control_type="Edit"))
+                            if eds2:
+                                rb = _fi_read(eds2[0])
+                            if rb is None:
+                                for t in txts:
+                                    if t != pname and _fi_eq(t, want):
+                                        rb = t
+                                        break
+                            break
+                    except Exception:
+                        pass
+                if rb is None and target_el is not None:
+                    rb = _fi_read(target_el)
+                if rb is not None and _fi_eq(rb, want):
+                    logger.info("  Input '%s'.%s = %s (verified, try %d)",
+                                cfg.mc_signal_name, pname, rb, attempt)
+                    ok = True
+                    break
+                logger.warning("  Input '%s'.%s read-back '%s' != %s (try %d)",
+                               cfg.mc_signal_name, pname, rb, pval, attempt)
+            except Exception as e:
+                logger.warning("  Input '%s'.%s attempt %d failed: %s",
+                               cfg.mc_signal_name, pname, attempt, e)
+                time.sleep(0.4)
+        if not ok:
+            failed.append(pname)
+
+    if failed:
+        _fi_dump(uia)
+        raise MCUIError(
+            f"set inputs FAILED for '{cfg.mc_signal_name}': {failed} — values could not "
+            f"be set+verified on the Inputs pane (see UIA dump above). Aborting instead "
+            f"of silently keeping old params.")
 
     # --- General tab: set date range ---
     _click_tab(signal_dlg, ["General", "一般"])
