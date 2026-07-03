@@ -84,6 +84,7 @@ MODULE_PARAM_NAMES = {sig: {p[0] for p in axes} for (_, sig, axes) in MODULES}
 VARY_AXIS = {"M1": ("STP", 0.1), "M2": ("ATRSTP", 0.1), "M3": ("EXITBAR", 1.0),
              "M4": ("DAYRANGE", 0.01), "M5": ("PT_Base", 0.001), "M6": ("std", 0.1)}
 EPS = 1e-9
+FORCE = False   # --force: ignore cached *_raw.csv and re-run the optimization
 
 SYMBOL = MAIN_SIGNAL = None
 TOKENS: List[str] = []
@@ -183,7 +184,7 @@ def csv_for(name):
 
 def run_or_load(cfg, conn, from_csv):
     p = csv_for(cfg.name)
-    if from_csv or p.exists():
+    if from_csv or (p.exists() and not FORCE):
         if p.exists():
             try:
                 df = mc.load_results_csv(str(p), cfg); log.info("Loaded %s: %d rows", cfg.name, len(df))
@@ -590,10 +591,13 @@ def main():
     ap.add_argument("--from-stage", type=int, default=1)
     ap.add_argument("--from-csv", action="store_true")
     ap.add_argument("--probe-windows", action="store_true")
+    ap.add_argument("--force", action="store_true", help="ignore cached *_raw.csv and re-optimize")
     ap.add_argument("--resume-gaps", action="store_true",
                     help="resume any instrument missing a complete stage4 (in one process)")
     ap.add_argument("--_elevated", action="store_true", help=argparse.SUPPRESS)
     args = ap.parse_args()
+    global FORCE
+    FORCE = bool(args.force)
     if not args.from_csv and not _is_admin():
         _auto_elevate(); return 0
     conn = None

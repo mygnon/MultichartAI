@@ -225,7 +225,7 @@ def _find_all_mc_windows() -> List[Tuple[int, str, int]]:
     """Return list of (hwnd, title, area) for all visible MultiCharts windows."""
     results = []
     try:
-        for win in Desktop(backend="win32").windows():
+        for win in _safe_desktop_windows():
             try:
                 title = win.window_text()
                 if "MultiCharts" in title and win.is_visible():
@@ -584,7 +584,7 @@ def _wait_for_any_window(
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            for win in Desktop(backend="win32").windows():
+            for win in _safe_desktop_windows():
                 try:
                     if not win.is_visible():
                         continue
@@ -1440,6 +1440,24 @@ def _close_format_dialog(conn: MultiChartsConnection) -> None:
 # Format Signals dialog helpers
 # ---------------------------------------------------------------------------
 
+def _safe_desktop_windows():
+    """Enumerate top-level win32 windows without ever raising.
+
+    pywinauto's ``Desktop(backend="win32").windows()`` can itself raise
+    ``InvalidWindowHandle`` ("Handle N is not a valid window handle") when a
+    top-level window dies mid-enumeration — e.g. MC recreating an Optimization
+    Report / progress window during a Stage-3 module transition. The per-item
+    ``try/except`` in call sites only guards the loop BODY, not the ``.windows()``
+    construction, so that error escaped and killed whole instrument runs
+    (ETH, BNB). Returns a (possibly partial) list; on failure returns [].
+    """
+    try:
+        return list(Desktop(backend="win32").windows())
+    except Exception as _e:
+        logger.debug("_safe_desktop_windows enumeration failed (ignored): %s", _e)
+        return []
+
+
 def _find_popup_hwnd(timeout: float = 3.0) -> Optional[int]:
     """Find the most-recently-shown popup menu (#32768) via Desktop enumeration.
 
@@ -1449,7 +1467,7 @@ def _find_popup_hwnd(timeout: float = 3.0) -> Optional[int]:
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            for win in Desktop(backend="win32").windows():
+            for win in _safe_desktop_windows():
                 try:
                     if win.class_name() == "#32768" and win.is_visible():
                         return win.handle
@@ -1558,7 +1576,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
     _fmt_patterns = [r".*Format Objects.*", r".*Format Signals.*", r".*Format Strategies.*",
                      r".*格式物件.*", r".*格式訊號.*", r".*格式策略.*"]
     try:
-        for win in Desktop(backend="win32").windows():
+        for win in _safe_desktop_windows():
             try:
                 if not win.is_visible():
                     continue
@@ -1607,7 +1625,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         # Still degenerate: scan all windows for any visible MC window
         if r - l < 100 or b - t < 100:
             logger.warning("Still degenerate — scanning all top-level windows for MC")
-            for _win in Desktop(backend="win32").windows():
+            for _win in _safe_desktop_windows():
                 try:
                     _title = _win.window_text()
                     if "MultiCharts" in _title and "QuoteManager" not in _title:
@@ -1717,7 +1735,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         time.sleep(0.2)
         # Snapshot windows before Alt press
         _pre_hwnds = set()
-        for _w in Desktop(backend="win32").windows():
+        for _w in _safe_desktop_windows():
             try:
                 _pre_hwnds.add(_w.handle)
             except Exception:
@@ -1725,7 +1743,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         pyautogui.press('alt')
         time.sleep(0.2)
         # Log any new window that appeared (menu popup candidate)
-        for _w in Desktop(backend="win32").windows():
+        for _w in _safe_desktop_windows():
             try:
                 if _w.handle not in _pre_hwnds and _w.is_visible():
                     logger.info("New window after Alt: hwnd=%x cls=%s txt=%s",
@@ -1738,7 +1756,7 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
         popup_after_alt = _find_popup_hwnd(timeout=1.2)
         if not popup_after_alt:
             # Try finding any new popup-like window
-            for _w in Desktop(backend="win32").windows():
+            for _w in _safe_desktop_windows():
                 try:
                     if _w.handle not in _pre_hwnds and _w.is_visible():
                         _cls = _w.class_name()
@@ -1855,22 +1873,33 @@ def _open_format_signals(conn: MultiChartsConnection) -> _HwndWrapper:
     pyautogui.rightClick(_rclick_x, _rclick_y)
     time.sleep(0.5)
 
-    # Snapshot all windows before/after to catch ANY new popup (MC may not use #32768)
+    # Snapshot all windows before/after to catch ANY new popup (MC may not use #32768).
+    # CRITICAL: the Desktop(...).windows() CALL itself can raise InvalidWindowHandle
+    # ("Handle N is not a valid window handle") when a top-level window (e.g. an MC
+    # Optimization Report / progress window) dies mid-enumeration. The per-item try
+    # only guards the loop BODY, not the .windows() construction — so wrap the whole
+    # enumeration. These are non-essential debug snapshots; never let them kill a run.
     _snap_before = set()
-    for _w in Desktop(backend="win32").windows():
-        try:
-            _snap_before.add(_w.handle)
-        except Exception:
-            pass
+    try:
+        for _w in _safe_desktop_windows():
+            try:
+                _snap_before.add(_w.handle)
+            except Exception:
+                pass
+    except Exception as _e:
+        logger.debug("window snapshot(before) enumeration failed (ignored): %s", _e)
 
     popup_hwnd_debug = _find_popup_hwnd(timeout=1.5)
     _new_wins = []
-    for _w in Desktop(backend="win32").windows():
-        try:
-            if _w.handle not in _snap_before and _w.is_visible():
-                _new_wins.append((_w.handle, _w.class_name(), _w.window_text()[:30]))
-        except Exception:
-            pass
+    try:
+        for _w in _safe_desktop_windows():
+            try:
+                if _w.handle not in _snap_before and _w.is_visible():
+                    _new_wins.append((_w.handle, _w.class_name(), _w.window_text()[:30]))
+            except Exception:
+                pass
+    except Exception as _e:
+        logger.debug("window snapshot(after) enumeration failed (ignored): %s", _e)
 
     if popup_hwnd_debug:
         try:
@@ -2465,6 +2494,47 @@ def _wizard_on_param_page(dlg) -> bool:
         return False
 
 
+def _wizard_is_walkforward(wizard) -> Optional[bool]:
+    """GROUND-TRUTH check of the optimization TYPE via page content.
+
+    The UIA selection state on the type radios is unreadable/lying, so the ONLY
+    reliable signal is that Walk-Forward mode renders a 'Set Robustness Settings'
+    section with WFO-only criteria ('Walk-Forward Profitability', 'Walk-Forward
+    Efficiency', 'Num Of Profitable Runs') that DO NOT exist in Regular mode. The
+    type radios stay on this same page, so we can re-select Regular in place.
+
+    Returns True if WFO markers are present, False if the page reads with none,
+    None if the page can't be read at all (inconclusive).
+    """
+    hwnd = wizard.handle if hasattr(wizard, "handle") else None
+    if not hwnd:
+        return None
+    uia = _uia_dlg(hwnd)
+    if uia is None:
+        return None
+    # These four never collide with the always-present radio label
+    # "Walk-Forward Optimization" / its description "Calculate WFO report ...".
+    _WFO = ("robustness", "walk-forward profit", "walk-forward effici",
+            "num of profitable run")
+    names = []
+    try:
+        for el in uia.descendants():
+            try:
+                nm = (el.element_info.name or "")
+            except Exception:
+                continue
+            if nm:
+                names.append(nm.lower())
+    except Exception:
+        pass
+    if not names:
+        return None
+    for nm in names:
+        if any(k in nm for k in _WFO):
+            return True
+    return False
+
+
 def _select_regular_optimization(wizard, dpi_scale: float = 1.0) -> bool:
     """On the wizard's 'choose the optimization type' page, positively SELECT the
     'Regular Optimization' radio (NOT Walk-Forward / Cluster).
@@ -2484,78 +2554,147 @@ def _select_regular_optimization(wizard, dpi_scale: float = 1.0) -> bool:
         nm = (nm or "").lower()
         return any(k in nm for k in _POS) and not any(k in nm for k in _NEG)
 
-    def _is_sel(radio) -> Optional[bool]:
+    def _is_neg(nm: str) -> bool:
+        return any(k in (nm or "").lower() for k in _NEG)
+
+    def _radio_checked(radio) -> Optional[bool]:
+        """TRUTHFUL 'is this radio selected?' read.
+
+        UIA is_selected()/get_toggle_state() LIE on these WPF radios (they returned
+        True for Regular while Walk-Forward was the real selection -> silent WFO
+        contamination of BNB/TXF/NQ/GC). The MSAA/LegacyIAccessible State bit
+        STATE_SYSTEM_CHECKED (0x10) is reliable, so it is PRIMARY. Returns
+        True/False, or None only when no reader could read a state at all.
+        """
+        # 1. Legacy MSAA state bit (reliable for WPF radios)
+        try:
+            st = radio.legacy_properties().get("State", None)
+            if st is not None:
+                return bool(st & 0x10)   # STATE_SYSTEM_CHECKED
+        except Exception:
+            pass
+        # 2. UIA SelectionItemPattern, read fresh from COM
+        try:
+            return bool(radio.iface_selection_item.CurrentIsSelected)
+        except Exception:
+            pass
+        # 3. pywinauto convenience wrappers (least trusted)
         for meth in ("is_selected", "get_toggle_state"):
             try:
-                v = getattr(radio, meth)()
-                return bool(v)   # get_toggle_state: 1==on
+                return bool(getattr(radio, meth)())
             except Exception:
                 pass
         return None
 
-    def _sel_label(pairs) -> Optional[str]:
-        for radio, label in pairs:
-            if _is_sel(radio):
-                return label
-        return None
-
-    def _click_radio(radio) -> None:
-        # PHYSICAL click on the radio circle (WPF hit-test toggles it). .select() is a
-        # no-op on these radios, so click_input (DPI-correct) is primary, coord fallback.
-        try:
-            radio.click_input()
-            return
-        except Exception:
-            pass
+    def _click_radio(radio, label="") -> None:
+        # Select the WPF radio via EVERY method that can work — the UIA selection
+        # state on these radios is unreadable/lying, so we cannot verify here; the
+        # CALLER verifies via the downstream Walk-Forward "Robustness" page. Fire all:
+        #   1. LegacyIAccessible.DoDefaultAction() — the canonical WPF-radio select
+        #   2. SelectionItemPattern.Select()
+        #   3. InvokePattern.invoke()
+        #   4. set_focus + click_input (DPI-correct clickable point)
+        #   5. pyautogui coordinate click at the rect center (dpi=1.0 here)
         try:
             r = radio.rectangle()
-            pyautogui.click(int(((r.left + r.right) / 2) / dpi_scale),
-                            int(((r.top + r.bottom) / 2) / dpi_scale))
+            logger.info("Regular radio '%s' rect=(L%d T%d R%d B%d) center=(%d,%d)",
+                        label, r.left, r.top, r.right, r.bottom,
+                        (r.left + r.right) // 2, (r.top + r.bottom) // 2)
         except Exception:
-            pass
+            r = None
+        for _m in ("iface_legacy_iaccessible.DoDefaultAction",
+                   "iface_selection_item.Select"):
+            try:
+                obj = radio
+                for _part in _m.split("."):
+                    obj = getattr(obj, _part)
+                obj()
+            except Exception:
+                pass
+        for _m in ("invoke", "set_focus", "click_input"):
+            try:
+                getattr(radio, _m)()
+            except Exception:
+                pass
+        if r is not None:
+            # Bring the wizard to the foreground first so pyautogui clicks are not
+            # swallowed by an overlapping panel (the WFO 'Robustness' list overlaps
+            # this block's center).
+            try:
+                _wg = ctypes.windll.user32
+                _wg.SetForegroundWindow(hwnd)
+            except Exception:
+                pass
+            # The reported rect is the whole option BLOCK (circle + title + 2-line
+            # description, ~489x127). The clickable radio GLYPH is at the TOP-LEFT,
+            # aligned with the title line — NOT the block center (which lands on the
+            # description text / the overlapping robustness list). Click the glyph
+            # first, then the title-line text, then the block center as a last resort.
+            _pts = [(r.left + 10, r.top + 14),          # radio circle
+                    (r.left + 60, r.top + 14),          # title text 'Regular Optimization'
+                    ((r.left + r.right) // 2, (r.top + r.bottom) // 2)]  # block center
+            for _px, _py in _pts:
+                try:
+                    pyautogui.click(int(_px / dpi_scale), int(_py / dpi_scale))
+                    time.sleep(0.15)
+                except Exception:
+                    pass
+            # Keyboard fallback: after clicking (which gives the radio GROUP focus),
+            # Up/Home moves the checked state to the FIRST radio = Regular (WPF radio
+            # groups select-on-arrow). Harmless if focus landed elsewhere.
+            try:
+                pyautogui.press("up", presses=3, interval=0.1)
+                time.sleep(0.1)
+                pyautogui.press("home")
+            except Exception:
+                pass
 
     uia = _uia_dlg(hwnd)
     if uia is not None:
         # The RadioButtons carry EMPTY names; the label ("Regular Optimization") is a
         # SEPARATE sibling Text right AFTER its radio in tree order (RadioButton -> Image
         # -> Text-label). Pair each radio with the FIRST non-empty Text that follows it.
-        try:
-            desc = list(uia.descendants())
-        except Exception:
-            desc = []
-        pairs = []   # [(radio_element, label_text)]
-        pending = None
-        for el in desc:
+        # Re-read FRESH each attempt: the element cache can go stale after a click and
+        # report the pre-click selection.
+        def _fresh_pairs():
             try:
-                ct = el.element_info.control_type
-                nm = (el.element_info.name or "").strip()
+                desc = list(uia.descendants())
             except Exception:
-                continue
-            if ct == "RadioButton":
-                pending = el
-            elif pending is not None and ct == "Text" and nm:
-                pairs.append((pending, nm)); pending = None
-        target, tlabel = None, None
-        for radio, label in pairs:
-            if _match(label):
-                target, tlabel = radio, label; break
-        if target is None and pairs:      # Regular is the FIRST option
-            target, tlabel = pairs[0]
-        if target is not None:
-            sel = None
-            for attempt in range(1, 4):
-                if _is_sel(target):       # already selected -> done
-                    logger.info("'Regular Optimization' already selected (label '%s')", tlabel)
-                    return True
-                _click_radio(target)
-                time.sleep(0.4)
-                sel = _sel_label(pairs)
-                logger.info("Regular-select attempt %d: clicked '%s' -> selected='%s'", attempt, tlabel, sel)
-                if _is_sel(target) or (sel and _match(sel)):
-                    logger.info("Selected 'Regular Optimization' radio (verified, label '%s')", tlabel)
-                    return True
-            logger.warning("Regular radio clicked but not verified selected (last selected='%s')", sel)
-            return True   # click was issued; proceed (verification may be unsupported)
+                desc = []
+            pairs, pending = [], None
+            for el in desc:
+                try:
+                    ct = el.element_info.control_type
+                    nm = (el.element_info.name or "").strip()
+                except Exception:
+                    continue
+                if ct == "RadioButton":
+                    pending = el
+                elif pending is not None and ct == "Text" and nm:
+                    pairs.append((pending, nm)); pending = None
+            return pairs
+
+        pairs = _fresh_pairs()
+        if pairs:
+            def _pick_regular(prs):
+                for radio, label in prs:
+                    if _match(label):
+                        return radio, label
+                return prs[0]   # Regular is the FIRST option
+
+            # NOTE: the UIA selection state on these radios is unreadable/lying (both
+            # is_selected() AND the UIA-derived LegacyIAccessible State report Regular
+            # 'selected' while the wizard is genuinely Walk-Forward). So we DO NOT verify
+            # here — we click Regular hard via every method, and the CALLER verifies via
+            # the downstream "Set Robustness Settings"/Walk-Forward criteria page (the only
+            # ground truth) and re-invokes this + <Previous> if needed.
+            pairs = _fresh_pairs() or pairs
+            target, tlabel = _pick_regular(pairs)
+            for _ in range(2):
+                _click_radio(target, tlabel)
+                time.sleep(0.35)
+            logger.info("Clicked 'Regular Optimization' radio '%s' (verification deferred to caller)", tlabel)
+            return True
     # Win32 fallback: a visible child whose text says 'regular'
     for h, c, t in _win32_enum_children(hwnd):
         if t and _match(t) and _win32_is_visible(h):
@@ -2671,7 +2810,7 @@ def configure_optimization(
     # A dialog left open from a previous run causes mis-clicks and wrong state.
     _fs_patterns_kw = ["Format Objects", "Format Signals", "Format Strategies",
                        "格式物件", "格式訊號", "格式策略"]
-    for _sw in Desktop(backend="win32").windows():
+    for _sw in _safe_desktop_windows():
         try:
             if not _sw.is_visible():
                 continue
@@ -2729,7 +2868,7 @@ def configure_optimization(
         if _needs_date_set:
             # Snapshot existing windows so we can detect the NEW signal-properties dialog
             _pre_snap: set = set()
-            for _sw in Desktop(backend="win32").windows():
+            for _sw in _safe_desktop_windows():
                 try:
                     if _sw.is_visible():
                         _pre_snap.add(_sw.handle)
@@ -2776,7 +2915,7 @@ def configure_optimization(
             signal_dlg = None
             _deadline = time.time() + 12.0
             while time.time() < _deadline and signal_dlg is None:
-                for _sw in Desktop(backend="win32").windows():
+                for _sw in _safe_desktop_windows():
                     try:
                         if _sw.is_visible() and _sw.handle not in _pre_snap:
                             _stitle = _sw.window_text()
@@ -2970,12 +3109,18 @@ def configure_optimization(
         logger.debug("Wizard enumeration failed: %s", _we)
 
     # Page 1 (if present): choose Regular Optimization then Next.
-    # MC may open the wizard directly on the parameter page — in that case
-    # _wizard_on_param_page() returns True immediately and we skip this block.
+    # KNOWN-GOOD (pre-2026-06-28) behaviour — restored after regression 1b8c19e:
+    # gently click a "Regular Optimization" *button* if one exists; on the WPF wizard
+    # no such Button exists so this is effectively a no-op and we RELY ON MC'S
+    # REMEMBERED default (MC keeps the last optimization type — set it to Regular once
+    # manually and it sticks). Do NOT aggressively click the WPF radio or press arrow
+    # keys: that regression actively knocked a manually-set Regular selection BACK to
+    # Walk-Forward (the radio ignores programmatic clicks yet the stray arrow-keys /
+    # off-target clicks corrupt the state).
     _early_dpi = _get_dpi_scale(wizard.handle)
     if not _wizard_on_param_page(wizard):
-        logger.info("Wizard on Page 1 (type selection) — selecting Regular Optimization + Next")
-        _select_regular_optimization(wizard, _early_dpi)
+        logger.info("Wizard on Page 1 (type selection) — clicking Regular Optimization + Next")
+        _click_button_in_dlg(wizard, ["Regular Optimization", "標準優化", "一般優化", "最佳化", "Optimization"])
         time.sleep(0.4)
         _click_next_in_wizard(wizard, _early_dpi)
         time.sleep(1.0)
@@ -2988,6 +3133,25 @@ def configure_optimization(
                 logger.warning("Still on Page 1 after second Next click — proceeding anyway")
     else:
         logger.info("Wizard opened directly on parameter page (Page 1 skipped)")
+
+    # READ-ONLY safety guard: confirm the type is Regular via page content (Walk-Forward
+    # renders a 'Set Robustness Settings' section with WFO-only criteria — Walk-Forward
+    # Profitability/Efficiency/Num Of Profitable Runs — that Regular never shows). We do
+    # NOT re-select here (clicking the WPF radio is unreliable and corrupts a good
+    # selection). If WFO is detected we ABORT loudly so the user sets Regular manually
+    # once (MC then remembers it) instead of silently producing contaminated results.
+    time.sleep(0.6)
+    _wf = _wizard_is_walkforward(wizard)
+    if _wf is True:
+        raise MCUIError(
+            "Optimization wizard is in WALK-FORWARD mode (robustness criteria present). "
+            "MC remembers the last optimization type: open the Optimize Strategy wizard "
+            "manually on this chart, select 'Regular Optimization', click Next then Cancel, "
+            "then re-run. Aborting to avoid contaminated Walk-Forward results.")
+    elif _wf is False:
+        logger.info("Optimization type confirmed = Regular (no Walk-Forward robustness markers)")
+    else:
+        logger.warning("Optimization type could not be read (page unreadable) — proceeding")
 
     _cfg_lap("step4_wizard_appeared")
 
