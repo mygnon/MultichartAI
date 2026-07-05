@@ -71,7 +71,7 @@
         "gain_pct": 0.0
       }
     ],
-    "timestamp": "2026-06-28T05:57:32.959284"
+    "timestamp": "2026-07-01T23:46:43.499009"
   },
   "stage2": {
     "results": {
@@ -213,7 +213,7 @@
       "ATRMult": 5.0,
       "ReentryBars": 12.0
     },
-    "timestamp": "2026-06-28T06:09:38.599937"
+    "timestamp": "2026-07-01T23:46:43.580251"
   },
   "stage3": {
     "baseline": {
@@ -224,66 +224,66 @@
       "M1": {
         "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
         "params": {
-          "STP": 0.9
+          "STP": 4.2
         },
-        "net_profit": -276600.0,
-        "max_drawdown": -967600.0,
-        "total_trades": 1632,
-        "delta_np_pct": -107.27
+        "net_profit": 4376000.0,
+        "max_drawdown": -359400.0,
+        "total_trades": 484,
+        "delta_np_pct": 15.09
       },
       "M2": {
         "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
         "params": {
-          "ATRSTP": 2.1
+          "ATRSTP": 5.2
         },
-        "net_profit": 1057600.0,
-        "max_drawdown": -967600.0,
-        "total_trades": 1793,
-        "delta_np_pct": -72.18
+        "net_profit": 4670000.0,
+        "max_drawdown": -495400.0,
+        "total_trades": 580,
+        "delta_np_pct": 22.82
       },
       "M3": {
         "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
         "params": {
-          "EXITBAR": 14.0
+          "EXITBAR": 33.0
         },
-        "net_profit": -15800.0,
-        "max_drawdown": -1257400.0,
-        "total_trades": 1174,
-        "delta_np_pct": -100.42
+        "net_profit": 4207600.0,
+        "max_drawdown": -401400.0,
+        "total_trades": 479,
+        "delta_np_pct": 10.66
       },
       "M4": {
         "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
         "params": {
-          "DAYRANGE": 2.06
+          "DAYRANGE": 3.96
         },
-        "net_profit": -330800.0,
-        "max_drawdown": -1224000.0,
-        "total_trades": 1675,
-        "delta_np_pct": -108.7
+        "net_profit": 4306200.0,
+        "max_drawdown": -362200.0,
+        "total_trades": 485,
+        "delta_np_pct": 13.26
       },
       "M5": {
         "signal": "QuantPass_PT_Exit",
         "params": {
-          "PT_Base": 0.009
+          "PT_Base": 0.089
         },
-        "net_profit": -413200.0,
-        "max_drawdown": -1540200.0,
-        "total_trades": 1315,
-        "delta_np_pct": -110.87
+        "net_profit": 4535600.0,
+        "max_drawdown": -388200.0,
+        "total_trades": 464,
+        "delta_np_pct": 19.29
       },
       "M6": {
         "signal": "RescueTeamExit",
         "params": {
-          "Length": 400.0,
+          "Length": 340.0,
           "std": 3.0
         },
-        "net_profit": -400400.0,
-        "max_drawdown": -1255000.0,
-        "total_trades": 1090,
-        "delta_np_pct": -110.53
+        "net_profit": 4568200.0,
+        "max_drawdown": -376400.0,
+        "total_trades": 488,
+        "delta_np_pct": 20.15
       }
     },
-    "timestamp": "2026-06-28T06:28:53.907989"
+    "timestamp": "2026-07-03T23:47:07.971224"
   },
   "stage4": {
     "baseline": {
@@ -298,92 +298,111 @@
         "enabled": [
           "SFJ_15Dworkshop_lesson9_1_TrailingStop"
         ],
-        "net_profit": 2060600.0,
-        "max_intraday_drawdown": -967600.0,
-        "romad": 2.1296,
+        "net_profit": 5311400.0,
+        "max_intraday_drawdown": -756400.0,
+        "romad": 7.0219,
         "prev_romad": 3.9568,
-        "delta_romad_pct": -46.18,
-        "decision": "discard",
+        "delta_romad_pct": 77.47,
+        "decision": "KEEP",
         "valid": true
       },
       {
         "step": 2,
-        "candidate": "M3",
-        "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+        "candidate": "M6",
+        "signal": "RescueTeamExit",
         "enabled": [
-          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit"
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "RescueTeamExit"
         ],
-        "net_profit": -21200.0,
-        "max_intraday_drawdown": -1450800.0,
-        "romad": -0.0146,
-        "prev_romad": 3.9568,
-        "delta_romad_pct": -100.37,
-        "decision": "discard",
+        "net_profit": 6968800.0,
+        "max_intraday_drawdown": -658800.0,
+        "romad": 10.578,
+        "prev_romad": 7.0219,
+        "delta_romad_pct": 50.64,
+        "decision": "KEEP",
         "valid": true
       },
       {
         "step": 3,
-        "candidate": "M1",
-        "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+        "candidate": "M5",
+        "signal": "QuantPass_PT_Exit",
         "enabled": [
-          "SFJ_15Dworkshop_lesson4_ATRstop"
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "RescueTeamExit",
+          "QuantPass_PT_Exit"
         ],
-        "net_profit": 199400.0,
-        "max_intraday_drawdown": -1103600.0,
-        "romad": 0.1807,
-        "prev_romad": 3.9568,
-        "delta_romad_pct": -95.43,
-        "decision": "discard",
+        "net_profit": 7399400.0,
+        "max_intraday_drawdown": -658800.0,
+        "romad": 11.2316,
+        "prev_romad": 10.578,
+        "delta_romad_pct": 6.18,
+        "decision": "KEEP",
         "valid": true
       },
       {
         "step": 4,
-        "candidate": "M4",
-        "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+        "candidate": "M1",
+        "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
         "enabled": [
-          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit"
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "RescueTeamExit",
+          "QuantPass_PT_Exit",
+          "SFJ_15Dworkshop_lesson4_ATRstop"
         ],
-        "net_profit": -1427200.0,
-        "max_intraday_drawdown": -1725800.0,
-        "romad": -0.827,
-        "prev_romad": 3.9568,
-        "delta_romad_pct": -120.9,
+        "net_profit": 7017400.0,
+        "max_intraday_drawdown": -697000.0,
+        "romad": 10.068,
+        "prev_romad": 11.2316,
+        "delta_romad_pct": -10.36,
         "decision": "discard",
         "valid": true
       },
       {
         "step": 5,
-        "candidate": "M6",
-        "signal": "RescueTeamExit",
+        "candidate": "M4",
+        "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
         "enabled": [
-          "RescueTeamExit"
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "RescueTeamExit",
+          "QuantPass_PT_Exit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit"
         ],
-        "net_profit": -798400.0,
-        "max_intraday_drawdown": -1543200.0,
-        "romad": -0.5174,
-        "prev_romad": 3.9568,
-        "delta_romad_pct": -113.08,
-        "decision": "discard",
+        "net_profit": 7132600.0,
+        "max_intraday_drawdown": -592800.0,
+        "romad": 12.0321,
+        "prev_romad": 11.2316,
+        "delta_romad_pct": 7.13,
+        "decision": "KEEP",
         "valid": true
       },
       {
         "step": 6,
-        "candidate": "M5",
-        "signal": "QuantPass_PT_Exit",
+        "candidate": "M3",
+        "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
         "enabled": [
-          "QuantPass_PT_Exit"
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "RescueTeamExit",
+          "QuantPass_PT_Exit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit"
         ],
-        "net_profit": 133200.0,
-        "max_intraday_drawdown": -1540200.0,
-        "romad": 0.0865,
-        "prev_romad": 3.9568,
-        "delta_romad_pct": -97.81,
-        "decision": "discard",
+        "net_profit": 7445400.0,
+        "max_intraday_drawdown": -592800.0,
+        "romad": 12.5597,
+        "prev_romad": 12.0321,
+        "delta_romad_pct": 4.39,
+        "decision": "KEEP",
         "valid": true
       }
     ],
-    "final_kept": [],
-    "final_romad": 3.9568,
-    "timestamp": "2026-06-28T06:52:54.884660"
+    "final_kept": [
+      "M2",
+      "M6",
+      "M5",
+      "M4",
+      "M3"
+    ],
+    "final_romad": 12.5597,
+    "timestamp": "2026-07-04T00:13:11.006168"
   }
 }

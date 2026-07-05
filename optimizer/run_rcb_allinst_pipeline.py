@@ -85,6 +85,11 @@ MODULES: List[Tuple[str, str, List[Tuple[str, float, float, float]]]] = [
                                                               ("std",       3.0,   6.0,   0.1)]),
 ]
 ALL_MODULE_NAMES = [m[1] for m in MODULES]
+# Live-trading signals that MUST be OFF during optimization/backtest — leaving
+# them ON blocks dialogs / interferes with runs (user-diagnosed BNB/ETH failure).
+# Missing-on-chart is tolerated (ensure-OFF is then trivially satisfied).
+EXTRA_OFF_SIGNALS = ["WinTrade_TradeMode", "*_OrderMasterTXT"]
+STATUS_ALL = ALL_MODULE_NAMES + EXTRA_OFF_SIGNALS
 MODULE_PARAM_NAMES = {sig: {p[0] for p in axes} for (_, sig, axes) in MODULES}
 VARY_AXIS = {"M1": ("STP", 0.1), "M2": ("ATRSTP", 0.1), "M3": ("EXITBAR", 1.0),
              "M4": ("DAYRANGE", 0.01), "M5": ("PT_Base", 0.001), "M6": ("std", 0.1)}
@@ -300,7 +305,7 @@ def stage1(conn, from_csv, state):
     log.info("############ [%s] STAGE 1: IS optimization ############", SYMBOL)
     if conn is not None:
         _activate(conn)
-        mc.set_signal_statuses(conn, {n: False for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+        mc.set_signal_statuses(conn, {n: False for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
         mc.set_instrument_data_range(conn, *IS_RANGE)
     r1_attempts = [
         ("01_global_wide", (5, 80, 5),   (0.5, 3.0, 0.5),  (2.0, 14.0, 2.0), (0, 20, 10)),
@@ -372,7 +377,7 @@ def stage2(conn, from_csv, state):
     for period, rng in (("is", IS_RANGE), ("full", FULL_RANGE)):
         if conn is not None:
             _activate(conn)
-            mc.set_signal_statuses(conn, {n: False for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+            mc.set_signal_statuses(conn, {n: False for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
             mc.set_instrument_data_range(conn, *rng)
         for i, c in enumerate(cands):
             cfg = _micro_main_cfg(f"S2_{period}_C{i}", c["RegLen"], c["BandMult"], c["ATRMult"], c["ReentryBars"])
@@ -457,7 +462,7 @@ def stage3(conn, from_csv, state):
         _activate(conn)
         mc.set_instrument_data_range(conn, *IS_RANGE)
         _set_signal_inputs(conn, MAIN_SIGNAL, champ)
-        mc.set_signal_statuses(conn, {n: False for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+        mc.set_signal_statuses(conn, {n: False for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
     df0 = run_or_load(_micro_main_cfg("S3_A00", *ct), conn, from_csv)
     row0 = _pick_main(df0, *ct) if df0 is not None and not df0.empty else None
     if row0 is None:
@@ -468,7 +473,7 @@ def stage3(conn, from_csv, state):
     for (label, signal, axes) in MODULES:
         if conn is not None:
             _activate(conn)
-            mc.set_signal_statuses(conn, {n: (n == signal) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+            mc.set_signal_statuses(conn, {n: (n == signal) for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
         cfg = _module_cfg(f"S3_{label}_{signal[:24]}", signal, axes,
                           fixed_inputs={MAIN_SIGNAL: champ})
         df = run_or_load(cfg, conn, from_csv)
@@ -499,7 +504,7 @@ def stage4(conn, from_csv, state):
         _s4sigs = [(MAIN_SIGNAL, champ)] + [(info["signal"], info["params"]) for label, info in mods.items()]
         for _i, (_sig, _prm) in enumerate(_s4sigs):
             _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(_s4sigs) - 1))
-        mc.set_signal_statuses(conn, {n: False for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+        mc.set_signal_statuses(conn, {n: False for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
     df0 = run_or_load(_micro_main_cfg("S4_A00", *ct), conn, from_csv)
     row0 = _pick_main(df0, *ct) if df0 is not None and not df0.empty else None
     if row0 is None:
@@ -513,7 +518,7 @@ def stage4(conn, from_csv, state):
         enabled = [mods[k]["signal"] for k in kept] + [signal]
         if conn is not None:
             _activate(conn)
-            mc.set_signal_statuses(conn, {n: (n in enabled) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+            mc.set_signal_statuses(conn, {n: (n in enabled) for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
         _fx = {MAIN_SIGNAL: dict(champ)}
         for k in kept:
             _fx.setdefault(mods[k]["signal"], {}).update(mods[k]["params"])
@@ -559,7 +564,7 @@ def stage4(conn, from_csv, state):
             _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(sigs) - 1))
             log.info("[TIMING] teardown inputs %s done (+%.1fs)", _sig, time.time() - _t0)
         kept_signals = {mods[k]["signal"] for k in kept}
-        mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in ALL_MODULE_NAMES}, verify=True, protected=[MAIN_SIGNAL])
+        mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in STATUS_ALL}, verify=True, protected=[MAIN_SIGNAL])
         for _i, (_sig, _prm) in enumerate(sigs):   # post-statuses re-verify (fast path)
             _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(sigs) - 1))
         log.info("[TIMING] teardown inputs re-verified (+%.1fs)", time.time() - _t0)
@@ -585,7 +590,7 @@ def apply_final_only(conn, state):
         _set_signal_inputs(conn, _sig, _prm, commit=(_i == len(sigs) - 1))
         log.info("[TIMING] apply-final inputs %s done (+%.1fs)", _sig, time.time() - _t0)
     kept_signals = {mods[k]["signal"] for k in kept}
-    mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in ALL_MODULE_NAMES},
+    mc.set_signal_statuses(conn, {n: (n in kept_signals) for n in STATUS_ALL},
                            verify=True, protected=[MAIN_SIGNAL])
     # POST-STATUSES RE-VERIFY: the statuses session touches the same dialog; if
     # anything reverted the input strings, this pass re-fixes it (fast-path skip

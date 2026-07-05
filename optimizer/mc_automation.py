@@ -2611,6 +2611,11 @@ def _set_signal_statuses_once(
         if current.get(sig) is want:
             results[sig] = want   # already correct — no per-signal rescan needed
             continue
+        if current.get(sig) is None and want is False and _find_signal_item(dlg, sig) is None:
+            # ensure-OFF for a signal that is not on this chart = trivially satisfied
+            logger.info("set_signal_statuses: '%s' not on this chart — ensure-OFF satisfied", sig)
+            results[sig] = False
+            continue
         ok = set_signal_status(dlg, sig, want)
         results[sig] = want if ok else None
         if not ok:
@@ -2633,6 +2638,8 @@ def _set_signal_statuses_once(
         for sig, want in status_map.items():
             got = get_signal_status(dlg2, sig)
             logger.info("verify status '%s': want=%s got=%s", sig, want, got)
+            if got is None and want is False and _find_signal_item(dlg2, sig) is None:
+                continue   # not on this chart — ensure-OFF satisfied
             if got is not want:
                 mismatches.append((sig, want, got))
         # Close read-only verify pass without applying anything
