@@ -1,0 +1,126 @@
+{===============================================================================
+  DayChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. N-DAY HIGH/LOW CHANNEL (session-anchored Donchian) +/- ATR-band
+  breakout entered intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the REFERENCE
+  CENTER:
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout                : prior-session pivot +/- k*range   (session-anchored)
+    - MidChannelBreakout           : range-midpoint (HH+LL)/2 +/- k*ATR
+    - HullBreakout / KAMABreakout  : low-lag / adaptive-lag MA center +/- k*ATR
+    - VWAPBreakout                 : volume-weighted center +/- k*ATR
+  The center-LAG axis is settled (low-lag wins IS but overfits OOS; laggy/adaptive
+  centers are OOS-robust). The open axis is ANCHORING: PivotBreakout — the only
+  session-anchored reference so far — showed a distinct character (fewer/cleaner
+  trades, MILD OOS breaks, biggest exit-module benefit) but is a single sample.
+  This probes an 11th reference to confirm it: the CLASSIC N-day high/low channel,
+      UpDay = Highest High of the last Length COMPLETED days  (HighD(1..Length))
+      DnDay = Lowest  Low  of the last Length COMPLETED days  (LowD(1..Length))
+      long STOP at UpDay + BandMult*ATR ; short STOP at DnDay - BandMult*ATR
+  i.e. a session-anchored Donchian: the levels are CONSTANT within the trading day
+  (they only step at the day roll), unlike the rolling hourly Donchian whose channel
+  walks bar by bar. Direct A/B against Donchian (same edge concept, different anchor)
+  and against Pivot (same anchor, different level).
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - completed-day lookback of the channel, DAYS (not bars)
+    BandMult    - extra breakout buffer beyond the day-extreme in ATR(14) multiples
+                  (0 = classic touch-the-level breakout)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Requires an INTRADAY chart (HighD/LowD read completed-day values, same as
+     PivotBreakout). Levels computed with an explicit HighD(i)/LowD(i) loop —
+     Highest()/Lowest() cannot take HighD as a series. Keep Length <= 50.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-06
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ii( 0 ),
+    UpDay( 0 ),
+    DnDay( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- N-day high/low channel of COMPLETED days (session-anchored; steps at day roll) ---- }
+UpDay = HighD( 1 ) ;
+DnDay = LowD( 1 ) ;
+for ii = 2 to Length
+begin
+    if HighD( ii ) > UpDay then
+        UpDay = HighD( ii ) ;
+    if LowD( ii ) < DnDay and LowD( ii ) > 0 then
+        DnDay = LowD( ii ) ;
+end ;
+
+UpLvl = UpDay + BandMult * ATRv ;   { long breakout level }
+DnLvl = DnDay - BandMult * ATRv ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: N-day channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars and UpDay > 0 and DnDay > 0 then
+begin
+    Buy ( "DcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "DcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "DcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "DcSX" ) next bar at TrailShort stop ;
+end ;
