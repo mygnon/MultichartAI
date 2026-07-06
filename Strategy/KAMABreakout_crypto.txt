@@ -1,0 +1,131 @@
+{===============================================================================
+  KAMABreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. KAMA (Kaufman Adaptive MA) +/- ATR-band breakout entered intrabar
+  via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the REFERENCE
+  CENTER:
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - Keltner / VolatilityBreakout : EMA / Close center +/- k*ATR
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout                : prior-session pivot +/- k*range
+    - MidChannelBreakout           : range-midpoint (HH+LL)/2 +/- k*ATR
+    - VWAPBreakout                 : volume-weighted center +/- k*ATR
+    - HullBreakout                 : near-zero-lag Hull-MA center +/- k*ATR
+  This probes a 10th reference: a KAMA (Kaufman ADAPTIVE MA) center. Matrix evidence so
+  far says center LAG drives the IS/OOS trade-off: the low-lag Hull wins IS but overfits
+  OOS; the laggy range-midpoint (MidChannel) is IS-weaker but OOS-robust. KAMA adapts its
+  own lag by the Efficiency Ratio:
+      ER   = AbsValue(Close - Close[Length]) / Sum(AbsValue(Close - Close[1]), Length)
+      SC   = ( ER*(FastSC - SlowSC) + SlowSC )^2    { FastSC=2/3, SlowSC=2/31 }
+      KAMA = KAMA[1] + SC*(Close - KAMA[1])
+  In a clean trend ER->1 and KAMA tracks price almost lag-free (Hull-like); in chop ER->0
+  and KAMA nearly freezes (MidChannel-like), so the band does NOT walk into noise. Tests
+  whether an adaptive-lag center gets Hull's IS strength AND MidChannel's OOS robustness.
+  The breakout is an ATR band beyond it:
+      UpKama = KAMA + BandMult*ATR ; DnKama = KAMA - BandMult*ATR
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpKama STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnKama STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - Efficiency-Ratio lookback of the KAMA, bars (Kaufman default 10)
+    BandMult    - breakout distance from the KAMA center in ATR(14) multiples
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ KAMA is computed manually (recursive var, seeded with Close on the first bars) —
+     no dependency on the AdaptiveMovAvg built-in. Fast/Slow smoothing constants are
+     Kaufman's standard 2 and 30 bars (not optimized; Length drives the adaptivity).
+     Zero-denominator ER guarded to 0 (KAMA freezes).
+
+  Defaults: Length=10, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-06
+===============================================================================}
+
+inputs:
+    Length( 10 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    SC( 0 ),
+    KamaV( 0 ),
+    UpKama( 0 ),
+    DnKama( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- KAMA center: adaptive lag via the Efficiency Ratio (Kaufman 2/30 constants) ---- }
+if CurrentBar <= Length then
+    KamaV = Close
+else
+begin
+    Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+    if Noise > 0 then
+        ER = AbsValue( Close - Close[Length] ) / Noise
+    else
+        ER = 0 ;
+    SC    = Square( ER * ( 2 / 3 - 2 / 31 ) + 2 / 31 ) ;
+    KamaV = KamaV[1] + SC * ( Close - KamaV[1] ) ;
+end ;
+
+UpKama = ( KamaV + BandMult * ATRv )[1] ;   { long breakout level }
+DnKama = ( KamaV - BandMult * ATRv )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: KAMA ATR-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "KaLE" ) _Crypto1MUSD contract next bar at UpKama stop ;
+    SellShort ( "KaSE" ) _Crypto1MUSD contract next bar at DnKama stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "KaLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "KaSX" ) next bar at TrailShort stop ;
+end ;
