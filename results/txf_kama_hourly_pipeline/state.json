@@ -361,7 +361,13 @@
           "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
           "SFJ_15Dworkshop_lesson4_ATRstop"
         ],
-        "valid": false
+        "net_profit": 4247000.0,
+        "max_intraday_drawdown": -783800.0,
+        "romad": 5.4185,
+        "prev_romad": 5.7124,
+        "delta_romad_pct": -5.15,
+        "decision": "discard",
+        "valid": true
       }
     ],
     "final_kept": [
@@ -370,6 +376,6 @@
       "M4"
     ],
     "final_romad": 5.7124,
-    "timestamp": "2026-07-06T07:40:28.820332"
+    "timestamp": "2026-07-06T16:49:20.943537"
   }
 }
