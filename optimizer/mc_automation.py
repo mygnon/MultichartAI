@@ -6,6 +6,7 @@ MultiCharts64 UI Automation
 from __future__ import annotations
 import ctypes
 import logging
+import math
 import os
 import time
 from pathlib import Path
@@ -3628,10 +3629,19 @@ def configure_optimization(
 
             def _num_eq(a: str, b: float) -> bool:
                 try:
-                    fa = float(str(a).replace(",", ""))
-                    return abs(fa - b) <= max(1e-9, abs(b) * 1e-6)
+                    sa = str(a).replace(",", "").strip()
+                    fa = float(sa)
                 except Exception:
                     return False
+                if abs(fa - b) <= max(1e-9, abs(b) * 1e-6):
+                    return True
+                # The wizard grid may DISPLAY fewer decimals than the stored value
+                # (e.g. 5.11 shown as '5.1'): accept only the target ROUNDED or
+                # TRUNCATED to the read-back's displayed decimal places.
+                dec = len(sa.split(".", 1)[1]) if "." in sa else 0
+                scale = 10 ** dec
+                return (abs(fa - round(b, dec)) <= 1e-9
+                        or abs(fa - math.trunc(b * scale) / scale) <= 1e-9)
 
             for _fx_sig, _fx_params in _fixed.items():
                 for _fx_name, _fx_val in _fx_params.items():
@@ -4085,9 +4095,18 @@ def set_params_and_date_for_single_run(
 
     def _fi_eq(txt: str, want: float) -> bool:
         try:
-            return abs(float(str(txt).replace(",", "")) - want) <= max(1e-9, abs(want) * 1e-6)
+            st = str(txt).replace(",", "").strip()
+            ft = float(st)
         except Exception:
             return False
+        if abs(ft - want) <= max(1e-9, abs(want) * 1e-6):
+            return True
+        # Tolerate display rounding (e.g. 5.11 shown as '5.1'): accept only the
+        # target ROUNDED or TRUNCATED to the read-back's displayed decimal places.
+        dec = len(st.split(".", 1)[1]) if "." in st else 0
+        scale = 10 ** dec
+        return (abs(ft - round(want, dec)) <= 1e-9
+                or abs(ft - math.trunc(want * scale) / scale) <= 1e-9)
 
     def _fi_dump(uia_dlg) -> None:
         try:
