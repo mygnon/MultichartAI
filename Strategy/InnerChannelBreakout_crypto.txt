@@ -1,0 +1,114 @@
+{===============================================================================
+  InnerChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. INNER-CHANNEL breakout — Highest LOW / Lowest HIGH channel
+  +/- ATR buffer — entered intrabar via STOP + ReentryBars cooldown + ATR
+  chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. One productive axis is WHICH PRICE
+  FIELD defines the channel:
+    - Donchian (outer)   : Highest HIGH / Lowest LOW — the full envelope incl. wicks
+    - CloseChannel (mid) : Highest CLOSE / Lowest CLOSE — wick-immune (lowest MDD,
+                           #1 risk-adjusted of the self-authored family)
+  This probes a 16th reference — the third point on that spectrum, the INNER envelope:
+      UpInner = Highest(Low,  Length)   { the highest recent LOW  }
+      DnInner = Lowest (High, Length)   { the lowest  recent HIGH }
+      long STOP at (UpInner + BandMult*ATR)[1] ; short at (DnInner - BandMult*ATR)[1]
+  Breaking above the HIGHEST LOW means every recent dip has been exceeded — a
+  "rising-floor" confirmation that triggers EARLIER (tighter level) than the Donchian
+  high; the mirror holds for shorts (falling-ceiling). The BandMult*ATR buffer keeps
+  the too-tight inner level from firing on every wiggle (0 = pure inner-extreme touch).
+  Direct A/B vs Donchian v2 (outer) and CloseChannelBreakout (close): outer -> close ->
+  inner isolates how deep into the bar structure the reference can move before the
+  early-entry benefit is eaten by false breaks.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - inner-channel lookback, bars
+    BandMult    - buffer beyond the inner extreme in ATR(14) multiples
+                  (0 = pure touch; higher = demand more range expansion)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Note UpLvl can sit BELOW DnLvl when BandMult is small and the inner channel is
+     inverted (highest low > lowest high happens in strong trends) — both orders are
+     still placed; the STOP semantics make only the with-move side fill first.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-06
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    UpInner( 0 ),
+    DnInner( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- inner channel: highest LOW / lowest HIGH of the window ---- }
+UpInner = Highest( Low, Length ) ;
+DnInner = Lowest( High, Length ) ;
+
+UpLvl = ( UpInner + BandMult * ATRv )[1] ;   { long breakout level  (rising floor)   }
+DnLvl = ( DnInner - BandMult * ATRv )[1] ;   { short breakout level (falling ceiling) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: inner-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "IcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "IcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "IcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "IcSX" ) next bar at TrailShort stop ;
+end ;

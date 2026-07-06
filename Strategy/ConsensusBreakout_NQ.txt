@@ -1,0 +1,115 @@
+{===============================================================================
+  ConsensusBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. CONSENSUS breakout — the OUTERMOST of the Donchian extreme and the
+  Bollinger band (must clear BOTH) — entered intrabar via STOP + ReentryBars
+  cooldown + ATR chandelier trail.
+
+  Futures port of ConsensusBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Sixteen references varied the
+  center/anchor/band; the matrix LAW says exactly TWO are both IS-strong AND
+  OOS-robust: Donchian v2 (rolling H/L extreme) and BollingerBreakout (SMA +/- k*stdev).
+  This probes a 17th reference on a NEW AXIS — LEVEL COMPOSITION: the strictest-of-two
+  consensus of precisely those two winners,
+      UpCons = MaxList( Highest(High, Length),
+                        Average(Close, Length) + BandMult*StdDev(Close, Length) )
+      DnCons = MinList( Lowest(Low, Length),
+                        Average(Close, Length) - BandMult*StdDev(Close, Length) )
+      long STOP at UpCons[1] ; short STOP at DnCons[1]
+  A fill requires clearing BOTH the recent extreme AND the statistical band — whichever
+  is farther gates the trade. In quiet drift the Donchian edge is outermost (extreme
+  must break); after a volatility burst the Bollinger band is outermost (a statistical
+  outlier is demanded). Fewer but higher-consensus signals. Direct A/B vs each parent
+  (same Length semantics): does the composition inherit both parents' OOS robustness,
+  or just throw away the earlier parent's profitable early fills?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpCons STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnCons STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared lookback for BOTH parents (Donchian window = Bollinger window)
+    BandMult    - Bollinger stdev multiplier (the statistical parent's width)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ BandMult small -> the Donchian extreme dominates (reduces to Donchian v2 sans
+     TrendLen); BandMult large -> the Bollinger band dominates. The interesting region
+     is where BOTH bind on different days. StdDev population basis (,2) as in the
+     Bollinger/RegChannel strategies.
+
+  Defaults: Length=20, BandMult=2.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 2.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    SMAc( 0 ),
+    SDev( 0 ),
+    UpCons( 0 ),
+    DnCons( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- consensus level: outermost of Donchian extreme and Bollinger band ---- }
+SMAc = Average( Close, Length ) ;
+SDev = StandardDev( Close, Length, 2 ) ;
+UpCons = MaxList( Highest( High, Length ), SMAc + BandMult * SDev ) ;
+DnCons = MinList( Lowest( Low, Length ),  SMAc - BandMult * SDev ) ;
+
+UpLvl = UpCons[1] ;   { long breakout level  (must clear BOTH parents) }
+DnLvl = DnCons[1] ;   { short breakout level (must clear BOTH parents) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: consensus breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "CnLE" ) next bar at UpLvl stop ;
+    SellShort ( "CnSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "CnLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "CnSX" ) next bar at TrailShort stop ;
+end ;

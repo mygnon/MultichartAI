@@ -1,0 +1,110 @@
+{===============================================================================
+  TypicalChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. TYPICAL-PRICE channel breakout — Highest/Lowest of (H+L+C)/3
+  +/- ATR buffer — entered intrabar via STOP + ReentryBars cooldown + ATR
+  chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The most productive axis so far is
+  WHICH PRICE FIELD defines the channel — how much WICK information the level carries:
+    - Donchian (outer, wick weight 1)    : Highest HIGH / Lowest LOW
+    - CloseChannel (mid, wick weight 0)  : Highest CLOSE / Lowest CLOSE
+                                           (#1 risk-adjusted — wick-immunity cuts MDD)
+    - InnerChannel (inner, weight -1)    : Highest LOW / Lowest HIGH
+  This probes a 22nd reference — the missing INTERMEDIATE point, wick weight ~1/3:
+      TP     = (High + Low + Close) / 3          { typical price }
+      UpTyp  = Highest(TP, Length) ; DnTyp = Lowest(TP, Length)
+      long STOP at (UpTyp + BandMult*ATR)[1] ; short at (DnTyp - BandMult*ATR)[1]
+  The typical-price extreme blends a THIRD of the wick into the level: an extreme set
+  by a long-wick bar counts partially (unlike Donchian, fully; unlike CloseChannel,
+  not at all). Completes the field gradient outer -> typical -> close -> inner and
+  answers WHERE along it the risk-adjusted sweet spot sits.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - typical-price channel lookback, bars
+    BandMult    - buffer beyond the TP extreme in ATR(14) multiples
+                  (0 = pure touch, like Donchian/CloseChannel)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    TP( 0 ),
+    UpTyp( 0 ),
+    DnTyp( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- typical-price channel (wick weight ~1/3 per bar) ---- }
+TP = ( High + Low + Close ) / 3 ;
+UpTyp = Highest( TP, Length ) ;
+DnTyp = Lowest( TP, Length ) ;
+
+UpLvl = ( UpTyp + BandMult * ATRv )[1] ;   { long breakout level }
+DnLvl = ( DnTyp - BandMult * ATRv )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: typical-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "TcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "TcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "TcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "TcSX" ) next bar at TrailShort stop ;
+end ;

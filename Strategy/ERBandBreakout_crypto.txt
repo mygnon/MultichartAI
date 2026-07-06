@@ -1,0 +1,116 @@
+{===============================================================================
+  ERBandBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. SMA center +/- EFFICIENCY-RATIO-SCALED ATR band breakout entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Thirteen references so far varied
+  the CENTER (channel edges, SMA/EMA/linreg/Hull/KAMA/VWMA, pivots, day/week extremes)
+  — but every single one used a FIXED band width (BandMult * ATR or stdev). This
+  probes a 14th reference on a NEW AXIS: the BAND WIDTH adapts while the center stays
+  deliberately plain (SMA — the laggy, OOS-robust family):
+      ER      = AbsValue(Close - Close[Length]) / Sum(AbsValue(Close - Close[1]), Length)
+      EffBand = BandMult * ATR * (2 - ER)        { trend ER->1: 1x ; chop ER->0: 2x }
+      UpBand  = SMA + EffBand ; DnBand = SMA - EffBand
+  In chop the gate WIDENS (a breakout needs more evidence — noise suppression); in a
+  clean trend it NARROWS (enter earlier). KAMA showed ER-adapting the CENTER's lag
+  lands in the OOS-robust camp; this tests whether ER-adapting the GATE does the same.
+  Direct A/B: vs Bollinger (SMA + fixed stdev band) and Keltner (EMA + fixed ATR band)
+  — same center family, adaptive vs fixed gate.
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpBand STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnBand STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - window for BOTH the SMA center and the Efficiency Ratio, bars
+    BandMult    - base breakout distance in ATR(14) multiples (dynamic 1x-2x by ER)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ ER shares KAMA's formula (zero-denominator guarded to 0 = widest gate). The
+     (2 - ER) scaling is bounded [1, 2] — the optimizer's BandMult grid sets the
+     overall scale, ER only modulates within that band.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-06
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    SMAc( 0 ),
+    EffBand( 0 ),
+    UpBand( 0 ),
+    DnBand( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- SMA center + ER-scaled band width (chop widens the gate, trend narrows it) ---- }
+SMAc = Average( Close, Length ) ;
+Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+if Noise > 0 then
+    ER = AbsValue( Close - Close[Length] ) / Noise
+else
+    ER = 0 ;
+EffBand = BandMult * ATRv * ( 2 - ER ) ;
+
+UpBand = ( SMAc + EffBand )[1] ;   { long breakout level }
+DnBand = ( SMAc - EffBand )[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: ER-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "EbLE" ) _Crypto1MUSD contract next bar at UpBand stop ;
+    SellShort ( "EbSE" ) _Crypto1MUSD contract next bar at DnBand stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "EbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "EbSX" ) next bar at TrailShort stop ;
+end ;

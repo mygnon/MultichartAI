@@ -1,0 +1,111 @@
+{===============================================================================
+  MADBandBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. SMA center +/- MAD (mean-absolute-deviation) band breakout entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of MADBandBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Nineteen references varied the
+  field / lag / anchor / volume / band-width / composition / memory of the level.
+  This probes a 20th reference on a NEW AXIS — ROBUST vs CLASSICAL DISPERSION:
+  BollingerBreakout widens its band with the STANDARD DEVIATION, which SQUARES
+  deviations — one outlier bar blows the band out and keeps it inflated for Length
+  bars. The MAD (mean absolute deviation) weighs every deviation equally:
+      SMAc = Average(Close, Length)
+      MAD  = Average( AbsValue(Close - SMAc), Length )
+      UpMad = SMAc + BandMult*MAD ; DnMad = SMAc - BandMult*MAD
+  Same center, same skeleton — the only change is the dispersion estimator. On
+  fat-tailed data this is where stdev and MAD disagree most: after an outlier bar
+  the Bollinger band overshoots (missing the follow-through) while the MAD band
+  stays honest. For normal data MAD ~ 0.8*stdev, so BandMult lives on a different
+  scale (the grid covers it). Direct A/B vs BollingerBreakout isolates the
+  robust-statistics axis at O(N) cost (no sorting, unlike a median).
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpMad STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnMad STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - window for the SMA center and the MAD, bars
+    BandMult    - breakout distance in MAD multiples (~1.25x the equivalent stdev mult)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ MAD computed as a nested series expression (Average of AbsValue(Close - SMA)) —
+     the same pattern as the KAMA/ERBand noise sums; no sorting, no arrays.
+
+  Defaults: Length=20, BandMult=2.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 2.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    SMAc( 0 ),
+    MADv( 0 ),
+    UpMad( 0 ),
+    DnMad( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- SMA center +/- mean-absolute-deviation band (robust dispersion) ---- }
+SMAc = Average( Close, Length ) ;
+MADv = Average( AbsValue( Close - Average( Close, Length ) ), Length ) ;
+UpMad = SMAc + BandMult * MADv ;
+DnMad = SMAc - BandMult * MADv ;
+
+UpLvl = UpMad[1] ;   { long breakout level }
+DnLvl = DnMad[1] ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: MAD-band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "MbLE" ) next bar at UpLvl stop ;
+    SellShort ( "MbSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "MbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "MbSX" ) next bar at TrailShort stop ;
+end ;

@@ -1,0 +1,113 @@
+{===============================================================================
+  SemiBandBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. SMA center with ASYMMETRIC SEMI-DEVIATION bands — the up-band is
+  scaled by UPSIDE dispersion only, the down-band by DOWNSIDE dispersion only —
+  entered intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of SemiBandBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Twenty references varied the
+  field / lag / anchor / volume / band-width / composition / memory / dispersion of
+  the level — but every band so far was SYMMETRIC (same width both sides). This
+  probes a 21st reference on a NEW AXIS — DIRECTIONAL DISPERSION:
+      SMAc   = Average(Close, Length)
+      UpSemi = Average( MaxList(Close - SMAc, 0), Length )   { upside semi-dev  }
+      DnSemi = Average( MaxList(SMAc - Close, 0), Length )   { downside semi-dev }
+      UpLvl  = SMAc + BandMult*UpSemi ; DnLvl = SMAc - BandMult*DnSemi
+  Each side's gate is scaled by ITS OWN side's recent dispersion, so the band is
+  asymmetric AUTOMATICALLY, following the local skew: after a strong run-up the
+  upside semi-dev is inflated -> the long gate moves far (anti-chase); in a decline
+  the downside semi-dev widens -> shorts demand a true downside outlier. LAW (5)
+  says asymmetry is necessary-but-not-sufficient and was previously bought with
+  separately-optimized per-side params (DonchianAsym); here the asymmetry is
+  ENDOGENOUS — data-driven, zero extra parameters. Direct A/B vs MADBand (same
+  center, pooled |dev|) isolates the directional split.
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower band
+  break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - window for the SMA center and both semi-deviations, bars
+    BandMult    - breakout distance in semi-dev multiples (semi-dev ~ MAD/2 when
+                  symmetric, so ~2x the equivalent MAD mult; default 4)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Semi-devs are nested series expressions (same pattern as MADBand) — no arrays.
+     A one-sided drift window can drive one semi-dev toward 0 (gate hugs the SMA);
+     the flat+cooldown skeleton and the STOP semantics keep that side's fills sane.
+
+  Defaults: Length=20, BandMult=4.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 4.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    SMAc( 0 ),
+    UpSemi( 0 ),
+    DnSemi( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- SMA center + per-side semi-deviation bands (endogenous asymmetry) ---- }
+SMAc  = Average( Close, Length ) ;
+UpSemi = Average( MaxList( Close - Average( Close, Length ), 0 ), Length ) ;
+DnSemi = Average( MaxList( Average( Close, Length ) - Close, 0 ), Length ) ;
+
+UpLvl = ( SMAc + BandMult * UpSemi )[1] ;   { long breakout level  (upside-scaled)   }
+DnLvl = ( SMAc - BandMult * DnSemi )[1] ;   { short breakout level (downside-scaled) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: semi-dev band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "SbLE" ) next bar at UpLvl stop ;
+    SellShort ( "SbSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "SbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "SbSX" ) next bar at TrailShort stop ;
+end ;

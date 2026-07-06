@@ -1,0 +1,127 @@
+{===============================================================================
+  WeekChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. N-WEEK HIGH/LOW CHANNEL (week-anchored Donchian) +/- ATR-band
+  breakout entered intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. What varies is only the REFERENCE
+  CENTER:
+    - Donchian / CloseChannel      : rolling channel EDGE (Highest/Lowest of H/L or C)
+    - BollingerBreakout            : SMA center +/- k*stdev
+    - RegChannelBreakout           : linear-regression center +/- k*stdev
+    - PivotBreakout / DayChannel   : SESSION-anchored levels (pivot / N-day extremes)
+    - MidChannelBreakout           : range-midpoint (HH+LL)/2 +/- k*ATR
+    - HullBreakout / KAMABreakout  : low-lag / adaptive-lag MA center +/- k*ATR
+    - VWAPBreakout / VWMABreakout  : volume-weighted centers
+  The open axis is ANCHORING GRANULARITY: PivotBreakout (prior-day pivot) showed the
+  session-anchored character (fewer/cleaner trades, MILD OOS breaks, biggest module
+  benefit); DayChannelBreakout samples it at DAY granularity. This probes a 13th
+  reference — the same idea one level coarser, the classic N-WEEK channel:
+      UpWk = Highest High of the last Length COMPLETED weeks  (HighW(1..Length))
+      DnWk = Lowest  Low  of the last Length COMPLETED weeks  (LowW(1..Length))
+      long STOP at UpWk + BandMult*ATR ; short STOP at DnWk - BandMult*ATR
+  Levels are CONSTANT within the trading week (they only step at the week roll) —
+  the slowest-stepping, most noise-immune reference in the family. Pairs with
+  DayChannel exactly like Hull/KAMA paired on the lag axis: two granularity points
+  on the anchoring axis (day vs week) isolate how anchoring scale trades signal
+  frequency against OOS robustness.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - completed-week lookback of the channel, WEEKS (not bars/days)
+    BandMult    - extra breakout buffer beyond the week-extreme in ATR(14) multiples
+                  (0 = classic touch-the-level breakout)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Requires an INTRADAY (or daily) chart (HighW/LowW read completed-week values,
+     analogous to DayChannel's HighD/LowD). Levels computed with an explicit
+     HighW(i)/LowW(i) loop — Highest()/Lowest() cannot take HighW as a series.
+     Keep Length <= 30 weeks.
+
+  Defaults: Length=8, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-06
+===============================================================================}
+
+inputs:
+    Length( 8 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ii( 0 ),
+    UpWk( 0 ),
+    DnWk( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- N-week high/low channel of COMPLETED weeks (steps only at the week roll) ---- }
+UpWk = HighW( 1 ) ;
+DnWk = LowW( 1 ) ;
+for ii = 2 to Length
+begin
+    if HighW( ii ) > UpWk then
+        UpWk = HighW( ii ) ;
+    if LowW( ii ) < DnWk and LowW( ii ) > 0 then
+        DnWk = LowW( ii ) ;
+end ;
+
+UpLvl = UpWk + BandMult * ATRv ;   { long breakout level }
+DnLvl = DnWk - BandMult * ATRv ;   { short breakout level }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: N-week channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars and UpWk > 0 and DnWk > 0 then
+begin
+    Buy ( "WcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "WcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "WcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "WcSX" ) next bar at TrailShort stop ;
+end ;

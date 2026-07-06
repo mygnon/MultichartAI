@@ -1,0 +1,115 @@
+{===============================================================================
+  UnionBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. UNION breakout — the INNERMOST of the Donchian extreme and the
+  Bollinger band (EITHER parent's break fires) — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of UnionBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The LEVEL-COMPOSITION axis pairs
+  two experiments on the SAME two parents — the only references that are both
+  IS-strong AND OOS-robust (Donchian v2 rolling extreme; Bollinger SMA +/- k*stdev):
+    - ConsensusBreakout (AND) : outermost of the two — must clear BOTH (fewer, later)
+    - UnionBreakout     (OR)  : innermost of the two — EITHER break fires (earlier)
+  This is the OR half, the 19th reference:
+      UpUnion = MinList( Highest(High, Length),
+                         Average(Close, Length) + BandMult*StdDev(Close, Length) )
+      DnUnion = MaxList( Lowest(Low, Length),
+                         Average(Close, Length) - BandMult*StdDev(Close, Length) )
+      long STOP at UpUnion[1] ; short STOP at DnUnion[1]
+  Whichever parent's level is CLOSER gates the trade — after quiet drift the Bollinger
+  band is inner (statistical break fires before the extreme); after a volatility burst
+  the Donchian edge is inner. Together with Consensus this isolates the composition
+  OPERATOR: do the two parents' fills add profitably (OR wins), does strictness pay
+  (AND wins), or do the parents dominate both composites?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpUnion STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnUnion STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared lookback for BOTH parents (Donchian window = Bollinger window)
+    BandMult    - Bollinger stdev multiplier (the statistical parent's width)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ BandMult large -> the Donchian extreme is always inner (reduces to Donchian v2
+     sans TrendLen); BandMult small -> the Bollinger band is always inner (reduces to
+     BollingerBreakout). The interesting region is where the INNER parent alternates.
+     StdDev population basis (,2) as in the Bollinger/RegChannel strategies.
+
+  Defaults: Length=20, BandMult=2.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 2.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    SMAc( 0 ),
+    SDev( 0 ),
+    UpUnion( 0 ),
+    DnUnion( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- union level: innermost of Donchian extreme and Bollinger band ---- }
+SMAc = Average( Close, Length ) ;
+SDev = StandardDev( Close, Length, 2 ) ;
+UpUnion = MinList( Highest( High, Length ), SMAc + BandMult * SDev ) ;
+DnUnion = MaxList( Lowest( Low, Length ),  SMAc - BandMult * SDev ) ;
+
+UpLvl = UpUnion[1] ;   { long breakout level  (EITHER parent's break fires) }
+DnLvl = DnUnion[1] ;   { short breakout level (EITHER parent's break fires) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: union breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "UnLE" ) next bar at UpLvl stop ;
+    SellShort ( "UnSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "UnLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "UnSX" ) next bar at TrailShort stop ;
+end ;
