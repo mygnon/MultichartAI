@@ -1,0 +1,124 @@
+{===============================================================================
+  RangeSpikeBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. RANGE-SPIKE bar breakout — levels anchored at the widest
+  TRUE-RANGE bar's High/Low +/- ATR buffer — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of RangeSpikeBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. POCBreakout introduced the
+  EVENT-DRIVEN anchor: the max-VOLUME bar's range as the battle zone. This probes a
+  24th reference — the CONTROL experiment for it, the same event-anchor built from
+  PRICE ONLY:
+      Spike bar = the bar with the LARGEST TRUE RANGE among the last Length
+                  completed bars (ties -> the most recent one)
+      UpLvl    = High of that bar + BandMult*ATR
+      DnLvl    = Low  of that bar - BandMult*ATR
+  The widest bar is the volatility EVENT — the moment the market repriced hardest.
+  Its range is the contested zone; a STOP fill beyond it means the repricing
+  resolved directionally. The max-volume bar is USUALLY also a wide-range bar, so:
+  if RangeSpike ~ POC across the matrix, POC's edge was just "the event bar" and
+  volume is redundant; if POC clearly beats RangeSpike, volume carries real,
+  price-independent information. Also a standalone sample of the event-anchor
+  family that stays valid where volume data is unreliable.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - lookback window for the max-true-range bar, bars
+    BandMult    - buffer beyond the spike bar's High/Low in ATR(14) multiples
+                  (0 = pure range-edge touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ True range per historical bar computed manually (MaxList(High, prior Close) -
+     MinList(Low, prior Close)) so session gaps count. Levels anchor at the bar's
+     actual High/Low. O(Length) scan over COMPLETED bars; keep Length <= 300.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    ii( 0 ),
+    tr( 0 ),
+    bestR( 0 ),
+    spkHi( 0 ),
+    spkLo( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- spike bar: the max-true-range bar of the COMPLETED window (tie -> most recent) ---- }
+bestR = -1 ;
+spkHi = High[1] ;
+spkLo = Low[1] ;
+for ii = 1 to Length
+begin
+    tr = MaxList( High[ii], Close[ii+1] ) - MinList( Low[ii], Close[ii+1] ) ;
+    if tr > bestR then
+    begin
+        bestR = tr ;
+        spkHi = High[ii] ;
+        spkLo = Low[ii] ;
+    end ;
+end ;
+
+UpLvl = spkHi + BandMult * ATRv ;   { long breakout level  (beyond the repricing zone) }
+DnLvl = spkLo - BandMult * ATRv ;   { short breakout level (beyond the repricing zone) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: spike-range breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "RsLE" ) next bar at UpLvl stop ;
+    SellShort ( "RsSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RsLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RsSX" ) next bar at TrailShort stop ;
+end ;

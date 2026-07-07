@@ -1,0 +1,117 @@
+{===============================================================================
+  FeedbackChannelBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. FEEDBACK channel breakout — a Donchian whose gate ESCALATES by
+  BandMult*ATR for every consecutive losing trade (resets on a winner) — entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of FeedbackChannelBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Every reference so far reads only
+  MARKET data; none consults the strategy's OWN recent outcomes. This probes a 30th
+  reference on a NEW AXIS — FEEDBACK/HYSTERESIS:
+      lossStreak = consecutive losing closed trades (0 after any winner; capped at 5)
+      UpLvl = Highest(High, Length)[1] + BandMult * ATR * lossStreak
+      DnLvl = Lowest(Low,  Length)[1] - BandMult * ATR * lossStreak
+  After a clean win the gate is the PURE Donchian edge; each consecutive false
+  break pushes the next gate BandMult*ATR further out — the market must show MORE
+  evidence after it just fooled us, which is precisely the breakout family's
+  failure mode (chop = strings of false breaks). This is the EVIDENCE-based sibling
+  of the proven time-based ReentryBars cooldown: not "wait N bars" but "demand an
+  extra margin per recent deception". BandMult = 0 reduces EXACTLY to Donchian
+  (nested A/B); the two anti-chop levers (time cooldown + loss escalation) are
+  co-optimized to reveal whether they are substitutes or complements.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - Donchian lookback, bars
+    BandMult    - gate escalation PER consecutive loss, in ATR(14) multiples
+                  (0 = pure Donchian, no feedback)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ lossStreak tracked via TotalTrades / PositionProfit(1) (profit of the most
+     recently CLOSED trade); capped at 5 so a losing run cannot push the gate to
+     infinity. Escalation uses the CURRENT ATR, so the extra margin stays
+     volatility-scaled.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    lastTT( 0 ),
+    lossStreak( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- feedback state: consecutive-loss counter (resets on any winning trade) ---- }
+if TotalTrades > lastTT then
+begin
+    if PositionProfit( 1 ) < 0 then
+        lossStreak = MinList( lossStreak + 1, 5 )
+    else
+        lossStreak = 0 ;
+    lastTT = TotalTrades ;
+end ;
+
+{ ---- escalated Donchian gate: pure edge after a win, +BandMult*ATR per loss ---- }
+UpLvl = Highest( High, Length )[1] + BandMult * ATRv * lossStreak ;
+DnLvl = Lowest( Low, Length )[1]  - BandMult * ATRv * lossStreak ;
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: feedback-gated breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "FbLE" ) next bar at UpLvl stop ;
+    SellShort ( "FbSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "FbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "FbSX" ) next bar at TrailShort stop ;
+end ;

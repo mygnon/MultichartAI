@@ -1,0 +1,114 @@
+{===============================================================================
+  MultiScaleBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. MULTI-SCALE channel breakout — the AVERAGE of three Donchian
+  levels (windows L, 2L, 4L) +/- ATR buffer — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Every reference so far bets on a
+  SINGLE window Length — and the matrix keeps showing that the IS-champion Length is
+  exactly where overfit concentrates (the plateau optimizer exists to fight this).
+  This probes a 26th reference on a NEW AXIS — SCALE BLENDING: consult THREE
+  timescales and take their consensus,
+      UpMS = ( Highest(High, L) + Highest(High, 2L) + Highest(High, 4L) ) / 3
+      DnMS = ( Lowest(Low,  L) + Lowest(Low,  2L) + Lowest(Low,  4L) ) / 3
+      long STOP at (UpMS + BandMult*ATR)[1] ; short at (DnMS - BandMult*ATR)[1]
+  In a fresh trend all three windows share the same recent extreme -> the level
+  equals the Donchian edge; after a pullback the scales DISAGREE and the level sits
+  between the short channel (already reset lower) and the long channel (still at the
+  old high) — a break must overcome the cross-scale average, not one cherry-picked
+  window. Embeds the project's plateau philosophy INSIDE the strategy: the level is
+  intrinsically robust to the Length choice, so the hypothesis is better OOS
+  retention than any single-window Donchian at similar IS.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - BASE window, bars; the three scales are Length, 2*Length, 4*Length
+                  (keep Length <= 75 so the longest window stays <= 300)
+    BandMult    - buffer beyond the multi-scale level in ATR(14) multiples
+                  (0 = pure touch of the averaged level)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  Defaults: Length=15, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 15 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    L2( 0 ),
+    L4( 0 ),
+    UpMS( 0 ),
+    DnMS( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- multi-scale consensus level: average Donchian edge across L / 2L / 4L ---- }
+L2 = Length * 2 ;
+L4 = Length * 4 ;
+UpMS = ( Highest( High, Length ) + Highest( High, L2 ) + Highest( High, L4 ) ) / 3 ;
+DnMS = ( Lowest( Low, Length )  + Lowest( Low, L2 )  + Lowest( Low, L4 ) ) / 3 ;
+
+UpLvl = ( UpMS + BandMult * ATRv )[1] ;   { long breakout level  (cross-scale consensus) }
+DnLvl = ( DnMS - BandMult * ATRv )[1] ;   { short breakout level (cross-scale consensus) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: multi-scale breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "MsLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "MsSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "MsLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "MsSX" ) next bar at TrailShort stop ;
+end ;

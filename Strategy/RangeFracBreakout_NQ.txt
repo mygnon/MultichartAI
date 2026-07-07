@@ -1,0 +1,112 @@
+{===============================================================================
+  RangeFracBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. RANGE-FRACTION gate breakout — entry levels at a FRACTION of the
+  Donchian channel WIDTH (channel-width numeraire instead of ATR) — entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of RangeFracBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Every buffered reference so far
+  denominates its confirmation distance in ATR (or stdev/MAD) — bar-scale units.
+  This probes a 27th reference on a NEW AXIS — the buffer NUMERAIRE: distance is
+  measured in CHANNEL WIDTHS instead,
+      HH = Highest(High, Length) ; LL = Lowest(Low, Length) ; W = HH - LL
+      UpLvl = LL + BandMult * W        { BandMult = position in/beyond the range }
+      DnLvl = HH - BandMult * W
+      long STOP at UpLvl[1] ; short STOP at DnLvl[1]
+  BandMult = 1 reduces EXACTLY to Donchian (UpLvl = HH); > 1 demands an overshoot
+  proportional to the RANGE (a wide chop demands a wide escape); < 1 arms INSIDE the
+  range ("price recovered to the top X% of the range" momentum-position entry).
+  The channel-width/ATR ratio varies with regime — a coiled narrow range and a wide
+  chop can have the same ATR — so range-denominated confirmation is genuinely
+  different information from ATR-denominated. Nested A/B vs Donchian v2 answers:
+  in WHAT UNIT does the market price its breakout confirmation?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - Donchian window for HH/LL, bars
+    BandMult    - gate position in channel-width fractions
+                  (1.0 = exact Donchian edge; sane grid ~0.5-2.0)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ BandMult well below ~0.5 puts the stop level deep inside the range where it can
+     sit below/above the market -> immediate fills (always-in churn); the optimizer
+     penalizes that zone naturally, but grids should start around 0.3.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    HH( 0 ),
+    LL( 0 ),
+    W( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- range-fraction gate: levels denominated in channel widths ---- }
+HH = Highest( High, Length ) ;
+LL = Lowest( Low, Length ) ;
+W  = HH - LL ;
+
+UpLvl = ( LL + BandMult * W )[1] ;   { long gate  (1.0 = Donchian HH) }
+DnLvl = ( HH - BandMult * W )[1] ;   { short gate (1.0 = Donchian LL) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: range-fraction breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars and W > 0 then
+begin
+    Buy ( "RfLE" ) next bar at UpLvl stop ;
+    SellShort ( "RfSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RfLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RfSX" ) next bar at TrailShort stop ;
+end ;

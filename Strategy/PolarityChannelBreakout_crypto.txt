@@ -1,0 +1,139 @@
+{===============================================================================
+  PolarityChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. POLARITY channel breakout — the upper level is the highest high
+  of the BEARISH bars (supply rejections), the lower level the lowest low of the
+  BULLISH bars (demand rejections), +/- ATR buffer — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Levels have been VALIDATED by
+  volume (HeavyChannel: only size-backed bars count). This probes a 28th reference
+  on a NEW AXIS — validation by BAR POLARITY:
+      UpPol = Highest High among bars i=1..Length with Close[i] < Open[i]
+              { bearish bars: where SUPPLY won — the price sellers defended }
+      DnPol = Lowest  Low  among bars i=1..Length with Close[i] > Open[i]
+              { bullish bars: where DEMAND won — the price buyers defended }
+      long STOP at UpPol + BandMult*ATR ; short STOP at DnPol - BandMult*ATR
+  A high printed by a BULLISH bar is a demand victory, not resistance; real
+  resistance is the highest point where a bar CLOSED BACK DOWN — a supply
+  rejection. Clearing the highest supply-rejection means every seller's stand in
+  the window has been absorbed (mirror for demand). When the window holds no
+  bearish (resp. bullish) bar the level falls back to the plain Donchian edge —
+  a one-sided runaway has no rejections left to clear. A/B vs Donchian isolates
+  the polarity validation; vs HeavyChannel compares volume- vs direction-based
+  validation of the same extreme-level idea.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - polarity-channel lookback, bars
+    BandMult    - buffer beyond the rejection extreme in ATR(14) multiples
+                  (0 = pure touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Doji bars (Close = Open) count for neither side. Empty-side windows fall back
+     to the Donchian edge (sane in runaways). O(Length) scan over COMPLETED bars
+     [1..Length]; keep Length <= 300.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ii( 0 ),
+    haveUp( false ),
+    haveDn( false ),
+    UpPol( 0 ),
+    DnPol( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- polarity channel: supply-rejection highs / demand-rejection lows ---- }
+haveUp = false ;
+haveDn = false ;
+UpPol = 0 ;
+DnPol = 0 ;
+for ii = 1 to Length
+begin
+    if Close[ii] < Open[ii] then
+    begin
+        if haveUp = false or High[ii] > UpPol then
+            UpPol = High[ii] ;
+        haveUp = true ;
+    end ;
+    if Close[ii] > Open[ii] then
+    begin
+        if haveDn = false or Low[ii] < DnPol then
+            DnPol = Low[ii] ;
+        haveDn = true ;
+    end ;
+end ;
+if haveUp = false then
+    UpPol = Highest( High, Length ) ;   { runaway up: no supply rejections left }
+if haveDn = false then
+    DnPol = Lowest( Low, Length ) ;     { runaway down: no demand rejections left }
+
+UpLvl = UpPol + BandMult * ATRv ;   { long breakout level  (all supply absorbed) }
+DnLvl = DnPol - BandMult * ATRv ;   { short breakout level (all demand absorbed) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: polarity-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "PcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "PcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "PcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "PcSX" ) next bar at TrailShort stop ;
+end ;

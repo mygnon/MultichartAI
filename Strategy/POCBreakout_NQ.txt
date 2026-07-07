@@ -1,0 +1,122 @@
+{===============================================================================
+  POCBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. POC (max-volume bar) range breakout — levels anchored at the
+  HIGHEST-VOLUME bar's High/Low +/- ATR buffer — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of POCBreakout_crypto: the _Crypto1MUSD ~$1M-notional position
+  sizing has been REMOVED -- orders use the strategy's default sizing (set in
+  Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The VOLUME axis so far only
+  volume-WEIGHTS an average (VWMABreakout: Sum(C*V)/Sum(V) center; VWAPBreakout:
+  anchored cumulative). This probes a 23rd reference — volume LOCATES the level
+  instead (a point-of-control approximation):
+      POC bar = the single bar with the LARGEST Volume among the last Length
+                completed bars (ties -> the most recent one)
+      UpLvl   = High of that bar + BandMult*ATR
+      DnLvl   = Low  of that bar - BandMult*ATR
+  The highest-volume bar is where the most business was transacted — the battle
+  zone where longs and shorts committed size. Its range acts as the accepted-value
+  area: while price trades inside it the fight is undecided; a STOP fill beyond its
+  High/Low means the auction moved away from the heaviest liquidity = winner decided.
+  When a fresh volume spike prints, the levels SNAP to that bar's range and hold
+  until a bigger-volume bar appears (or it ages out of the window) — an event-driven
+  anchor, unlike every rolling/statistical/session reference so far.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - lookback window for the max-volume bar, bars
+    BandMult    - buffer beyond the POC bar's High/Low in ATR(14) multiples
+                  (0 = pure range-edge touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Uses the chart's Volume field. A zero-volume feed makes every bar tie -> the
+     scan keeps the most recent bar (degrades to a prior-bar range breakout, sane).
+     O(Length) scan per bar over COMPLETED bars [1..Length]; keep Length <= 300.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    ii( 0 ),
+    bestV( 0 ),
+    pocHi( 0 ),
+    pocLo( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- POC bar: the max-volume bar of the COMPLETED window (tie -> most recent) ---- }
+bestV = -1 ;
+pocHi = High[1] ;
+pocLo = Low[1] ;
+for ii = 1 to Length
+begin
+    if Volume[ii] > bestV then
+    begin
+        bestV = Volume[ii] ;
+        pocHi = High[ii] ;
+        pocLo = Low[ii] ;
+    end ;
+end ;
+
+UpLvl = pocHi + BandMult * ATRv ;   { long breakout level  (beyond the battle zone) }
+DnLvl = pocLo - BandMult * ATRv ;   { short breakout level (beyond the battle zone) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: POC-range breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "PoLE" ) next bar at UpLvl stop ;
+    SellShort ( "PoSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "PoLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "PoSX" ) next bar at TrailShort stop ;
+end ;

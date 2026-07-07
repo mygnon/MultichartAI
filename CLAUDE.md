@@ -228,9 +228,9 @@ Common engine that works = rolling/non-lagged breakout level + intrabar STOP fil
 | **MidChannelBreakout** (Length, BandMult, ATRMult, ReentryBars) | $18,029 (19/1.0/7/27 Obj=67,773) | Donchian range-MIDPOINT ±BandMult*ATR (center=(HH+LL)/2) = 7th reference; mid-tier. Pinned exit modules: 6/6 KEEP (NQ stack RoMaD 16.14 = best cell). **BNB strict OOS PASS +$12,525 (1.00×); 5/6 OOS-profitable, mild breaks** |
 | **HullBreakout** (Length, BandMult, ATRMult, ReentryBars) | $21,928 (14/0.35/7/14 Obj=86,746) | Hull-MA center ±BandMult*ATR (near-zero-lag WMA-based MA) = 9th reference; mid-upper tier (IS ~ Bollinger). Pinned exit modules: 6/6 KEEP. **OOS WEAKER: no strict PASS, 3/6 profitable — low-lag center overfits** |
 | **KAMABreakout** (Length, BandMult, ATRMult, ReentryBars; no `SFJ_` prefix) | $18,559 (3/0.8125/7/13 Obj=68,224) | Kaufman adaptive-lag MA center ±ATR = 10th reference; IS ≈ MidChannel but **BEST OOS of all 9 tested (BNB strict PASS 1.00×, 6/6 OOS-profitable)**; modules 6/6 KEEP. see matrix below |
-| **DayChannelBreakout** (Length[days], BandMult, ATRMult, ReentryBars) | *(built 2026-07-06, not yet tested)* | 11th reference = **session-anchored Donchian** (H/L extremes of last N COMPLETED days via HighD/LowD loop; levels constant within the day; BandMult 0 = classic touch). Tests the ANCHORING axis — does Pivot's mild-break/module-loving character come from session anchoring? Pipeline `run_daychannel_allinst_pipeline.py` ready (Length grid in DAYS 1-50, BandMult ≥ 0) |
+| **DayChannelBreakout** (Length[days], BandMult, ATRMult, ReentryBars) | BNB IS $9,835 (1/1.06/7/16 Obj 19,759 — **BNB's weakest tested cell**) | 11th reference = **session-anchored Donchian**; TESTED 2026-07-07, see matrix below. **Length collapses to 1-2 DAYS everywhere** (= classic prior-day H/L breakout); **2/6 strict OOS PASS (BTC+ETH, both 1.00×)**; weak MAIN + biggest module dependence (BNB stack +402%) |
 
-**Built 2026-07-06/07, pipelines ready, awaiting 6-instrument runs** (refs 12-22; all no-`SFJ_` names, 4-param Length/BandMult/ATRMult/ReentryBars, `run_<key>_allinst_pipeline.py` + desktop BAT each; grids = KAMA clone unless noted):
+**Built 2026-07-06/07, pipelines ready, awaiting 6-instrument runs** (refs 12-30 minus tested 11; all no-`SFJ_` names, 4-param Length/BandMult/ATRMult/ReentryBars, `run_<key>_allinst_pipeline.py` + desktop BAT each; grids = KAMA clone unless noted):
 
 | Ref | Strategy | Axis probed / hypothesis |
 |---|---|---|
@@ -245,6 +245,14 @@ Common engine that works = rolling/non-lagged breakout level + intrabar STOP fil
 | 20 | **MADBandBreakout** (`run_madband`) | ROBUST DISPERSION: SMA ± BandMult·MAD (mean abs deviation; no outlier-squaring). A/B vs Bollinger stdev on fat tails |
 | 21 | **SemiBandBreakout** (`run_semiband`) | DIRECTIONAL DISPERSION: per-side semi-deviation bands — ENDOGENOUS asymmetry (law-(5) test, zero extra params) |
 | 22 | **TypicalChannelBreakout** (`run_typchannel`; BandMult ≥ 0) | FIELD wick-weight ⅓: Highest/Lowest of (H+L+C)/3 ± buffer — completes outer→typical→close→inner gradient |
+| 23 | **POCBreakout** (`run_poc`; workspace `POCBreakout_crypto_AI.wsp`) | VOLUME LOCATES: max-volume bar's H/L range ± buffer (event-driven anchor; battle-zone hypothesis) |
+| 24 | **RangeSpikeBreakout** (`run_rangespike`) | POC's CONTROL: max-TRUE-RANGE bar's H/L (price-only event anchor — isolates whether volume adds info) |
+| 25 | **HeavyChannelBreakout** (`run_heavychannel`) | VOLUME VALIDATES: Donchian extremes counting only above-average-volume bars (thin-volume wicks ≠ resistance) |
+| 26 | **MultiScaleBreakout** (`run_multiscale`; Length = BASE 2-75, scales L/2L/4L) | SCALE BLEND: avg Donchian edge across 3 timescales — plateau philosophy inside the strategy |
+| 27 | **RangeFracBreakout** (`run_rangefrac`; BandMult 0.3-2.5, 1.0 = exact Donchian) | Buffer NUMERAIRE: levels in channel-width fractions (in what unit does confirmation trade?) |
+| 28 | **PolarityChannelBreakout** (`run_polarity`) | BAR-POLARITY validation: highest bear-bar High (supply rejection) / lowest bull-bar Low (demand rejection) |
+| 29 | **TrimChannelBreakout** (`run_trimchannel`; BandMult = integer rank K 1-10, 1 = Donchian) | ORDER-STATISTIC edge: K-th extreme (outlier-trimmed Donchian). ⚠️ PL reserved word: `v`→`pv` fixed |
+| 30 | **FeedbackChannelBreakout** (`run_feedback`; BandMult ≥ 0) | FEEDBACK/HYSTERESIS: gate escalates BandMult·ATR per consecutive loss (evidence-based sibling of the cooldown) |
 | **VolatilityBreakout** (ATRLen, EntryMult, TrailMult) | **$22,046** (45/~0.01/16.5) | EntryMult→floor (buffer rejected) → degenerates to wide trail. OOS: NO PASS; IS champ VB1 worst −$14,696; best VB3 125/2.25/8 +$4,924 (1.31×) |
 | **CloseChannelBreakout** (Length, ATRMult, ReentryBars) | **$22,008** (8/7/14 Obj=98,395 **#1 risk-adj**) | see dedicated matrix below |
 | **BollingerBreakout** (BBLen, BBmult, ATRMult, ReentryBars) | **$21,210** (13/1.55/7/13 Obj=95,486) | see dedicated matrix below |
@@ -367,6 +375,21 @@ Crypto = `SFJ_CloseChannelBreakout_crypto` (`_Crypto1MUSD`). Futures = `SFJ_Clos
 | GC | 17/0.35/3.5/3 (OOS +7,750, 1.93×) | M5=0.036 only | $121K → $163K (+35%) | 2.54 (weakest cell) |
 
 **Verdict: IS mid-tier (BNB $18,559 Obj 68,224 ≈ MidChannel) but the BEST OOS profile of all 9 tested references — BNB strict PASS (break exactly 1.00×) + 6/6 OOS-profitable** (MidChannel 5/6, RCB 5/6, Hull 3/6) with mild crypto breaks (1.0-1.30×). Adaptive lag lands in the laggy/robust camp, NOT Hull's IS-max camp — third confirmation of the lag law. Modules 6/6 KEEP (30/30 running total).
+
+### DayChannelBreakout 6-instrument Hourly matrix (`DayChannelBreakout_{crypto,NQ}`; Length[DAYS], BandMult, ATRMult, ReentryBars)
+
+11th reference = **session-anchored Donchian** (H/L extremes of the last N COMPLETED days via HighD/LowD loop; levels constant within the day). Ran via `run_daychannel_allinst_pipeline.py` (full hardening + pinning; BTC needed a `--from-stage 4` status-flake recovery — M1 measured −5.5% → discard confirmed).
+
+| Inst | OOS-selected main (L[days]/B/Atr/Re) | Kept modules | full NP main→stack | RoMaD |
+|---|---|---|---|---|
+| **BTC** | 1/0.0/18/10 (**✅ strict PASS** +$764, 1.00×) | M6=20/3.2, M2=53.6 | $1.9K → $3.5K | 5.79 |
+| **ETH** | 1/0.5/15/5 (**✅ strict PASS** +$1,616, 1.00×) | M4=4.42, M5=0.262, M6=400/3.8, M1=25.3 | $4.6K → $6.7K | 11.09 |
+| GC | 5/0.0/4/14 (+45,430, 1.19×) | M4, M5, M3, M2, M1 (5!) | $153K → $228K (+49%) | 7.46 |
+| NQ | 1/1.9375/2.5/23 (+23,785, 1.53×) | M6=380/3.1, M4=5.72, M1=2.6 | $263K → $339K | 6.58 |
+| TXF | 1/0.0/4.75/3 (−585,600, 1.94×) | M5, M2, M6, M3, M1 (5!) | 2.40M → 4.70M (+96%) | 4.08 |
+| BNB | 1/1.0/7/16 (−4,168, 2.18×) | M5=0.123 (IS ΔNP +169%, step +220%), M6, M3 | $4.4K → **$22.3K (+402%)** | 1.98 |
+
+**Verdict: (1) Length collapses to 1-2 DAYS on 5/6 — the session anchor wants YESTERDAY's range, not multi-day memory (multi-day extremes rejected; the classic prior-day-H/L breakout is the natural form).** (2) **Session-anchor OOS character confirmed: 2/6 strict PASS (BTC+ETH both 1.00×) + GC 1.19× mild** — best strict-PASS count of any reference so far — but not immunity (BNB 2.18×/TXF 1.94× broke). (3) **Weakest MAIN, biggest module dependence** (BNB IS Obj 19.8K < Pivot 40K; stacks add +29..+402%; modules 6/6 KEEP → 36/36 running total). BNB is NOT the strongest instrument here for the first time.
 
 ### Self-authored ranking + FINAL LAWS
 

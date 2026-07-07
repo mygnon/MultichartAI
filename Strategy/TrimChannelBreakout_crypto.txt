@@ -1,0 +1,147 @@
+{===============================================================================
+  TrimChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. TRIMMED-channel breakout — the K-th highest High / K-th lowest
+  Low (outlier-trimmed Donchian) — entered intrabar via STOP + ReentryBars
+  cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The ROBUST-STATISTICS axis so far
+  only treated the BAND (MADBand: mean-absolute-deviation width; SemiBand: per-side).
+  The channel-EDGE family is still hostage to single outliers: ONE anomalous wick
+  defines the Donchian resistance for the next Length bars. This probes a 29th
+  reference — an ORDER-STATISTIC edge:
+      K      = IntPortion(BandMult), floored at 1
+      UpTrim = the K-th HIGHEST High of the last Length completed bars
+      DnTrim = the K-th LOWEST  Low  of the last Length completed bars
+      long STOP at UpTrim ; short STOP at DnTrim
+  K = 1 reduces EXACTLY to Donchian (nested A/B); K = 2..3 ignores the most extreme
+  1-2 wick spikes, anchoring the gate at the extreme that a MAJORITY of bars
+  actually respected — a flash-crash wick no longer poisons the level. The trimmed
+  edge sits INSIDE the full extreme -> earlier entries, robust to data spikes.
+  Answers for the EDGE what MADBand asked for the band: do order statistics beat
+  raw extremes on fat-tailed data?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpTrim STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnTrim STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - channel lookback, bars (completed bars 1..Length)
+    BandMult    - the RANK K (integer part used; 1 = pure Donchian, 2-10 = trim the
+                  top K-1 outlier extremes; capped at 10 and at Length)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Top-K selection kept in small fixed arrays (insertion, O(Length*K) per bar,
+     K <= 10) — no full sort. Fractional BandMult values from the optimizer grids
+     are floored to the integer rank.
+
+  Defaults: Length=20, BandMult=2, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 2 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+arrays:
+    topH[10]( 0 ),
+    botL[10]( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    K( 1 ),
+    ii( 0 ),
+    jj( 0 ),
+    pv( 0 ),
+    UpTrim( 0 ),
+    DnTrim( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- K-th extreme channel: top-K / bottom-K selection over COMPLETED bars ---- }
+K = MaxList( 1, MinList( 10, MinList( IntPortion( BandMult ), Length ) ) ) ;
+for jj = 1 to K
+begin
+    topH[jj] = -999999999 ;
+    botL[jj] =  999999999 ;
+end ;
+for ii = 1 to Length
+begin
+    pv = High[ii] ;
+    if pv > topH[K] then
+    begin
+        jj = K ;
+        while jj > 1 and pv > topH[jj - 1]
+        begin
+            topH[jj] = topH[jj - 1] ;
+            jj = jj - 1 ;
+        end ;
+        topH[jj] = pv ;
+    end ;
+    pv = Low[ii] ;
+    if pv < botL[K] then
+    begin
+        jj = K ;
+        while jj > 1 and pv < botL[jj - 1]
+        begin
+            botL[jj] = botL[jj - 1] ;
+            jj = jj - 1 ;
+        end ;
+        botL[jj] = pv ;
+    end ;
+end ;
+UpTrim = topH[K] ;   { long breakout level  (K-th highest High) }
+DnTrim = botL[K] ;   { short breakout level (K-th lowest  Low)  }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: trimmed-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "TrLE" ) _Crypto1MUSD contract next bar at UpTrim stop ;
+    SellShort ( "TrSE" ) _Crypto1MUSD contract next bar at DnTrim stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "TrLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "TrSX" ) next bar at TrailShort stop ;
+end ;

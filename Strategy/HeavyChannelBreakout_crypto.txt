@@ -1,0 +1,139 @@
+{===============================================================================
+  HeavyChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Long + Short. HEAVY-BAR channel breakout — Donchian extremes computed ONLY from
+  above-average-volume bars (+/- ATR buffer) — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The VOLUME axis now has three
+  distinct uses:
+    - VWMABreakout : volume WEIGHTS the center  (Sum(C*V)/Sum(V))
+    - POCBreakout  : volume LOCATES the level   (max-volume bar's range)
+    - THIS         : volume VALIDATES the level (25th reference)
+  The channel is a Donchian whose extremes only count bars that carried SIZE:
+      VolThr  = Average(Volume, Length)
+      UpHeavy = Highest High among bars i=1..Length with Volume[i] >= VolThr
+      DnHeavy = Lowest  Low  among the same heavy bars
+      long STOP at UpHeavy + BandMult*ATR ; short STOP at DnHeavy - BandMult*ATR
+  A high printed on THIN volume is not real resistance — nobody committed there —
+  so it is EXCLUDED from the level; the gate sits at the last SIZE-BACKED extreme
+  instead (usually inside the full Donchian -> earlier entries, but only past
+  volume-confirmed resistance). Direct A/B vs Donchian v2 (all bars count) isolates
+  the validation filter; vs POC (single heaviest bar) tests filtered-window vs
+  single-event use of the same information.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - channel window (and the volume-average window), bars
+    BandMult    - buffer beyond the heavy extreme in ATR(14) multiples
+                  (0 = pure touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ At least one bar always meets Volume >= window-average, so the levels are
+     always defined. A zero-volume feed makes every bar "heavy" -> reduces to a
+     plain Donchian (sane degradation). O(Length) scan over COMPLETED bars
+     [1..Length]; keep Length <= 300.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ii( 0 ),
+    VolThr( 0 ),
+    havehv( false ),
+    UpHeavy( 0 ),
+    DnHeavy( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- heavy-bar channel: extremes of above-average-volume COMPLETED bars only ---- }
+VolThr = Average( Volume[1], Length ) ;
+havehv = false ;
+UpHeavy = High[1] ;
+DnHeavy = Low[1] ;
+for ii = 1 to Length
+begin
+    if Volume[ii] >= VolThr then
+    begin
+        if havehv = false then
+        begin
+            UpHeavy = High[ii] ;
+            DnHeavy = Low[ii] ;
+            havehv = true ;
+        end
+        else
+        begin
+            if High[ii] > UpHeavy then
+                UpHeavy = High[ii] ;
+            if Low[ii] < DnHeavy then
+                DnHeavy = Low[ii] ;
+        end ;
+    end ;
+end ;
+
+UpLvl = UpHeavy + BandMult * ATRv ;   { long breakout level  (size-backed resistance) }
+DnLvl = DnHeavy - BandMult * ATRv ;   { short breakout level (size-backed support)    }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: heavy-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "HcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "HcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "HcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "HcSX" ) next bar at TrailShort stop ;
+end ;
