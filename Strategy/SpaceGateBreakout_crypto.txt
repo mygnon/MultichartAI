@@ -1,0 +1,121 @@
+{===============================================================================
+  SpaceGateBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. Donchian breakout gated by a
+  DISTANCE cooldown — after an exit, entries stay DISARMED until price has moved
+  BandMult*ATR away from the exit price — entered intrabar via STOP +
+  ReentryBars (time) cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. LAW (4): the ReentryBars cooldown
+  is the ONE entry-side lever that consistently survives — but it is denominated in
+  TIME. The anti-chop family now has three currencies:
+    - ReentryBars      : TIME cooldown (wait N bars)             — proven
+    - FeedbackChannel  : EVIDENCE escalation (per-loss margin)   — ref 30
+    - THIS             : SPACE cooldown (32nd reference)
+      lastExitP = ExitPrice of the most recently closed trade
+      armed     = AbsValue(Close - lastExitP) >= BandMult * ATR
+      entries (Donchian STOP at Highest/Lowest[1]) are placed ONLY when armed
+  Chop kills breakouts by re-entering NEAR where the last trade died; a time
+  cooldown waits it out blindly, a space gate waits until the market has actually
+  LEFT the kill zone — however many bars that takes. BandMult = 0 reduces EXACTLY
+  to the plain Donchian + time cooldown (nested A/B); co-optimizing BandMult with
+  ReentryBars reveals whether the cooldown's natural unit is bars or ATRs
+  (substitutes -> one collapses to 0; complements -> both stay positive).
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldowns done & armed -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldowns done & armed -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - Donchian lookback, bars
+    BandMult    - SPACE cooldown: required distance from the last exit price,
+                  in ATR(14) multiples (0 = no space gate, pure Donchian)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - TIME cooldown, bars flat after an exit (co-optimized with the
+                  space gate)
+
+  ⚠️ lastExitP tracked via TotalTrades / ExitPrice(1); before the first trade the
+     gate is open (lastExitP = 0 sentinel). Distance measured with the current
+     Close against the CURRENT ATR — the kill zone breathes with volatility.
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    lastTT( 0 ),
+    lastExitP( 0 ),
+    armed( true ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- space-cooldown state: remember where the last trade died ---- }
+if TotalTrades > lastTT then
+begin
+    lastExitP = ExitPrice( 1 ) ;
+    lastTT = TotalTrades ;
+end ;
+armed = lastExitP = 0 or AbsValue( Close - lastExitP ) >= BandMult * ATRv ;
+
+{ ---- Donchian breakout levels (prior completed bars) ---- }
+UpLvl = Highest( High, Length )[1] ;
+DnLvl = Lowest( Low, Length )[1] ;
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: only when flat + time cooldown done + OUTSIDE the kill zone ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars and armed then
+begin
+    Buy ( "SgLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "SgSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "SgLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "SgSX" ) next bar at TrailShort stop ;
+end ;

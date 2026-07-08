@@ -1,0 +1,125 @@
+{===============================================================================
+  RegimeBlendBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. REGIME-BLENDED breakout — the gate
+  is an Efficiency-Ratio-weighted MIX of the Donchian extreme and the Bollinger
+  band — entered intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The LEVEL-COMPOSITION axis has
+  two STATIC operators on the two law-(1) winners (Donchian extreme + Bollinger band):
+    - ConsensusBreakout (AND)   : outermost of the two — always the stricter parent
+    - UnionBreakout     (OR)    : innermost of the two — always the earlier parent
+  This probes a 33rd reference — the DYNAMIC operator, BLEND: the market's own
+  regime decides which parent gates, continuously:
+      ER      = AbsValue(Close-Close[Length]) / Sum(AbsValue(Close-Close[1]),Length)
+      UpBlend = ER * Highest(High, Length)
+              + (1-ER) * ( Average(Close, Length) + BandMult*StdDev(Close, Length) )
+      DnBlend = mirror ; long STOP at UpBlend[1], short STOP at DnBlend[1]
+  In a clean trend (ER->1) the gate IS the Donchian extreme — the reference that
+  wins trends; in chop (ER->0) the gate IS the statistical band, whose width
+  (BandMult) the optimizer sets to demand a true outlier before trusting a break.
+  Completes the composition-operator set (max / min / regime-weighted mean) and
+  answers whether the right parent is a fixed choice or a regime variable.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpBlend STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnBlend STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared window for the Donchian, SMA/StdDev and ER, bars
+    BandMult    - the chop-side Bollinger width in stdev multiples (population ,2)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ ER shares KAMA's formula (zero-denominator guarded to 0 = full Bollinger
+     weight). BandMult large can push the chop-gate beyond the extreme (harder in
+     chop than in trend) — the optimizer decides which way the blend should lean.
+
+  Defaults: Length=20, BandMult=2.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 2.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    SMAc( 0 ),
+    SDev( 0 ),
+    UpBlend( 0 ),
+    DnBlend( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- regime weight: Efficiency Ratio (trend -> 1, chop -> 0) ---- }
+Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+if Noise > 0 then
+    ER = AbsValue( Close - Close[Length] ) / Noise
+else
+    ER = 0 ;
+
+{ ---- regime-blended gate: ER-weighted mix of extreme and statistical band ---- }
+SMAc = Average( Close, Length ) ;
+SDev = StandardDev( Close, Length, 2 ) ;
+UpBlend = ER * Highest( High, Length ) + ( 1 - ER ) * ( SMAc + BandMult * SDev ) ;
+DnBlend = ER * Lowest( Low, Length )  + ( 1 - ER ) * ( SMAc - BandMult * SDev ) ;
+
+UpLvl = UpBlend[1] ;   { long breakout level  (trend: extreme / chop: outlier band) }
+DnLvl = DnBlend[1] ;   { short breakout level (trend: extreme / chop: outlier band) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: regime-blend breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "RbLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "RbSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "RbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "RbSX" ) next bar at TrailShort stop ;
+end ;

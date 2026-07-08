@@ -1,0 +1,110 @@
+{===============================================================================
+  WickBlendBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Long + Short. WICK-BLEND channel breakout — the channel field is a CONTINUOUS
+  blend between Close and High/Low (wick weight = BandMult) — entered intrabar
+  via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of WickBlendBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The FIELD axis (how much WICK
+  information the channel carries) has four DISCRETE samples:
+    - Donchian        wick weight 1    (Highest High / Lowest Low)
+    - TypicalChannel  wick weight ~1/3 ((H+L+C)/3 extremes)
+    - CloseChannel    wick weight 0    (Close extremes; #1 risk-adjusted)
+    - InnerChannel    wick weight ~-1  (opposite extremes)
+  This probes a 31st reference — the CONTINUOUS version that lets the optimizer
+  LOCATE the sweet spot directly:
+      UpField(bar) = Close + BandMult * (High - Close)   { per-bar blended top }
+      DnField(bar) = Close - BandMult * (Close - Low)    { per-bar blended bottom }
+      UpLvl = Highest(UpField, Length)[1] ; DnLvl = Lowest(DnField, Length)[1]
+  BandMult = 1 reduces EXACTLY to Donchian; BandMult = 0 reduces EXACTLY to
+  CloseChannel — BOTH champion references are nested end-points, and every wick
+  weight in between (and mild extrapolation beyond 1) is reachable. The optimized
+  BandMult per instrument IS the answer to "how much of the wick is real
+  resistance?", replacing discrete sampling with a measured optimum.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - channel lookback, bars
+    BandMult    - WICK WEIGHT of the field (0 = CloseChannel, 1 = Donchian;
+                  sane grid 0-1.5, mild extrapolation past the full wick allowed)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ BandMult here is a WEIGHT, not an ATR distance — grids should span ~0-1.5
+     with fine steps (0.05) around the discrete reference points 0 / 1/3 / 1.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-07
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    UpField( 0 ),
+    DnField( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- wick-blended channel field: Close + weight * wick, per bar ---- }
+UpField = Close + BandMult * ( High - Close ) ;
+DnField = Close - BandMult * ( Close - Low ) ;
+
+UpLvl = Highest( UpField, Length )[1] ;   { long breakout level  (blended top)    }
+DnLvl = Lowest( DnField, Length )[1] ;    { short breakout level (blended bottom) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: wick-blend breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "WbLE" ) next bar at UpLvl stop ;
+    SellShort ( "WbSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "WbLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "WbSX" ) next bar at TrailShort stop ;
+end ;
