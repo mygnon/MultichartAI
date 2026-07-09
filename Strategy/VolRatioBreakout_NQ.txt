@@ -1,0 +1,115 @@
+{===============================================================================
+  VolRatioBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Hourly resolution, Data1 only. Long + Short. VOL-RATIO band breakout — SMA
+  center +/- a band whose width is scaled by the SHORT/LONG ATR ratio (widens in
+  volatility expansions, tightens in contractions) — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of VolRatioBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The BAND-WIDTH-ADAPTATION axis
+  has one sample: ERBandBreakout scales the gate by TREND EFFICIENCY (chop widens).
+  This probes a 39th reference — the same SMA-center skeleton with the OTHER
+  natural modulator, the VOLATILITY REGIME:
+      VolRatio = ATR(14) / ATR(5*Length, capped 600)     { >1 = vol expansion }
+      EffBand  = BandMult * ATR(14) * VolRatio
+      UpLvl = (SMA + EffBand)[1] ; DnLvl = (SMA - EffBand)[1]
+  In a volatility EXPANSION (short ATR above its long baseline) breakout candles
+  fly everywhere — the gate moves FARTHER out, demanding a move large even by the
+  current frenzy's standard; in a CONTRACTION (coil) the gate tightens, buying the
+  squeeze resolution early. Note the double vol scaling: EffBand ~ ATR^2/ATRslow —
+  the width reacts quadratically to short-term vol. Pairs with ERBand (identical
+  skeleton, ER modulator) to answer: should the gate listen to TRENDINESS or to
+  VOLATILITY REGIME?
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower
+  band break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - SMA-center window, bars (long ATR baseline = 5*Length, cap 600)
+    BandMult    - base gate distance in ATR(14) multiples (VolRatio modulates it)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ ATR baseline window up to 600 bars — set chart Max Bars Study Will Reference
+     >= 620 (same requirement as VolClockBreakout).
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    ATRbase( 0 ),
+    VolRatio( 1 ),
+    SMAc( 0 ),
+    EffBand( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- vol-ratio modulated band: expansion widens the gate, contraction tightens ---- }
+ATRbase = AvgTrueRange( MinList( Length * 5, 600 ) ) ;
+if ATRbase > 0 then
+    VolRatio = ATRv / ATRbase
+else
+    VolRatio = 1 ;
+SMAc = Average( Close, Length ) ;
+EffBand = BandMult * ATRv * VolRatio ;
+
+UpLvl = ( SMAc + EffBand )[1] ;   { long breakout level  (vol-regime-scaled gate) }
+DnLvl = ( SMAc - EffBand )[1] ;   { short breakout level (vol-regime-scaled gate) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: vol-ratio band breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "VrLE" ) next bar at UpLvl stop ;
+    SellShort ( "VrSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "VrLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "VrSX" ) next bar at TrailShort stop ;
+end ;

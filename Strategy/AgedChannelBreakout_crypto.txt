@@ -1,0 +1,111 @@
+{===============================================================================
+  AgedChannelBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. AGED channel breakout — the
+  Donchian window EXCLUDES the freshest K bars, so only extremes that have
+  SURVIVED at least K bars define the levels — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The EXTREME-AGE axis has one
+  sample: DecayChannelBreakout DISCOUNTS old extremes (fresh gates hard, stale
+  fades). This probes a 34th reference — the OPPOSITE half of that axis: REQUIRE
+  age before an extreme counts,
+      K     = IntPortion(BandMult)          { age threshold, bars }
+      UpLvl = Highest(High, Length)[K + 1]  { extremes of bars K+1 .. K+Length }
+      DnLvl = Lowest(Low,  Length)[K + 1]
+      long STOP at UpLvl ; short STOP at DnLvl
+  A high printed 2 bars ago is NOT resistance yet — it is an unconfirmed spike;
+  only structure that has HELD for K bars enters the level. Behavioral difference
+  vs Donchian: after a fresh spike the aged channel still sits at the OLD level,
+  so a resumption does not need to clear the spike again (earlier re-entry), while
+  brand-new highs cannot drag the gate up behind a running move (anti-chase).
+  K = 0 reduces EXACTLY to Donchian (nested A/B). Together with DecayChannel the
+  pair brackets the question: should extreme AGE be a discount (Decay) or a
+  requirement (Aged) — or is the raw extreme (K=0) unbeatable?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - channel lookback, bars (the window is bars K+1 .. K+Length)
+    BandMult    - the AGE THRESHOLD K in bars (integer part used; 0 = pure
+                  Donchian; sane grid 0-30)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ BandMult here is a BAR OFFSET, not an ATR distance — integer grids 0-30.
+     Fractional optimizer values are floored. Keep Length + K <= 320.
+
+  Defaults: Length=20, BandMult=5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    K( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- aged channel: extremes of the window EXCLUDING the freshest K bars ---- }
+K = MaxList( 0, MinList( 30, IntPortion( BandMult ) ) ) ;
+UpLvl = Highest( High, Length )[K + 1] ;   { long breakout level  (seasoned highs only) }
+DnLvl = Lowest( Low, Length )[K + 1] ;     { short breakout level (seasoned lows only)  }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: aged-channel breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "AgLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "AgSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "AgLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "AgSX" ) next bar at TrailShort stop ;
+end ;

@@ -1,0 +1,128 @@
+{===============================================================================
+  BodySpikeBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. BODY-SPIKE bar breakout — levels
+  anchored at the High/Low of the bar with the LARGEST BODY (|Close-Open|)
+  +/- ATR buffer — entered intrabar via STOP + ReentryBars cooldown + ATR
+  chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The EVENT-ANCHOR family defines
+  its battle-zone bar three ways — this 37th reference completes the trio:
+    - POCBreakout        : the max-VOLUME bar        (participation event)
+    - RangeSpikeBreakout : the max-TRUE-RANGE bar    (volatility event)
+    - THIS               : the max-BODY bar          (conviction event)
+      Spike bar = the bar with the LARGEST AbsValue(Close - Open) among the last
+                  Length completed bars (ties -> the most recent one)
+      UpLvl    = High of that bar + BandMult*ATR
+      DnLvl    = Low  of that bar - BandMult*ATR
+  |Close - Open| is the market's NET directed move — how far it travelled WITH
+  conviction, wick noise excluded, and needs no volume data. A huge-range bar can
+  be a doji (indecision); a huge-bdy bar cannot. Its range is the zone where the
+  strongest one-sided commitment happened; a STOP fill beyond it means even that
+  commitment has been superseded. The trio's A/B isolates WHICH event definition
+  carries the information: participation (volume), violence (range) or conviction
+  (bdy).
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - lookback window for the max-bdy bar, bars
+    BandMult    - buffer beyond the spike bar's High/Low in ATR(14) multiples
+                  (0 = pure range-edge touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ O(Length) scan over COMPLETED bars [1..Length]; keep Length <= 300. Levels
+     anchor at the spike bar's actual High/Low (its full range, not just the bdy).
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ii( 0 ),
+    bdy( 0 ),
+    bestB( 0 ),
+    spkHi( 0 ),
+    spkLo( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- spike bar: the max-bdy bar of the COMPLETED window (tie -> most recent) ---- }
+bestB = -1 ;
+spkHi = High[1] ;
+spkLo = Low[1] ;
+for ii = 1 to Length
+begin
+    bdy = AbsValue( Close[ii] - Open[ii] ) ;
+    if bdy > bestB then
+    begin
+        bestB = bdy ;
+        spkHi = High[ii] ;
+        spkLo = Low[ii] ;
+    end ;
+end ;
+
+UpLvl = spkHi + BandMult * ATRv ;   { long breakout level  (beyond the conviction zone) }
+DnLvl = spkLo - BandMult * ATRv ;   { short breakout level (beyond the conviction zone) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: bdy-spike breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "BdLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "BdSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "BdLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "BdSX" ) next bar at TrailShort stop ;
+end ;

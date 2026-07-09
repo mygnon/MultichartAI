@@ -1,0 +1,119 @@
+{===============================================================================
+  VolClockBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. VOLATILITY-CLOCK channel breakout —
+  the Donchian WINDOW LENGTH adapts to the volatility regime (shrinks when the
+  market runs hot, stretches when it sleeps) — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Every reference measures its
+  window in BARS — but 20 quiet bars and 20 violent bars cover completely different
+  amounts of market ground. The ADAPTIVE family so far tuned the center's lag (KAMA)
+  and the band width (ERBand); this probes a 35th reference — the WINDOW itself
+  ticks on a volatility clock:
+      Ratio = ATR(10*Length_slow proxy) ... implemented as
+      N     = Round( Length * ATR(Length*5) / ATR(14) ), clamped [2, 300]
+      UpLvl = Highest(High, N)[1] + BandMult*ATR ; DnLvl = Lowest(Low, N)[1] - ...
+  When recent volatility (ATR14) runs ABOVE its own longer baseline (ATR over
+  5*Length bars), price covers ground fast -> fewer bars hold the same information
+  -> the window SHRINKS (fresher levels, quicker re-anchoring after a regime move);
+  in a sleepy market the window STRETCHES (levels reach further back, ignoring
+  noise-scale wiggles). Length sets the neutral scale: when recent vol equals its
+  baseline, N = Length and the strategy IS a plain Donchian — the adaptation only
+  expresses itself when the regime shifts. Tests whether market time should be
+  measured in bars or in volatility units.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - NEUTRAL window scale, bars (N = Length when vol = its baseline;
+                  baseline ATR window = 5*Length, capped at 600)
+    BandMult    - buffer beyond the adaptive extreme in ATR(14) multiples (0 = touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Highest/Lowest are called with a VARIABLE length N (MC supports numeric-
+     expression lengths); N clamped [2, 300]. MaxBarsBack must cover 300+ bars —
+     set chart Max Bars Study Will Reference >= 620.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    ATRbase( 0 ),
+    N( 20 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- volatility clock: window shrinks when vol runs above its baseline ---- }
+ATRbase = AvgTrueRange( MinList( Length * 5, 600 ) ) ;
+if ATRv > 0 then
+    N = Round( Length * ATRbase / ATRv, 0 )
+else
+    N = Length ;
+N = MaxList( 2, MinList( 300, N ) ) ;
+
+UpLvl = Highest( High, N )[1] + BandMult * ATRv ;   { long breakout level  (vol-clock window) }
+DnLvl = Lowest( Low, N )[1]  - BandMult * ATRv ;    { short breakout level (vol-clock window) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: vol-clock breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "VcLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "VcSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "VcLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "VcSX" ) next bar at TrailShort stop ;
+end ;

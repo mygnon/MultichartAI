@@ -1,0 +1,125 @@
+{===============================================================================
+  DualAnchorBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. DUAL-ANCHOR breakout — the gate is
+  the OUTERMOST of yesterday's session extreme and the rolling Donchian extreme
+  (must clear BOTH anchor families) — entered intrabar via STOP + ReentryBars
+  cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. This 36th reference is designed
+  FROM the matrix evidence:
+    - DayChannelBreakout showed the SESSION anchor is the most OOS-robust family
+      (Length collapsed to 1 day; BTC + ETH strict PASS at exactly 1.00x) but the
+      weakest MAIN.
+    - The rolling Donchian is the IS-strongest family but OOS-fragile.
+  ConsensusBreakout AND-ed two references WITHIN the rolling family; this one
+  AND-s ACROSS anchor families:
+      UpLvl = MaxList( HighD(1), Highest(High, Length)[1] ) + BandMult*ATR
+      DnLvl = MinList( LowD(1),  Lowest(Low,  Length)[1] ) - BandMult*ATR
+  A fill must clear BOTH yesterday's session extreme (the OOS-robust gate, constant
+  within the day) AND the N-bar rolling extreme (the IS-strong gate, walking bar by
+  bar) — whichever is farther gates the trade. Small Length -> the session side
+  dominates; large Length -> the rolling side dominates; the value zone is where
+  the outer anchor ALTERNATES. Hypothesis: inherit the session family's mild OOS
+  breaks while the rolling side restores the absolute edge DayChannel lacked.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - rolling Donchian lookback, bars
+    BandMult    - buffer beyond the dual-anchor level in ATR(14) multiples
+                  (0 = pure touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Requires an INTRADAY chart (HighD/LowD read the completed prior session, same
+     family as PivotBreakout / DayChannel). HighD(1)/LowD(1) > 0 guarded — an
+     unloaded prior day falls back to the rolling extreme alone.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    RollHi( 0 ),
+    RollLo( 0 ),
+    UpAnchor( 0 ),
+    DnAnchor( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- dual anchor: outermost of yesterday's extreme and the rolling extreme ---- }
+RollHi = Highest( High, Length )[1] ;
+RollLo = Lowest( Low, Length )[1] ;
+if HighD( 1 ) > 0 then
+    UpAnchor = MaxList( HighD( 1 ), RollHi )
+else
+    UpAnchor = RollHi ;
+if LowD( 1 ) > 0 then
+    DnAnchor = MinList( LowD( 1 ), RollLo )
+else
+    DnAnchor = RollLo ;
+
+UpLvl = UpAnchor + BandMult * ATRv ;   { long breakout level  (clears BOTH anchors) }
+DnLvl = DnAnchor - BandMult * ATRv ;   { short breakout level (clears BOTH anchors) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: dual-anchor breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "DaLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "DaSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "DaLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "DaSX" ) next bar at TrailShort stop ;
+end ;

@@ -235,7 +235,7 @@ Common engine that works = rolling/non-lagged breakout level + intrabar STOP fil
 | Ref | Strategy | Axis probed / hypothesis |
 |---|---|---|
 | 12 | ~~VWMABreakout~~ **TESTED 2026-07-08** | Volume-weighted center = **IS-strong (BNB 7/0.75/15/9 $23,293 Obj 102,264 = #2 self-authored, 2.3× Keltner's EMA) but OOS-fragile (no strict PASS; ETH 3.45× break; BNB OOS −2,295)** — joins the Hull/RegChannel low-lag-overfits camp. Modules 6/6 KEEP (BTC stack RoMaD 8.84; GC +65% NP). Deploy kept-sets per state.json |
-| 13 | **WeekChannelBreakout** (`run_weekchannel`; Length in WEEKS 1-30, sparse-zone-avoiding grids) | Anchoring GRANULARITY: N completed WEEKS extremes (HighW/LowW loop) — pairs with DayChannel (day vs week) |
+| 13 | ~~WeekChannelBreakout~~ **TESTED 2026-07-09** | Anchor-granularity 3rd point: **Length collapses to 1 WEEK (4/6 + BTC's S2 flip); weakest MAIN of all (BNB $7,965 Obj 15,870) but MILDEST OOS breaks family-wide (all ≤1.67×; ETH strict PASS 1.00×, BTC 1.003× near-miss)**. Trade-off curve is monotone: rolling→day→week = edge↓, robustness↑. Modules 6/6 KEEP (48/48); BNB stack +135% |
 | 14 | **ERBandBreakout** (`run_erband`) | Adaptive BAND-WIDTH: SMA ± BandMult·ATR·(2−ER) — chop widens gate, trend narrows. Falsifier: BandMult→floor re-enacts law (4) |
 | 15 | **OpenRangeBreakout** (`run_openrange`; day-scale, BandMult 0.05-3 in avg-day-range units) | 3rd ANCHOR type: today's OPEN ± BandMult·avg-day-range (Larry-Williams vol breakout; anchor resets each session) |
 | 16 | **InnerChannelBreakout** (`run_innerchannel`) | FIELD axis inner point: Highest LOW / Lowest HIGH ± ATR buffer (rising-floor / falling-ceiling confirmation) |
