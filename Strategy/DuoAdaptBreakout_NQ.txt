@@ -1,0 +1,125 @@
+{===============================================================================
+  DuoAdaptBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Hourly resolution, Data1 only. Long + Short. DOUBLE-ADAPTIVE breakout — KAMA
+  center (adaptive lag) +/- an ER-scaled ATR band (adaptive gate) — entered
+  intrabar via STOP + ReentryBars cooldown + ATR chandelier trail.
+
+  Futures port of DuoAdaptBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. This 43rd reference FUSES the two
+  individually-proven adaptive champions:
+    - KAMABreakout   : adaptive-lag CENTER — best OOS profile of the single-adaptive
+                       refs (BNB strict PASS, 6/6 OOS-profitable)
+    - ERBandBreakout : ER-scaled GATE — #1 self-authored Obj AND strict PASS
+  Both share one Efficiency Ratio over the same Length window:
+      KamaC   = KamaC[1] + SC(ER) * (Close - KamaC[1])     { Kaufman 2/30 }
+      EffBand = BandMult * ATR * (2 - ER)
+      UpLvl = (KamaC + EffBand)[1] ; DnLvl = (KamaC - EffBand)[1]
+  In a clean trend BOTH adaptations lean in: the center tracks price nearly
+  lag-free AND the gate narrows — doubly early entries; in chop BOTH defend: the
+  center freezes AND the gate widens to 2x — doubly hard to fool. Tests whether
+  two proven adaptations COMPOUND (super-additive: the fused ref beats both
+  parents) or INTERFERE (the mechanisms double-count the same regime signal and
+  overshoot).
+
+  This is NOT mean-reversion: it BUYS the upper band break and SHORTS the lower
+  band break (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared ER lookback for BOTH the KAMA center and the band, bars
+    BandMult    - base gate distance in ATR(14) multiples (dynamic 1x-2x by ER)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ KAMA computed manually (recursive, seeded with Close; Kaufman 2/30 constants;
+     zero-denominator ER guarded to 0 = frozen center + widest gate).
+
+  Defaults: Length=10, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-09
+===============================================================================}
+
+inputs:
+    Length( 10 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    SC( 0 ),
+    KamaC( 0 ),
+    EffBand( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- shared ER + KAMA center + ER-scaled gate ---- }
+if CurrentBar <= Length then
+begin
+    KamaC = Close ;
+    ER = 0 ;
+end
+else
+begin
+    Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+    if Noise > 0 then
+        ER = AbsValue( Close - Close[Length] ) / Noise
+    else
+        ER = 0 ;
+    SC    = Square( ER * ( 2 / 3 - 2 / 31 ) + 2 / 31 ) ;
+    KamaC = KamaC[1] + SC * ( Close - KamaC[1] ) ;
+end ;
+EffBand = BandMult * ATRv * ( 2 - ER ) ;
+
+UpLvl = ( KamaC + EffBand )[1] ;   { long breakout level  (double-adaptive gate) }
+DnLvl = ( KamaC - EffBand )[1] ;   { short breakout level (double-adaptive gate) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: duo-adaptive breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "DuLE" ) next bar at UpLvl stop ;
+    SellShort ( "DuSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "DuLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "DuSX" ) next bar at TrailShort stop ;
+end ;

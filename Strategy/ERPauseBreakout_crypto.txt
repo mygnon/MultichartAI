@@ -1,0 +1,120 @@
+{===============================================================================
+  ERPauseBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. Donchian breakout with an
+  ER-ADAPTIVE cooldown — the post-exit pause LENGTHENS in chop and SHRINKS in
+  trends — STOP entry + fixed ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. The ER-ADAPTATION transplant map
+  now covers three of the skeleton's four components:
+    - gate width on a center-band : ERBandBreakout  (#1 self-authored + strict PASS)
+    - gate width on the edge      : ERGateBreakout
+    - trail distance (the exit)   : ERTrailBreakout
+  This 42nd reference completes the map on the FOURTH component — the cooldown,
+  the one entry-side lever law (4) says genuinely works:
+      ER    = AbsValue(Close-Close[Length]) / Sum(AbsValue(Close-Close[1]),Length)
+      effRe = ReentryBars * ( 1 + BandMult * (1 - 2*ER) ), floored at 0
+      entries allowed only after flatBars >= effRe
+  In chop (ER->0) the pause stretches to (1+BandMult)x ReentryBars — wait LONGER
+  exactly where consecutive false breaks live; in a clean trend (ER->1) it shrinks
+  to (1-BandMult)x — get back in fast when the market is actually moving. Entry =
+  pure Donchian, trail = fixed chandelier. BandMult = 0 reduces EXACTLY to the
+  fixed cooldown (nested A/B vs Donchian v2 sans TrendLen). With all four
+  transplants run, the factorial answers: WHICH skeleton component profits most
+  from regime adaptation?
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & adaptive cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & adaptive cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared window for the Donchian and the ER, bars
+    BandMult    - cooldown ER-SENSITIVITY, 0-1 (0 = fixed cooldown; 0.5 = pause
+                  swings 0.5x-1.5x ReentryBars across regimes)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - BASE cooldown, bars flat after an exit
+
+  ⚠️ effRe evaluated each bar with the CURRENT ER — a regime flip mid-pause
+     shortens or extends the remaining wait accordingly.
+
+  Defaults: Length=20, BandMult=0.5, ATRMult=3.0, ReentryBars=10
+  Author: generated for Tim / MultichartAI, 2026-07-09
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.5 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 10 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    effRe( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- ER-adaptive cooldown: stretches in chop, shrinks in trend ---- }
+Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+if Noise > 0 then
+    ER = AbsValue( Close - Close[Length] ) / Noise
+else
+    ER = 0 ;
+effRe = MaxList( 0, ReentryBars * ( 1 + BandMult * ( 1 - 2 * ER ) ) ) ;
+
+{ ---- Donchian breakout levels (prior completed bars) ---- }
+UpLvl = Highest( High, Length )[1] ;
+DnLvl = Lowest( Low, Length )[1] ;
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: Donchian STOP, only when flat + ADAPTIVE cooldown done ---- }
+if MarketPosition = 0 and flatBars >= effRe then
+begin
+    Buy ( "EpLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "EpSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "EpLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "EpSX" ) next bar at TrailShort stop ;
+end ;

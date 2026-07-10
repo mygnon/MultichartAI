@@ -1,0 +1,115 @@
+{===============================================================================
+  ERGateBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. ER-GATED Donchian breakout — the
+  buffer BEYOND the Donchian edge is scaled by (1 - EfficiencyRatio): zero in a
+  clean trend, up to BandMult*ATR in chop — entered intrabar via STOP +
+  ReentryBars cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. Evidence-driven design (40th
+  reference): ERBandBreakout just became the #1 self-authored reference AND a strict
+  OOS PASS — proving the ER-scaled adaptive GATE mechanism — but it lives on an SMA
+  center. This transplants the winning gate onto the IS-strongest EDGE family:
+      ER    = AbsValue(Close-Close[Length]) / Sum(AbsValue(Close-Close[1]),Length)
+      UpLvl = ( Highest(High, Length) + BandMult*ATR*(1-ER) )[1]
+      DnLvl = ( Lowest(Low,  Length) - BandMult*ATR*(1-ER) )[1]
+  In a clean trend (ER->1) the buffer VANISHES — enter at the raw Donchian edge,
+  never late for the move; in chop (ER->0) the gate demands up to BandMult*ATR of
+  extra evidence beyond the extreme — exactly where naked Donchian bleeds false
+  breaks. BandMult = 0 reduces EXACTLY to Donchian (nested A/B). Answers whether
+  the ER-gate mechanism TRANSFERS across skeletons (center-band -> edge) — if yes,
+  it is a general-purpose upgrade applicable to any reference.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at prior UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at prior DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - shared window for the Donchian and the ER, bars
+    BandMult    - MAXIMUM chop-side buffer in ATR(14) multiples
+                  (0 = pure Donchian; the trend-side buffer is always ~0)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ ER shares KAMA's formula (zero-denominator guarded to 0 = full buffer).
+
+  Defaults: Length=20, BandMult=1.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-09
+===============================================================================}
+
+inputs:
+    Length( 20 ),
+    BandMult( 1.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    Noise( 0 ),
+    ER( 0 ),
+    EffBuf( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- ER-gated buffer: vanishes in trend, grows to BandMult*ATR in chop ---- }
+Noise = Summation( AbsValue( Close - Close[1] ), Length ) ;
+if Noise > 0 then
+    ER = AbsValue( Close - Close[Length] ) / Noise
+else
+    ER = 0 ;
+EffBuf = BandMult * ATRv * ( 1 - ER ) ;
+
+UpLvl = ( Highest( High, Length ) + EffBuf )[1] ;   { long gate  (edge + chop evidence) }
+DnLvl = ( Lowest( Low, Length ) - EffBuf )[1] ;     { short gate (edge - chop evidence) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: ER-gated Donchian breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "EgLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "EgSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "EgLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "EgSX" ) next bar at TrailShort stop ;
+end ;
