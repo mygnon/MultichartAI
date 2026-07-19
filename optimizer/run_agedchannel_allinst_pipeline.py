@@ -265,10 +265,15 @@ def _stage1_round(label, attempts, seed, conn, from_csv):
             [(4, 1, 1, 1, 1.5, 0.5, 4, 1),
              (3, 1, 1, 1, 1.0, 0.25, 3, 1),
              (2, 1, 1, 1, 0.75, 0.25, 2, 1)], 1):
-        Lz = (max(LEN_LO, _snap(bL - rL, sL)), min(LEN_HI, _snap(bL + rL, sL)), sL)
-        Bz = (max(BAND_LO, _snap(bB - rB, sB)), min(BAND_HI, _snap(bB + rB, sB)), sB)
-        Az = (max(ATR_LO, _snap(bA - rA, sA)), min(ATR_HI, _snap(bA + rA, sA)), sA)
-        Rez = (max(RE_LO, _snap(bRe - rRe, sRe)), min(RE_HI, _snap(bRe + rRe, sRe)), sRe)
+        # clamp the zoom center into declared bounds -- a champion from an
+        # unclamped confirm grid (e.g. len_fine sL+8) can sit above *_HI,
+        # which would invert the zoomed range and crash ParamAxis.values()
+        cL = min(max(bL, LEN_LO), LEN_HI); cB = min(max(bB, BAND_LO), BAND_HI)
+        cA = min(max(bA, ATR_LO), ATR_HI); cRe = min(max(bRe, RE_LO), RE_HI)
+        Lz = (max(LEN_LO, _snap(cL - rL, sL)), min(LEN_HI, _snap(cL + rL, sL)), sL)
+        Bz = (max(BAND_LO, _snap(cB - rB, sB)), min(BAND_HI, _snap(cB + rB, sB)), sB)
+        Az = (max(ATR_LO, _snap(cA - rA, sA)), min(ATR_HI, _snap(cA + rA, sA)), sA)
+        Rez = (max(RE_LO, _snap(cRe - rRe, sRe)), min(RE_HI, _snap(cRe + rRe, sRe)), sRe)
         cfg = _main_cfg(f"S1_{label}_zoom{zi}", Lz, Bz, Az, Rez)
         df = run_or_load(cfg, conn, from_csv)
         if df is None or df.empty or not _valid_main(df):
@@ -286,14 +291,14 @@ def _stage1_round(label, attempts, seed, conn, from_csv):
 
 def _confirm_attempts(sL, sB, sA, sRe):
     return [
-        ("01_retest", (max(LEN_LO, sL-2), sL+2, 1), (max(BAND_LO, sB-1), sB+1, 1),
-         (max(ATR_LO, sA-1), sA+1, 0.5), (max(RE_LO, sRe-2), sRe+2, 1)),
-        ("02_len_fine", (max(LEN_LO, sL-8), sL+8, 1), (sB, sB, 1), (sA, sA, 0.5), (sRe, sRe, 1)),
+        ("01_retest", (max(LEN_LO, sL-2), min(LEN_HI, sL+2), 1), (max(BAND_LO, sB-1), sB+1, 1),
+         (max(ATR_LO, sA-1), min(ATR_HI, sA+1), 0.5), (max(RE_LO, sRe-2), min(RE_HI, sRe+2), 1)),
+        ("02_len_fine", (max(LEN_LO, sL-8), min(LEN_HI, sL+8), 1), (sB, sB, 1), (sA, sA, 0.5), (sRe, sRe, 1)),
         ("03_band_fine", (sL, sL, 1), (max(BAND_LO, sB-2), min(BAND_HI, sB+2), 1), (sA, sA, 0.5), (sRe, sRe, 1)),
         ("04_atr_fine", (sL, sL, 1), (sB, sB, 1), (max(ATR_LO, sA-3), min(ATR_HI, sA+3), 0.25), (sRe, sRe, 1)),
         ("05_re_fine", (sL, sL, 1), (sB, sB, 1), (sA, sA, 0.5), (0, 30, 1)),
-        ("06_combo", (max(LEN_LO, sL-6), sL+6, 2), (max(BAND_LO, sB-1), min(BAND_HI, sB+1), 1),
-         (max(ATR_LO, sA-2), min(ATR_HI, sA+2), 0.5), (max(RE_LO, sRe-4), sRe+4, 2)),
+        ("06_combo", (max(LEN_LO, sL-6), min(LEN_HI, sL+6), 2), (max(BAND_LO, sB-1), min(BAND_HI, sB+1), 1),
+         (max(ATR_LO, sA-2), min(ATR_HI, sA+2), 0.5), (max(RE_LO, sRe-4), min(RE_HI, sRe+4), 2)),
     ]
 
 
