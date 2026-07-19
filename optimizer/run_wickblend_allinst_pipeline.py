@@ -326,7 +326,13 @@ def stage1(conn, from_csv, state):
     conv = []
     for rnd in range(2, MAX_ROUNDS + 1):
         prev_obj = champ["objective"]
-        s = (champ["Length"], champ["BandMult"], champ["ATRMult"], champ["ReentryBars"])
+        # clamp the seed into declared bounds -- a champion from an unclamped
+        # legacy grid (cached CSV) can sit outside *_LO..*_HI and would invert
+        # the confirm ranges (np.linspace with negative sample count)
+        s = (min(max(champ["Length"], LEN_LO), LEN_HI),
+             min(max(champ["BandMult"], BAND_LO), BAND_HI),
+             min(max(champ["ATRMult"], ATR_LO), ATR_HI),
+             min(max(champ["ReentryBars"], RE_LO), RE_HI))
         rows += _stage1_round(f"R{rnd}", _confirm_attempts(*s), s, conn, from_csv)
         champ = max(rows, key=lambda r: r["objective"])
         gain = (champ["objective"] - prev_obj) / prev_obj if prev_obj > 0 else 1.0
