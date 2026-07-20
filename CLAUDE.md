@@ -265,25 +265,26 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 | 29 | **TrimChannelBreakout** (K-th order-statistic extreme) | 91,827 | K interior 2-3 ×5 (rank-validate); BNB strict PASS +$13,554; **TXF Obj 42.96M = futures record** |
 | 30 | **FeedbackChannelBreakout** (loss-streak widening) | — | axis REJECTED (BandMult→0 ×5; cooldown suffices) but bare skeleton: BTC PASS + **GC 1st strict PASS +$59,130** RoMaD 15.48 |
 | 31 | **WickBlendBreakout** (field = C + w·(H−C)) | 125,760 #3 | **w optimum INTERIOR ≈0.625-0.75**, beats both endpoints + Typical — "inward but not central" continuous; TXF Obj 40.77M #2; 0 PASS, futures OOS pick w→0 |
+| 32 | **SpaceGateBreakout** (space cooldown: re-arm only BandMult·ATR away from last exit) | 60,317 | gate is MARKET-SPLIT: BNB→B=0 (time cooldown suffices), futures+ETH interior 0.5-2.0 — cooldown family: time (universal) > space (futures) > loss-streak (rejected); **BNB 2 candidates strict PASS, winner +$14,223 ties Heavy #2**; ETH stack RoMaD 13.97 = best ETH cell (M5 step +220.5%); TXF Obj 37.67M #4 futures; 5/6 OOS-profitable (TXF only loser) |
 | 37 | **BodySpikeBreakout** (max \|C−O\| bar; trio closes) | 107,357 | body ≈ range (≈ RangeSpike, both OOS-broke) — only VOLUME carries independent OOS info; **GC OOS +$135,970 = largest ever**; exposed seed-clamp bug (fixed 5b46b3b) |
 
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-32 SpaceGate, 33 RegimeBlend (completes the AND/OR/BLEND composition triad), 34 AgedChannel (extreme-age axis, pairs with Decay), 35 VolClock, 36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+33 RegimeBlend (completes the AND/OR/BLEND composition triad), 34 AgedChannel (extreme-age axis, pairs with Decay), 35 VolClock, 36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
 
 ### Records ledger
 
-- **Strict-PASS OOS profits (BNB):** Consensus 14,719 > Heavy 14,223 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
+- **Strict-PASS OOS profits (BNB):** Consensus 14,719 > Heavy 14,223 ≈ SpaceGate 14,223 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
 - **RoMaD cells:** GC-Typical 17.54 > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
 - **Stacked NP (BNB):** Inner 70.6K > RangeFrac 51.1K > Polarity 50.9K > WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 162/162 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 168/168 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
 1. **The engine is the alpha**: non-lagged level + intrabar STOP + wide ATR chandelier trail + ReentryBars cooldown. The EXIT is decisive (channel exit / SAR break it); a lagged pivot or close-confirmed MARKET entry breaks it.
-2. **Entry filters fail OOS** (ADX/squeeze/RSI/trend/vol-buffer → floor); ReentryBars cooldown is the ONE entry-side lever kept >0. Extends to loss-streak feedback (ref 30: rejected, cooldown already covers it).
+2. **Entry filters fail OOS** (ADX/squeeze/RSI/trend/vol-buffer → floor); ReentryBars cooldown is the ONE entry-side lever kept >0. Cooldown family (refs 30+32): time cooldown universal > price-space re-arm gate market-split (futures+ETH keep it interior 0.5-2.0, BNB→0) > loss-streak escalation rejected.
 3. **IS strength ≠ OOS robustness**: the IS Obj champion (lowest IS-MDD, sparse) is repeatedly OOS-worst; higher-freq / wider-MDD regimes generalize. Exceptions ("anti-correlation breakers", IS-top AND strict PASS): **ERBand, RangeFrac**; near: Heavy, MADBand.
 4. **Lag law** (5 confirmations): low-lag centers (Hull, VWMA, RegChannel, Decay) win IS but overfit OOS; laggy/adaptive centers (MidChannel, KAMA) are IS-weaker but OOS-robust.
 5. **Field law**: monotone INWARD — Inner 140K > WickBlend(w≈0.7) 126K > Typical 119K > Donchian 100K > Close 98K; continuous form: the optimum is "inward but not central" (WickBlend w≈0.7 ≈ RangeFrac fraction 0.75-0.93).
