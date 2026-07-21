@@ -266,32 +266,33 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 | 30 | **FeedbackChannelBreakout** (loss-streak widening) | — | axis REJECTED (BandMult→0 ×5; cooldown suffices) but bare skeleton: BTC PASS + **GC 1st strict PASS +$59,130** RoMaD 15.48 |
 | 31 | **WickBlendBreakout** (field = C + w·(H−C)) | 125,760 #3 | **w optimum INTERIOR ≈0.625-0.75**, beats both endpoints + Typical — "inward but not central" continuous; TXF Obj 40.77M #2; 0 PASS, futures OOS pick w→0 |
 | 32 | **SpaceGateBreakout** (space cooldown: re-arm only BandMult·ATR away from last exit) | 60,317 | gate is MARKET-SPLIT: BNB→B=0 (time cooldown suffices), futures+ETH interior 0.5-2.0 — cooldown family: time (universal) > space (futures) > loss-streak (rejected); **BNB 2 candidates strict PASS, winner +$14,223 ties Heavy #2**; ETH stack RoMaD 13.97 = best ETH cell (M5 step +220.5%); TXF Obj 37.67M #4 futures; 5/6 OOS-profitable (TXF only loser) |
+| 33 | **RegimeBlendBreakout** (ER-weighted blend of Donchian extreme + Bollinger band) | 107,721 | **COMPOSITION TRIAD CLOSES: the dynamic dial escapes the trade-off** — IS beats BOTH parents AND Union's static OR (104K) AND strict PASS 1.00× (+$13,800 #4) = 4th anti-correlation breaker; BNB all-4 candidates OOS-profitable, breaks ≤1.27×; stack $48.6K RoMaD 9.76; **NQ IS Obj 6.29M = best NQ IS ever** (but OOS 2.8× — NQ anti-correlation intact); TXF kept 5 modules; 3/6 OOS-profitable |
 | 37 | **BodySpikeBreakout** (max \|C−O\| bar; trio closes) | 107,357 | body ≈ range (≈ RangeSpike, both OOS-broke) — only VOLUME carries independent OOS info; **GC OOS +$135,970 = largest ever**; exposed seed-clamp bug (fixed 5b46b3b) |
 
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-33 RegimeBlend (completes the AND/OR/BLEND composition triad), 34 AgedChannel (extreme-age axis, pairs with Decay), 35 VolClock, 36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+34 AgedChannel (extreme-age axis, pairs with Decay), 35 VolClock, 36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
 
 ### Records ledger
 
-- **Strict-PASS OOS profits (BNB):** Consensus 14,719 > Heavy 14,223 ≈ SpaceGate 14,223 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
+- **Strict-PASS OOS profits (BNB):** Consensus 14,719 > Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
 - **RoMaD cells:** GC-Typical 17.54 > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
 - **Stacked NP (BNB):** Inner 70.6K > RangeFrac 51.1K > Polarity 50.9K > WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 168/168 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 174/174 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
 1. **The engine is the alpha**: non-lagged level + intrabar STOP + wide ATR chandelier trail + ReentryBars cooldown. The EXIT is decisive (channel exit / SAR break it); a lagged pivot or close-confirmed MARKET entry breaks it.
 2. **Entry filters fail OOS** (ADX/squeeze/RSI/trend/vol-buffer → floor); ReentryBars cooldown is the ONE entry-side lever kept >0. Cooldown family (refs 30+32): time cooldown universal > price-space re-arm gate market-split (futures+ETH keep it interior 0.5-2.0, BNB→0) > loss-streak escalation rejected.
-3. **IS strength ≠ OOS robustness**: the IS Obj champion (lowest IS-MDD, sparse) is repeatedly OOS-worst; higher-freq / wider-MDD regimes generalize. Exceptions ("anti-correlation breakers", IS-top AND strict PASS): **ERBand, RangeFrac**; near: Heavy, MADBand.
+3. **IS strength ≠ OOS robustness**: the IS Obj champion (lowest IS-MDD, sparse) is repeatedly OOS-worst; higher-freq / wider-MDD regimes generalize. Exceptions ("anti-correlation breakers", IS-top AND strict PASS): **ERBand, RangeFrac, RegimeBlend**; near: Heavy, MADBand.
 4. **Lag law** (5 confirmations): low-lag centers (Hull, VWMA, RegChannel, Decay) win IS but overfit OOS; laggy/adaptive centers (MidChannel, KAMA) are IS-weaker but OOS-robust.
 5. **Field law**: monotone INWARD — Inner 140K > WickBlend(w≈0.7) 126K > Typical 119K > Donchian 100K > Close 98K; continuous form: the optimum is "inward but not central" (WickBlend w≈0.7 ≈ RangeFrac fraction 0.75-0.93).
 6. **Dispersion axis**: MAD 139K > SemiBand 109K > stdev 95K — robust dispersion helps, per-side splitting hurts.
 7. **Volume axis**: VALIDATE (Heavy) > LOCATE (POC) > WEIGHT (VWMA); volume buys OOS robustness, not IS edge (RangeSpike/BodySpike price-only controls both OOS-broke). Event-anchor trio: body ≈ range, only volume independent.
 8. **Validation family** (filter WHICH bars' extremes count — volume/polarity/rank): all 3 give BNB strict PASS and BandMult→0 (the filter replaces the price buffer).
-9. **Anchor granularity**: rolling → day → week = edge↓, robustness↑; session anchors produce BTC strict PASSes (Day/Week/OpenRange); composition operator (AND/OR) is an IS↔OOS dial, not alpha.
+9. **Anchor granularity**: rolling → day → week = edge↓, robustness↑; session anchors produce BTC strict PASSes (Day/Week/OpenRange). **Composition triad**: static AND/OR is an IS↔OOS dial, not alpha — but the ER-weighted dynamic BLEND (ref 33) escapes the dial (IS above both parents AND strict PASS).
 10. **Exit modules on trend-breakout mains genuinely HELP (162/162) — but ONLY with verified pinning** of the main's champion params (`fixed_inputs`, read-back). Any module result without verified pinning is invalid (the CCB per-instrument pipelines' S3/4 remain SUSPECT). A module stack lifts NP/RoMaD, not generalization (Pivot-BNB +210% but still weak-OOS). On counter-trend/reversal mains modules HURT (CT 24/24, QPRSI-ETH).
 
 ## Running the Optimizer
