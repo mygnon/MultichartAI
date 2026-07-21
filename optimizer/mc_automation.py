@@ -16,6 +16,8 @@ import pandas as pd
 import pyautogui
 import pyperclip
 import pywinauto
+
+import pause_gate
 from pywinauto import Application, Desktop
 from pywinauto.keyboard import send_keys
 
@@ -1131,6 +1133,7 @@ def set_instrument_data_range(conn: MultiChartsConnection, from_date: str, to_da
     Data Range From/To) — this is what actually restricts the optimization backtest.
     Dumps the dialog's UIA structure to the log every call (the dialog is not yet
     characterised, so the log + a user screenshot let us verify/repair)."""
+    pause_gate.checkpoint()
     logger.info("=== set_instrument_data_range: %s ~ %s ===", from_date, to_date)
     dlg = _open_format_instrument(conn)
     hwnd = dlg.handle
@@ -2565,6 +2568,7 @@ def set_signal_statuses(
     after OK, and the Format dialog occasionally fails to open — both raise MCUIError;
     a fresh reopen+re-toggle usually succeeds. Re-settles (Escape stray dialogs)
     between attempts; raises the last MCUIError if all retries fail."""
+    pause_gate.checkpoint()
     last_err: Optional[Exception] = None
     for _attempt in range(1, max(1, retries) + 1):
         try:
@@ -4780,6 +4784,7 @@ def run_optimization_for_strategy(
     cfg: StrategyConfig,
     output_dir: str,
 ) -> str:
+    pause_gate.checkpoint()
     logger.info("=== Starting %s (%d runs) ===", cfg.name, cfg.total_runs())
     _run_t0 = time.time()
     try:
