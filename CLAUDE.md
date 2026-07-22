@@ -268,20 +268,21 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 | 32 | **SpaceGateBreakout** (space cooldown: re-arm only BandMult·ATR away from last exit) | 60,317 | gate is MARKET-SPLIT: BNB→B=0 (time cooldown suffices), futures+ETH interior 0.5-2.0 — cooldown family: time (universal) > space (futures) > loss-streak (rejected); **BNB 2 candidates strict PASS, winner +$14,223 ties Heavy #2**; ETH stack RoMaD 13.97 = best ETH cell (M5 step +220.5%); TXF Obj 37.67M #4 futures; 5/6 OOS-profitable (TXF only loser) |
 | 33 | **RegimeBlendBreakout** (ER-weighted blend of Donchian extreme + Bollinger band) | 107,721 | **COMPOSITION TRIAD CLOSES: the dynamic dial escapes the trade-off** — IS beats BOTH parents AND Union's static OR (104K) AND strict PASS 1.00× (+$13,800 #4) = 4th anti-correlation breaker; BNB all-4 candidates OOS-profitable, breaks ≤1.27×; stack $48.6K RoMaD 9.76; **NQ IS Obj 6.29M = best NQ IS ever** (but OOS 2.8× — NQ anti-correlation intact); TXF kept 5 modules; 3/6 OOS-profitable |
 | 34 | **AgedChannelBreakout** (Donchian window excludes freshest K bars; K=BandMult, 0=Donchian) | 92,244 | **BNB ALL 4 candidates strict PASS 1.00× (first ever); winner +$15,318 = #1 all-time strict-PASS profit**; stack $53.7K = #2 all-time NP; extreme-age axis closes two-sided with Decay: recent extremes carry the signal (K→0-2 on strong cells, TXF/NQ K=0); TXF 1.054× near-PASS +508K; NQ IS Obj 4.81M (#2 NQ) but OOS 4.1× |
+| 35 | **VolClockBreakout** (vol-clock Donchian: window N = Length·ATRbase/ATR14) | 55,917 | EVENT-TIME REJECTED for IS: vol-rescaling the lookback weakens every strong cell (BNB 55.9K ≪ Donchian 100K; TXF 26.6M; NQ 2.65M) — the fixed-bar window is already the right clock. But OOS-benign: **6/6 OOS-profitable** (3rd ever), BNB strict PASS +$14,247 (3rd ~14.2K bare-skeleton PASS: Heavy/SpaceGate/VolClock — same underlying regime); NQ 1.145× mild |
 | 37 | **BodySpikeBreakout** (max \|C−O\| bar; trio closes) | 107,357 | body ≈ range (≈ RangeSpike, both OOS-broke) — only VOLUME carries independent OOS info; **GC OOS +$135,970 = largest ever**; exposed seed-clamp bug (fixed 5b46b3b) |
 
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-35 VolClock, 36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+36 DualAnchor, 38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
 
 ### Records ledger
 
-- **Strict-PASS OOS profits (BNB):** **AgedChannel 15,318 (all-4-candidates PASS, first ever)** > Consensus 14,719 > Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
+- **Strict-PASS OOS profits (BNB):** **AgedChannel 15,318 (all-4-candidates PASS, first ever)** > Consensus 14,719 > VolClock 14,247 ≈ Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
 - **RoMaD cells:** GC-Typical 17.54 > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
 - **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 180/180 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 186/186 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
