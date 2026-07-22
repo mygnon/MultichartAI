@@ -1,0 +1,11 @@
+Input:PT_Base(0.2);
+var:PT(0);
+if marketposition<>0 then begin 
+	PT = entryprice+(PT_Base*entryprice*marketposition) ; 
+end ; 
+if marketposition>0 then begin 
+	if C>PT then sell ("LX_PT") next bar market;
+end
+else if marketposition<0 then begin 
+	if C<PT then buytocover ("SX_PT") next bar market;
+end ; 

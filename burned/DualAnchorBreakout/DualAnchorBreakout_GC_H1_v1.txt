@@ -1,0 +1,197 @@
+{ =====================================================================
+  AUTOGEN - do not edit by hand
+  strategy_id         : DualAnchorBreakout_GC_H1_v1
+  source_state_sha256 : d3160a9a2aa7a00dd6b800af39c236cea87caff1da4fb78b58f1e7d879b28df7
+  template_version    : 1
+  main                : DualAnchorBreakout_NQ  (params baked from stage2.main_champ)
+  exit_modules        : M5=QuantPass_PT_Exit, M6=RescueTeamExit, M4=SFJ_15Dworkshop_lesson11_3_high_volatility_exit  (params baked from stage3)
+===================================================================== }
+
+{===============================================================================
+  DualAnchorBreakout_NQ
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for CME.NQ futures.
+  Hourly resolution, Data1 only. Long + Short. DUAL-ANCHOR breakout — the gate is
+  the OUTERMOST of yesterday's session extreme and the rolling Donchian extreme
+  (must clear BOTH anchor families) — entered intrabar via STOP + ReentryBars
+  cooldown + ATR chandelier trail.
+
+  Futures port of DualAnchorBreakout_crypto: the _Crypto1MUSD ~$1M-notional
+  position sizing has been REMOVED -- orders use the strategy's default sizing
+  (set in Format Signals -> Properties -> default contracts).
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. This 36th reference is designed
+  FROM the matrix evidence:
+    - DayChannelBreakout showed the SESSION anchor is the most OOS-robust family
+      (Length collapsed to 1 day; BTC + ETH strict PASS at exactly 1.00x) but the
+      weakest MAIN.
+    - The rolling Donchian is the IS-strongest family but OOS-fragile.
+  ConsensusBreakout AND-ed two references WITHIN the rolling family; this one
+  AND-s ACROSS anchor families:
+      UpLvl = MaxList( HighD(1), Highest(High, Length)[1] ) + BandMult*ATR
+      DnLvl = MinList( LowD(1),  Lowest(Low,  Length)[1] ) - BandMult*ATR
+  A fill must clear BOTH yesterday's session extreme (the OOS-robust gate, constant
+  within the day) AND the N-bar rolling extreme (the IS-strong gate, walking bar by
+  bar) — whichever is farther gates the trade. Small Length -> the session side
+  dominates; large Length -> the rolling side dominates; the value zone is where
+  the outer anchor ALTERNATES. Hypothesis: inherit the session family's mild OOS
+  breaks while the rolling side restores the absolute edge DayChannel lacked.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - rolling Donchian lookback, bars
+    BandMult    - buffer beyond the dual-anchor level in ATR(14) multiples
+                  (0 = pure touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Requires an INTRADAY chart (HighD/LowD read the completed prior session, same
+     family as PivotBreakout / DayChannel). HighD(1)/LowD(1) > 0 guarded — an
+     unloaded prior day falls back to the rolling extreme alone.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 178 ),
+    BandMult( 0 ),
+    ATRMult( 1.75 ),
+    ReentryBars( 24 ) ;
+
+variables:
+    ATRv( 0 ),
+    RollHi( 0 ),
+    RollLo( 0 ),
+    UpAnchor( 0 ),
+    DnAnchor( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+
+{ ==== burned exit-module declarations (params baked from stage3) ==== }
+inputs: m5_PT_Base( 0.022 ) ;
+variables: m5_PT( 0 ) ;
+inputs: m6_Length( 140 ), m6_std( 5.1 ) ;
+inputs: m4_DAYRANGE( 4.92 ) ;
+variables: m4_ATR( 0 ) ;
+{ ==== OMS emit declarations (template v1) ==== }
+DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
+variables:
+    oms_q( "" ),
+    oms_out( "" ),
+    oms_tmp( "" ),
+    oms_json( "" ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- dual anchor: outermost of yesterday's extreme and the rolling extreme ---- }
+RollHi = Highest( High, Length )[1] ;
+RollLo = Lowest( Low, Length )[1] ;
+if HighD( 1 ) > 0 then
+    UpAnchor = MaxList( HighD( 1 ), RollHi )
+else
+    UpAnchor = RollHi ;
+if LowD( 1 ) > 0 then
+    DnAnchor = MinList( LowD( 1 ), RollLo )
+else
+    DnAnchor = RollLo ;
+
+UpLvl = UpAnchor + BandMult * ATRv ;   { long breakout level  (clears BOTH anchors) }
+DnLvl = DnAnchor - BandMult * ATRv ;   { short breakout level (clears BOTH anchors) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: dual-anchor breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "DaLE" ) next bar at UpLvl stop ;
+    SellShort ( "DaSE" ) next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "DaLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "DaSX" ) next bar at TrailShort stop ;
+end ;
+
+{ ==== M5: QuantPass_PT_Exit (burned: PT_Base=0.022) ==== }
+if marketposition<>0 then begin 
+	m5_PT = entryprice+(m5_PT_Base*entryprice*marketposition) ; 
+end ; 
+if marketposition>0 then begin 
+	if C>m5_PT then sell ("LX_PT") next bar market;
+end
+else if marketposition<0 then begin 
+	if C<m5_PT then buytocover ("SX_PT") next bar market;
+end ; 
+
+{ ==== M6: RescueTeamExit (burned: Length=140, std=5.1) ==== }
+if marketposition<0 then begin
+	if c crosses under BollingerBand( c, m6_Length, -m6_std ) then Buytocover ( "Buytocover " ) next bar at market;
+end;
+
+{ ==== M4: SFJ_15Dworkshop_lesson11_3_high_volatility_exit (burned: DAYRANGE=4.92) ==== }
+{-------------------Copyrigth@2020.11.24 Jey -------------------
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+m4_ATR= AvgTrueRange(10); 
+
+IF H-L > m4_DAYRANGE*m4_ATR THEN BEGIN
+	IF marketposition=1  THEN SELL("DayRange_LX") NEXT BAR MARKET;
+	IF marketposition=-1 THEN BUYTOCOVER("DayRange_sX") NEXT BAR MARKET;
+END;
+
+{ ==== OMS signal emit: real-time only, atomic tmp+rename (oms-spec 2.1) ==== }
+if GetAppInfo( aiRealTimeCalc ) = 1 then
+begin
+    oms_q = DoubleQuote ;
+    oms_out = "C:\oms\signals\DualAnchorBreakout_GC_H1_v1.json" ;
+    oms_tmp = oms_out + ".tmp" ;
+    oms_json =
+        "{" + NewLine +
+        "  " + oms_q + "strategy_id" + oms_q + ": " + oms_q + "DualAnchorBreakout_GC_H1_v1" + oms_q + "," + NewLine +
+        "  " + oms_q + "symbol" + oms_q + ": " + oms_q + "CME.GC" + oms_q + "," + NewLine +
+        "  " + oms_q + "target_units" + oms_q + ": " + NumToStr( CurrentContracts * MarketPosition, 0 ) + "," + NewLine +
+        "  " + oms_q + "theoretical_equity" + oms_q + ": " + NumToStr( NetProfit + OpenPositionProfit, 2 ) + "," + NewLine +
+        "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
+        "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
+        "}" + NewLine ;
+    FileDelete( oms_tmp ) ;
+    FileAppend( oms_tmp, oms_json ) ;
+    MoveFileExA( oms_tmp, oms_out, 1 ) ;
+end ;

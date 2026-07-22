@@ -1,0 +1,66 @@
+{ =====================================================================
+  AUTOGEN - do not edit by hand
+  strategy_id         : MiniMain_BTC_H1_v1
+  source_state_sha256 : 0000000000000000000000000000000000000000000000000000000000000000
+  template_version    : 1
+  main                : MiniMain_crypto  (params baked from stage2.main_champ)
+  exit_modules        : (none)  (params baked from stage3)
+===================================================================== }
+
+{ MiniMain_crypto -- tiny main-strategy fixture for burner golden tests }
+
+inputs:
+    Length( 8 ),
+    BandMult( 4.75 ),
+    ATRMult( 5.5 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ) ;
+
+{ ---- levels ---- }
+
+{ ==== OMS emit declarations (template v1) ==== }
+DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
+variables:
+    oms_q( "" ),
+    oms_out( "" ),
+    oms_tmp( "" ),
+    oms_json( "" ) ;
+
+ATRv = AvgTrueRange( 14 ) ;
+UpLvl = Highest( High, Length )[1] + BandMult * ATRv ;
+DnLvl = Lowest( Low, Length )[1] - BandMult * ATRv ;
+
+if MarketPosition = 0 then
+begin
+    Buy ( "MmLE" ) next bar at UpLvl stop ;
+    SellShort ( "MmSE" ) next bar at DnLvl stop ;
+end ;
+
+if MarketPosition = 1 then
+    Sell ( "MmLX" ) next bar at UpLvl - ATRMult * ATRv stop ;
+if MarketPosition = -1 then
+    BuyToCover ( "MmSX" ) next bar at DnLvl + ATRMult * ATRv stop ;
+
+{ ==== OMS signal emit: real-time only, atomic tmp+rename (oms-spec 2.1) ==== }
+if GetAppInfo( aiRealTimeCalc ) = 1 then
+begin
+    oms_q = DoubleQuote ;
+    oms_out = "C:\oms\signals\MiniMain_BTC_H1_v1.json" ;
+    oms_tmp = oms_out + ".tmp" ;
+    oms_json =
+        "{" + NewLine +
+        "  " + oms_q + "strategy_id" + oms_q + ": " + oms_q + "MiniMain_BTC_H1_v1" + oms_q + "," + NewLine +
+        "  " + oms_q + "symbol" + oms_q + ": " + oms_q + "BTCUSDT" + oms_q + "," + NewLine +
+        "  " + oms_q + "target_units" + oms_q + ": " + NumToStr( CurrentContracts * MarketPosition, 0 ) + "," + NewLine +
+        "  " + oms_q + "theoretical_equity" + oms_q + ": " + NumToStr( NetProfit + OpenPositionProfit, 2 ) + "," + NewLine +
+        "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
+        "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
+        "}" + NewLine ;
+    FileDelete( oms_tmp ) ;
+    FileAppend( oms_tmp, oms_json ) ;
+    MoveFileExA( oms_tmp, oms_out, 1 ) ;
+end ;

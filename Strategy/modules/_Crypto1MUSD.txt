@@ -1,0 +1,1 @@
+_Crypto1MUSD = IFF( C<>0 and C>0.000000001 , Round(1000000/C,0) , 1 ) ;  

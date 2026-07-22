@@ -1,0 +1,315 @@
+{
+  "name": "DualAnchorBreakout",
+  "tf": "H1",
+  "workspace": "C:\\Users\\Tim\\Downloads\\Multichart64\\Tim\\DualAnchorBreakout_AI.wsp",
+  "generated_at": "2026-07-22T12:37:16Z",
+  "items": [
+    {
+      "inst": "BTC",
+      "strategy_id": "DualAnchorBreakout_BTC_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_BTC_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "BTCUSDT HOT",
+      "full_range": [
+        "2021/03/01",
+        "2026/06/10"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_crypto",
+          "QuantPass_PT_Exit",
+          "SFJ_15Dworkshop_lesson4_ATRstop",
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop"
+        ],
+        "main_inputs": {
+          "Length": 8.0,
+          "BandMult": 4.75,
+          "ATRMult": 5.5,
+          "ReentryBars": 0.0
+        },
+        "module_inputs": {
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.246
+          },
+          "SFJ_15Dworkshop_lesson4_ATRstop": {
+            "STP": 6.1
+          },
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop": {
+            "ATRSTP": 40.6
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_BTC_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 2335.01,
+        "max_intraday_drawdown": -329.96,
+        "romad": 7.0766
+      }
+    },
+    {
+      "inst": "ETH",
+      "strategy_id": "DualAnchorBreakout_ETH_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_ETH_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "ETHUSDT HOT",
+      "full_range": [
+        "2021/03/01",
+        "2026/06/10"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_crypto",
+          "QuantPass_PT_Exit",
+          "RescueTeamExit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit"
+        ],
+        "main_inputs": {
+          "Length": 29.0,
+          "BandMult": 2.0,
+          "ATRMult": 15.75,
+          "ReentryBars": 1.0
+        },
+        "module_inputs": {
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.616
+          },
+          "RescueTeamExit": {
+            "Length": 40.0,
+            "std": 4.8
+          },
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit": {
+            "DAYRANGE": 5.88
+          },
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit": {
+            "EXITBAR": 616.0
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_ETH_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 5074.35,
+        "max_intraday_drawdown": -801.073,
+        "romad": 6.3344
+      }
+    },
+    {
+      "inst": "BNB",
+      "strategy_id": "DualAnchorBreakout_BNB_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_BNB_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "BNBUSDT HOT",
+      "full_range": [
+        "2021/03/01",
+        "2026/06/10"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_crypto",
+          "QuantPass_PT_Exit",
+          "RescueTeamExit",
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "SFJ_15Dworkshop_lesson4_ATRstop"
+        ],
+        "main_inputs": {
+          "Length": 293.0,
+          "BandMult": 2.5,
+          "ATRMult": 13.5,
+          "ReentryBars": 13.0
+        },
+        "module_inputs": {
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.191
+          },
+          "RescueTeamExit": {
+            "Length": 80.0,
+            "std": 3.3
+          },
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop": {
+            "ATRSTP": 25.7
+          },
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit": {
+            "EXITBAR": 334.0
+          },
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit": {
+            "DAYRANGE": 5.04
+          },
+          "SFJ_15Dworkshop_lesson4_ATRstop": {
+            "STP": 16.8
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_BNB_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 14118.4,
+        "max_intraday_drawdown": -6800.13,
+        "romad": 2.0762
+      }
+    },
+    {
+      "inst": "TXF",
+      "strategy_id": "DualAnchorBreakout_TXF_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_TXF_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "TWF.TXF HOT",
+      "full_range": [
+        "2018/01/01",
+        "2026/01/01"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_NQ",
+          "QuantPass_PT_Exit",
+          "RescueTeamExit",
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit"
+        ],
+        "main_inputs": {
+          "Length": 8.0,
+          "BandMult": 0.0,
+          "ATRMult": 3.75,
+          "ReentryBars": 5.0
+        },
+        "module_inputs": {
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.134
+          },
+          "RescueTeamExit": {
+            "Length": 420.0,
+            "std": 4.1
+          },
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop": {
+            "ATRSTP": 8.4
+          },
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit": {
+            "EXITBAR": 50.0
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_TXF_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 3562800.0,
+        "max_intraday_drawdown": -1076800.0,
+        "romad": 3.3087
+      }
+    },
+    {
+      "inst": "NQ",
+      "strategy_id": "DualAnchorBreakout_NQ_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_NQ_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "CME.NQ HOT",
+      "full_range": [
+        "2018/01/01",
+        "2026/01/01"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_NQ",
+          "RescueTeamExit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+          "QuantPass_PT_Exit",
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+          "SFJ_15Dworkshop_lesson4_ATRstop",
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop"
+        ],
+        "main_inputs": {
+          "Length": 2.0,
+          "BandMult": 1.5,
+          "ATRMult": 1.75,
+          "ReentryBars": 41.0
+        },
+        "module_inputs": {
+          "RescueTeamExit": {
+            "Length": 380.0,
+            "std": 3.2
+          },
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit": {
+            "DAYRANGE": 4.94
+          },
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.029
+          },
+          "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit": {
+            "EXITBAR": 9.0
+          },
+          "SFJ_15Dworkshop_lesson4_ATRstop": {
+            "STP": 1.8
+          },
+          "SFJ_15Dworkshop_lesson9_1_TrailingStop": {
+            "ATRSTP": 4.6
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_NQ_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 295395.0,
+        "max_intraday_drawdown": -25580.0,
+        "romad": 11.5479
+      }
+    },
+    {
+      "inst": "GC",
+      "strategy_id": "DualAnchorBreakout_GC_H1_v1",
+      "compile_first": "burned/DualAnchorBreakout/DualAnchorBreakout_GC_H1_v1.txt (paste into MC64 Study Editor, compile)",
+      "chart_symbol": "CME.GC HOT",
+      "full_range": [
+        "2018/01/01",
+        "2026/01/01"
+      ],
+      "run_a": {
+        "enable": [
+          "DualAnchorBreakout_NQ",
+          "QuantPass_PT_Exit",
+          "RescueTeamExit",
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit"
+        ],
+        "main_inputs": {
+          "Length": 178.0,
+          "BandMult": 0.0,
+          "ATRMult": 1.75,
+          "ReentryBars": 24.0
+        },
+        "module_inputs": {
+          "QuantPass_PT_Exit": {
+            "PT_Base": 0.022
+          },
+          "RescueTeamExit": {
+            "Length": 140.0,
+            "std": 5.1
+          },
+          "SFJ_15Dworkshop_lesson11_3_high_volatility_exit": {
+            "DAYRANGE": 4.92
+          }
+        }
+      },
+      "run_b": {
+        "enable": [
+          "DualAnchorBreakout_GC_H1_v1"
+        ]
+      },
+      "advisory_stage4_final": {
+        "net_profit": 183070.0,
+        "max_intraday_drawdown": -10300.0,
+        "romad": 17.7738
+      }
+    }
+  ]
+}

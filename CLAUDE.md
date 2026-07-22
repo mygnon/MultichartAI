@@ -299,6 +299,19 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 10. **Extreme-age law** (refs 18+34, two-sided): recent extremes carry the signal — fading STALE levels helps (Decay BandMult interior ×6), while excluding the FRESHEST 1-2 bars is at best a small crypto refinement (Aged K→0-2; TXF/NQ take K=0).
 11. **Exit modules on trend-breakout mains genuinely HELP (162/162) — but ONLY with verified pinning** of the main's champion params (`fixed_inputs`, read-back). Any module result without verified pinning is invalid (the CCB per-instrument pipelines' S3/4 remain SUSPECT). A module stack lifts NP/RoMaD, not generalization (Pivot-BNB +210% but still weak-OOS). On counter-trend/reversal mains modules HURT (CT 24/24, QPRSI-ETH).
 
+## Burn-in Codegen (`burner/`)
+
+Fuses each instrument's pipeline result (state.json main_champ + Stage-4 KEEP modules) into ONE self-contained EL signal with params baked as input defaults, for zero-config Portfolio Trader mounting at scale. Spec: `burn-in-codegen-spec.md` (+ `oms-spec.md`); procedure doc: `docs/burn_equivalence.md`.
+
+```powershell
+py -m burner burn --name DualAnchorBreakout --key dualanchor [--inst btc,gc] [--no-modules] [--dry-run]
+py -m burner verify --name DualAnchorBreakout --key dualanchor --dry-run   # equivalence checklist (no MC64)
+py -m burner verify --name DualAnchorBreakout --key dualanchor            # same-day A/B gate (MC64, signal compiled manually first)
+py -m burner export-modules    # Knowledge/*.docx -> Strategy/modules/*.txt (7 files, diff-locked by tests)
+```
+
+Outputs `burned/{Name}/{Name}_{INST}_{TF}_v{n}.txt|.manifest.json` + `burn_report.json`; idempotent (identical rerun reuses v{n}, content change bumps, old versions never overwritten). Key rules: main body VERBATIM (only input defaults rewritten); module inputs/vars prefixed `m{n}_` (whitelist whole-token case-insensitive rename — M6 `Length` collides with main); M1/M3 unnamed orders get `"M1_LX"`-style names; module declarations HOISTED above the main's first executable statement (PL wants declarations first); OMS emit block guarded `GetAppInfo(aiRealTimeCalc)=1` so backtests never write files. Equivalence gate (spec §4.4) = same-day A/B (original multi-signal vs burned signal, ±0.5%) — never compare against stale manifest numbers (Critical Rule 5). Tests: `py -m pytest tests/` (goldens byte-exact; regen via `py tests/regen_goldens.py` then review). OMS-block builtins (`DoubleQuote`, `DefineDLLFunc`/`MoveFileExA`, `FormatDate` etc.) still need one first-compile confirmation in MC64.
+
 ## Running the Optimizer
 
 All scripts must run as Administrator because MC64 runs elevated and Windows UIPI blocks cross-privilege UI automation. MC64 must be open with the correct workspace before running.

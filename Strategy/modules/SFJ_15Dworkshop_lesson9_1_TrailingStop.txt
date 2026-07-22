@@ -1,0 +1,28 @@
+{-------------------Copyrigth@2021.01.11 Jey -------------------
+CHAPTER 9
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+INPUT:ATRSTP(3);
+VAR:ATR(0),MP(0),POSH(0),POSL(99999);
+
+MP = MarketPosition ;
+ATR=AvgTrueRange(10);
+
+if MP<>MP[1] then begin
+	posh=0;
+	posl=99999;
+end;
+
+if MP = 1 then begin
+	IF High > POSH THEN POSH = High ;
+	SELL ( "AtrLX" ) next bar at POSH - ATR*ATRSTP stop ;
+end;
+	
+if MP =-1 then begin
+	IF LOW < POSL THEN POSL = L ;
+	BUYTOCOVER ( "AtrSX" ) next bar at POSL + ATR*ATRSTP stop ;
+end;

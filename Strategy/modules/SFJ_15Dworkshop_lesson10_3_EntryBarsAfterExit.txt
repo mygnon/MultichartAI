@@ -1,0 +1,15 @@
+{-------------------Copyrigth@2021.01.11 Jey -------------------
+CHAPTER 10
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+
+INPUT:EXITBAR(2);//ENTRYBARS AFTER
+
+IF barssinceentry = EXITBAR AND openpositionprofit<0 THEN BEGIN
+	IF marketposition=1  THEN SELL NEXT BAR MARKET;
+	IF marketposition=-1 THEN BUYTOCOVER NEXT BAR MARKET;
+END;

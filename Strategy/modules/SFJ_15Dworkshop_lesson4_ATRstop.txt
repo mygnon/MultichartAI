@@ -1,0 +1,14 @@
+{-------------------Copyrigth@2020.11.24 Jey -------------------
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+INPUT:STP(1);
+VAR:ATR(0);
+
+ATR= AvgTrueRange(10); 
+
+IF marketposition=1  THEN SELL NEXT BAR ENTRYPRICE - STP * ATR STOP;
+IF marketposition=-1 THEN BUYTOCOVER NEXT BAR ENTRYPRICE + STP * ATR STOP;

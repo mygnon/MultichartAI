@@ -1,0 +1,5 @@
+inputs:  Length( 25 ), std( 3.06 );
+
+if marketposition<0 then begin
+	if c crosses under BollingerBand( c, Length, -std ) then Buytocover ( "Buytocover " ) next bar at market;
+end;

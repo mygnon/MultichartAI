@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "strategy_id": "DualAnchorBreakout_BNB_H1_v1",
+  "base_strategy": "DualAnchorBreakout",
+  "source_variant": "DualAnchorBreakout_crypto",
+  "symbol": "BNBUSDT",
+  "symbol_class": "crypto",
+  "timeframe": "H1",
+  "params": {
+    "Length": 293.0,
+    "BandMult": 2.5,
+    "ATRMult": 13.5,
+    "ReentryBars": 13.0
+  },
+  "exit_modules": [
+    {
+      "id": "M5",
+      "signal": "QuantPass_PT_Exit",
+      "params": {
+        "PT_Base": 0.191
+      }
+    },
+    {
+      "id": "M6",
+      "signal": "RescueTeamExit",
+      "params": {
+        "Length": 80.0,
+        "std": 3.3
+      }
+    },
+    {
+      "id": "M2",
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params": {
+        "ATRSTP": 25.7
+      }
+    },
+    {
+      "id": "M3",
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params": {
+        "EXITBAR": 334.0
+      }
+    },
+    {
+      "id": "M4",
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params": {
+        "DAYRANGE": 5.04
+      }
+    },
+    {
+      "id": "M1",
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params": {
+        "STP": 16.8
+      }
+    }
+  ],
+  "stage4_final": {
+    "net_profit": 14118.4,
+    "max_intraday_drawdown": -6800.13,
+    "romad": 2.0762
+  },
+  "dependencies": [],
+  "oos": {
+    "net_profit": -5250.06,
+    "mdd": -9847.27,
+    "pass": false
+  },
+  "source_state_json": "results/bnb_dualanchor_hourly_pipeline/state.json",
+  "source_state_sha256": "5cd0b3458855e2722e5372240a6dcbe9f786a3c4bb20797ed268da402726d6b6",
+  "el_sha256": "f6e8724a59fab279d4c12b51be0ba4e35c8033ec0165fe17ab13772e91527a5e",
+  "burned_at": "2026-07-22T12:33:50Z"
+}

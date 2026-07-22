@@ -1,0 +1,28 @@
+{ MiniMain_crypto -- tiny main-strategy fixture for burner golden tests }
+
+inputs:
+    Length( 20 ),
+    BandMult( 0.0 ),
+    ATRMult( 3.0 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    ATRv( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ) ;
+
+{ ---- levels ---- }
+ATRv = AvgTrueRange( 14 ) ;
+UpLvl = Highest( High, Length )[1] + BandMult * ATRv ;
+DnLvl = Lowest( Low, Length )[1] - BandMult * ATRv ;
+
+if MarketPosition = 0 then
+begin
+    Buy ( "MmLE" ) next bar at UpLvl stop ;
+    SellShort ( "MmSE" ) next bar at DnLvl stop ;
+end ;
+
+if MarketPosition = 1 then
+    Sell ( "MmLX" ) next bar at UpLvl - ATRMult * ATRv stop ;
+if MarketPosition = -1 then
+    BuyToCover ( "MmSX" ) next bar at DnLvl + ATRMult * ATRv stop ;
