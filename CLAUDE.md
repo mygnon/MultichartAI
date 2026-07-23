@@ -275,9 +275,11 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 
 | 39 | **VolRatioBreakout** (vol-regime band width: EffBand = BandMult·ATR14·(ATR14/ATRslow), quadratic) | 138,191 #3 | **width-modulator axis closes as an IS↔OOS dial**: vol² modulation beats ERBand on IS (138.2K > 113.2K, #3 all-time behind Inner/MADBand) but loses ERBand's strict PASS (0 PASS; BNB 1.024× near-PASS +$9,691); **6/6 OOS-profitable (4th ever)**; TXF +704,000 = 2nd-largest TXF OOS (CCB +1.09M); NQ collapses to ultra-high-freq L=72 Re=0 2732tr; M3 kept 5/6 (historically least-kept); zero-flake run |
 
+| 40 | **ERGateBreakout** (ERBand's ER gate on the Donchian EDGE: buffer = BandMult·ATR·(1−ER); B=0 = exact Donchian, nested A/B) | 85,779 | **ER-transplant 1/3: the OOS robustness transfers, the IS edge does NOT** — B interior 0.75-2.0 everywhere (the gate IS used, never →0) yet BNB IS 85.8K ≪ ERBand-on-SMA 113.2K; **BNB strict PASS 1.00× +$12,466**; **ETH stack RoMaD 12.99 = #2 ETH cell ever** (OOS +$1,860 high-tier, M5 step +39.5%); BTC IS Obj 17.6K (top BTC tier), break 1.125×; NQ all-4-candidates OOS-NEGATIVE (2nd all-negative cell, after HLMean-TXF); TXF +472,000 but kept only M5 (rare single-module keep); GC sparse 79tr weak; 5/6 OOS-profitable |
+
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand + ERGate), 43 DuoAdapt.
 
 ### Records ledger
 
@@ -286,7 +288,7 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 - **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > VolRatio 49.6K ≈ WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 204/204 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 210/210 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
