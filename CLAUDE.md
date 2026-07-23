@@ -271,27 +271,28 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 | 35 | **VolClockBreakout** (vol-clock Donchian: window N = Length·ATRbase/ATR14) | 55,917 | EVENT-TIME REJECTED for IS: vol-rescaling the lookback weakens every strong cell (BNB 55.9K ≪ Donchian 100K; TXF 26.6M; NQ 2.65M) — the fixed-bar window is already the right clock. But OOS-benign: **6/6 OOS-profitable** (3rd ever), BNB strict PASS +$14,247 (3rd ~14.2K bare-skeleton PASS: Heavy/SpaceGate/VolClock — same underlying regime); NQ 1.145× mild |
 | 36 | **DualAnchorBreakout** (outermost of yesterday's extreme + rolling Donchian = anchor-space AND) | 25,116 | anchor-AND confirms "strictness costs IS" but WITHOUT Consensus's OOS payoff (0 strict PASS; BNB collapses to L=291 ultra-long, OOS −$5,250) — the AND reward depends on WHAT is AND-ed; **GC 178/0/1.75/24 stack RoMaD 17.77 = NEW ALL-TIME RECORD cell** (long-window tight-trail GC family again), OOS 1.03× near-PASS +56,840; **BNB+NQ both kept ALL 6 modules (first double full-keep)**, BNB stack +233%; NQ RoMaD 11.55; 4/6 OOS-profitable; zero-flake run |
 | 37 | **BodySpikeBreakout** (max \|C−O\| bar; trio closes) | 107,357 | body ≈ range (≈ RangeSpike, both OOS-broke) — only VOLUME carries independent OOS info; **GC OOS +$135,970 = largest ever**; exposed seed-clamp bug (fixed 5b46b3b) |
+| 38 | **HLMeanBreakout** (mean-of-highs shelf: Average(High,L) + BandMult·ATR) | 126,949 #2 | **4th anti-correlation breaker**: BNB IS #2 all-time AND strict PASS 1.00× +$13,635; BTC 2/4 candidates PASS 1.00× (+$596); **NQ stack RoMaD 16.23 = new NQ record** (5 modules; dethrones NQ-Heavy 16.22); order-statistic gradient closes NON-monotone in rank: mean 127K > max(Donchian) 100K > K-th(Trim) 91.8K — the statistical shelf beats the spike, deep-inward endpoint wins (Law 5); TXF all-4-candidates OOS-NEGATIVE (winner −261,800, 2.94×); 5/6 OOS-profitable; triple-flake run (ETH/BNB/TXF), all recovered clean |
 
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-38 HLMean, 39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
 
 ### Records ledger
 
-- **Strict-PASS OOS profits (BNB):** **AgedChannel 15,318 (all-4-candidates PASS, first ever)** > Consensus 14,719 > VolClock 14,247 ≈ Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
-- **RoMaD cells:** **GC-DualAnchor 17.77** > GC-Typical 17.54 > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
-- **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > WickBlend 49.4K ≈ KAMA 49.2K
+- **Strict-PASS OOS profits (BNB):** **AgedChannel 15,318 (all-4-candidates PASS, first ever)** > Consensus 14,719 > VolClock 14,247 ≈ Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > HLMean 13,635 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
+- **RoMaD cells:** **GC-DualAnchor 17.77** > GC-Typical 17.54 > **NQ-HLMean 16.23** > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
+- **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 192/192 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 198/198 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
 1. **The engine is the alpha**: non-lagged level + intrabar STOP + wide ATR chandelier trail + ReentryBars cooldown. The EXIT is decisive (channel exit / SAR break it); a lagged pivot or close-confirmed MARKET entry breaks it.
 2. **Entry filters fail OOS** (ADX/squeeze/RSI/trend/vol-buffer → floor); ReentryBars cooldown is the ONE entry-side lever kept >0. Cooldown family (refs 30+32): time cooldown universal > price-space re-arm gate market-split (futures+ETH keep it interior 0.5-2.0, BNB→0) > loss-streak escalation rejected.
-3. **IS strength ≠ OOS robustness**: the IS Obj champion (lowest IS-MDD, sparse) is repeatedly OOS-worst; higher-freq / wider-MDD regimes generalize. Exceptions ("anti-correlation breakers", IS-top AND strict PASS): **ERBand, RangeFrac, RegimeBlend**; near: Heavy, MADBand.
+3. **IS strength ≠ OOS robustness**: the IS Obj champion (lowest IS-MDD, sparse) is repeatedly OOS-worst; higher-freq / wider-MDD regimes generalize. Exceptions ("anti-correlation breakers", IS-top AND strict PASS): **ERBand, RangeFrac, RegimeBlend, HLMean**; near: Heavy, MADBand.
 4. **Lag law** (5 confirmations): low-lag centers (Hull, VWMA, RegChannel, Decay) win IS but overfit OOS; laggy/adaptive centers (MidChannel, KAMA) are IS-weaker but OOS-robust.
-5. **Field law**: monotone INWARD — Inner 140K > WickBlend(w≈0.7) 126K > Typical 119K > Donchian 100K > Close 98K; continuous form: the optimum is "inward but not central" (WickBlend w≈0.7 ≈ RangeFrac fraction 0.75-0.93).
+5. **Field law**: monotone INWARD — Inner 140K > HLMean(mean-of-highs) 127K ≈ WickBlend(w≈0.7) 126K > Typical 119K > Donchian 100K > Close 98K; continuous form: the optimum is "inward but not central" (WickBlend w≈0.7 ≈ RangeFrac fraction 0.75-0.93). Order-statistic sweep (ref 38) is NON-monotone in rank: mean 127K > max 100K > K-th 91.8K — the deep-inward statistical shelf beats both the spike and the trimmed spike.
 6. **Dispersion axis**: MAD 139K > SemiBand 109K > stdev 95K — robust dispersion helps, per-side splitting hurts.
 7. **Volume axis**: VALIDATE (Heavy) > LOCATE (POC) > WEIGHT (VWMA); volume buys OOS robustness, not IS edge (RangeSpike/BodySpike price-only controls both OOS-broke). Event-anchor trio: body ≈ range, only volume independent.
 8. **Validation family** (filter WHICH bars' extremes count — volume/polarity/rank): all 3 give BNB strict PASS and BandMult→0 (the filter replaces the price buffer).
