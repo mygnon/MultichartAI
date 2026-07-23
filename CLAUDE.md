@@ -271,20 +271,22 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 | 35 | **VolClockBreakout** (vol-clock Donchian: window N = Length·ATRbase/ATR14) | 55,917 | EVENT-TIME REJECTED for IS: vol-rescaling the lookback weakens every strong cell (BNB 55.9K ≪ Donchian 100K; TXF 26.6M; NQ 2.65M) — the fixed-bar window is already the right clock. But OOS-benign: **6/6 OOS-profitable** (3rd ever), BNB strict PASS +$14,247 (3rd ~14.2K bare-skeleton PASS: Heavy/SpaceGate/VolClock — same underlying regime); NQ 1.145× mild |
 | 36 | **DualAnchorBreakout** (outermost of yesterday's extreme + rolling Donchian = anchor-space AND) | 25,116 | anchor-AND confirms "strictness costs IS" but WITHOUT Consensus's OOS payoff (0 strict PASS; BNB collapses to L=291 ultra-long, OOS −$5,250) — the AND reward depends on WHAT is AND-ed; **GC 178/0/1.75/24 stack RoMaD 17.77 = NEW ALL-TIME RECORD cell** (long-window tight-trail GC family again), OOS 1.03× near-PASS +56,840; **BNB+NQ both kept ALL 6 modules (first double full-keep)**, BNB stack +233%; NQ RoMaD 11.55; 4/6 OOS-profitable; zero-flake run |
 | 37 | **BodySpikeBreakout** (max \|C−O\| bar; trio closes) | 107,357 | body ≈ range (≈ RangeSpike, both OOS-broke) — only VOLUME carries independent OOS info; **GC OOS +$135,970 = largest ever**; exposed seed-clamp bug (fixed 5b46b3b) |
-| 38 | **HLMeanBreakout** (mean-of-highs shelf: Average(High,L) + BandMult·ATR) | 126,949 #2 | **4th anti-correlation breaker**: BNB IS #2 all-time AND strict PASS 1.00× +$13,635; BTC 2/4 candidates PASS 1.00× (+$596); **NQ stack RoMaD 16.23 = new NQ record** (5 modules; dethrones NQ-Heavy 16.22); order-statistic gradient closes NON-monotone in rank: mean 127K > max(Donchian) 100K > K-th(Trim) 91.8K — the statistical shelf beats the spike, deep-inward endpoint wins (Law 5); TXF all-4-candidates OOS-NEGATIVE (winner −261,800, 2.94×); 5/6 OOS-profitable; triple-flake run (ETH/BNB/TXF), all recovered clean |
+| 38 | **HLMeanBreakout** (mean-of-highs shelf: Average(High,L) + BandMult·ATR) | 126,949 | **4th anti-correlation breaker**: BNB IS #2 all-time AND strict PASS 1.00× +$13,635; BTC 2/4 candidates PASS 1.00× (+$596); **NQ stack RoMaD 16.23 = new NQ record** (5 modules; dethrones NQ-Heavy 16.22); order-statistic gradient closes NON-monotone in rank: mean 127K > max(Donchian) 100K > K-th(Trim) 91.8K — the statistical shelf beats the spike, deep-inward endpoint wins (Law 5); TXF all-4-candidates OOS-NEGATIVE (winner −261,800, 2.94×); 5/6 OOS-profitable; triple-flake run (ETH/BNB/TXF), all recovered clean |
+
+| 39 | **VolRatioBreakout** (vol-regime band width: EffBand = BandMult·ATR14·(ATR14/ATRslow), quadratic) | 138,191 #3 | **width-modulator axis closes as an IS↔OOS dial**: vol² modulation beats ERBand on IS (138.2K > 113.2K, #3 all-time behind Inner/MADBand) but loses ERBand's strict PASS (0 PASS; BNB 1.024× near-PASS +$9,691); **6/6 OOS-profitable (4th ever)**; TXF +704,000 = 2nd-largest TXF OOS (CCB +1.09M); NQ collapses to ultra-high-freq L=72 Re=0 2732tr; M3 kept 5/6 (historically least-kept); zero-flake run |
 
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-39 VolRatio, 40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
+40 ERGate / 41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand), 43 DuoAdapt.
 
 ### Records ledger
 
 - **Strict-PASS OOS profits (BNB):** **AgedChannel 15,318 (all-4-candidates PASS, first ever)** > Consensus 14,719 > VolClock 14,247 ≈ Heavy 14,223 ≈ SpaceGate 14,223 > RegimeBlend 13,800 > HLMean 13,635 > Trim 13,554 > Polarity 13,437 > RangeFrac 13,402 > ERBand 13,039
 - **RoMaD cells:** **GC-DualAnchor 17.77** > GC-Typical 17.54 > **NQ-HLMean 16.23** > NQ-Heavy 16.22 > NQ-MidChannel 16.14 > GC-Feedback 15.48 > NQ-RegChannel 15.41
-- **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > WickBlend 49.4K ≈ KAMA 49.2K
+- **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > VolRatio 49.6K ≈ WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 198/198 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 204/204 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
@@ -298,7 +300,8 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 8. **Validation family** (filter WHICH bars' extremes count — volume/polarity/rank): all 3 give BNB strict PASS and BandMult→0 (the filter replaces the price buffer).
 9. **Anchor granularity**: rolling → day → week = edge↓, robustness↑; session anchors produce BTC strict PASSes (Day/Week/OpenRange). **Composition triad**: static AND/OR is an IS↔OOS dial, not alpha — but the ER-weighted dynamic BLEND (ref 33) escapes the dial (IS above both parents AND strict PASS).
 10. **Extreme-age law** (refs 18+34, two-sided): recent extremes carry the signal — fading STALE levels helps (Decay BandMult interior ×6), while excluding the FRESHEST 1-2 bars is at best a small crypto refinement (Aged K→0-2; TXF/NQ take K=0).
-11. **Exit modules on trend-breakout mains genuinely HELP (162/162) — but ONLY with verified pinning** of the main's champion params (`fixed_inputs`, read-back). Any module result without verified pinning is invalid (the CCB per-instrument pipelines' S3/4 remain SUSPECT). A module stack lifts NP/RoMaD, not generalization (Pivot-BNB +210% but still weak-OOS). On counter-trend/reversal mains modules HURT (CT 24/24, QPRSI-ETH).
+11. **Width-modulator axis** (refs 14+39, two-sided): modulating band width by vol regime (VolRatio, quadratic ATR²/ATRslow) beats modulating by trend efficiency (ERBand) on IS (138.2K > 113.2K) but LOSES the strict PASS ERBand keeps — the modulator choice is another IS↔OOS dial; both are 6/6-profitable-grade mild-break designs.
+12. **Exit modules on trend-breakout mains genuinely HELP (162/162) — but ONLY with verified pinning** of the main's champion params (`fixed_inputs`, read-back). Any module result without verified pinning is invalid (the CCB per-instrument pipelines' S3/4 remain SUSPECT). A module stack lifts NP/RoMaD, not generalization (Pivot-BNB +210% but still weak-OOS). On counter-trend/reversal mains modules HURT (CT 24/24, QPRSI-ETH).
 
 ## Burn-in Codegen (`burner/`)
 
