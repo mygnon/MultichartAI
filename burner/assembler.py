@@ -82,7 +82,7 @@ def assemble(src: BurnSource, main_el: str, mods: List[ModuleSource],
         hoist += "{ ==== burned exit-module declarations (params baked from stage3) ==== }\n"
         for tm in transformed:
             hoist += tm.decl_lines
-    hoist += templates.OMS_DECLS_TMPL.substitute(template_version=template_version)
+    hoist += templates.render_oms_decls(template_version)
 
     cut = el_lex.first_executable_offset(main_text)
     parts = [main_text[:cut], "\n", hoist, "\n", main_text[cut:]]
@@ -92,6 +92,5 @@ def assemble(src: BurnSource, main_el: str, mods: List[ModuleSource],
         parts.append("\n")
         parts.append(tm.body)
     parts.append("\n")
-    parts.append(templates.OMS_BODY_TMPL.substitute(
-        strategy_id=strategy_id, symbol=src.ctx.symbol))
+    parts.append(templates.render_oms_body(strategy_id, src.ctx.symbol))
     return "".join(parts)

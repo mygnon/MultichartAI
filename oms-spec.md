@@ -32,9 +32,9 @@
 
 每隻策略在每根 bar 收盤（以及進出場當下）呼叫共用函式，輸出當前目標部位。由 Claude Code 量產策略時直接嵌入此模板。
 
-輸出方式：**每策略一檔，原子性覆寫**（先寫 `*.tmp` 再 rename），避免 OMS 讀到半截檔案。
+輸出方式：**每策略一檔，原子性覆寫**（先寫唯一檔名 `*.tmp` 再 MoveFileExA rename），避免 OMS 讀到半截檔案。
 
-檔案路徑：`\\signals\{strategy_id}.json`
+檔案路徑：`Z:\oms\signals\{strategy_id}.json`（Z: 為 ramdisk；見 §2.3）
 
 ```json
 {
@@ -54,6 +54,41 @@
 | `theoretical_equity` | 策略理論權益（PT 回測口徑），供 MDD 監控與追蹤誤差比對 |
 | `bar_time` | 訊號所屬 bar 的收盤時間，用於過期判斷 |
 | `emit_time` | 寫檔時間，作為 heartbeat |
+
+### 2.1.1 寫入端零拋錯規範(template v2,burner/templates.py)
+
+EL 無 try/catch,檔案內建函數一拋 runtime error 就會解除該策略的 AOE。因此 v2 emit 區塊:
+
+1. **自癒目錄**:每次 emit 先 `CreateDirectoryA`(冪等)+ `GetFileAttributesA` 確認;Z: 未掛載/重開機清空 → 本 bar 靜默跳過,不寫不拋。開機順序不依賴任何 boot 腳本。
+2. **唯一暫存檔名**:`{out}.{GetTickCount}.{seq}.tmp`,無同名爭搶,免 FileDelete。
+3. **rename 重試**:`MoveFileExA`(BOOL 回傳,不拋錯)失敗 → Sleep(30ms) 重試,共 5 次;全敗 → `DeleteFileA` 清殘檔 + 跳過本 bar(下一 bar 重發,OMS 靠 §2.2 heartbeat 判 stale)。
+
+### 2.1.2 讀取端 I/O 規範(collector 實作必守)
+
+1. glob **只匹配 `*.json`** — 嚴禁 `*.json*` 之類 pattern(會誤掃 `.tmp`)。
+2. `with open(...)` 即讀即關,任何時候不長時間持有 handle(持有中的 rename-onto 會被 Windows 檔案鎖擋下)。
+3. `PermissionError` / `OSError` / `json.JSONDecodeError` 一律**跳過本輪、下輪再讀**,不 crash、不原地重試佔住檔案。
+
+```python
+def scan_signals(d: Path) -> dict[str, dict]:
+    out = {}
+    for p in d.glob("*.json"):          # never *.json*
+        try:
+            with open(p, encoding="utf-8") as f:   # open-read-close at once
+                out[p.stem] = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            continue                     # skip this cycle; next poll re-reads
+    return out
+```
+
+驗收/稽核工具:`py -m burner.tools.signal_lock_stress`(`--file` 持鎖壓測寫入端 retry;`--scan-dir` 稽核 glob 規範與 .tmp 殘留)。
+
+### 2.3 Ramdisk(Z:)注意事項
+
+- **重啟後 Z:\ 全部消失**:訊號檔為暫態資料,消失無妨;寫入端自癒建目錄(§2.1.1),OMS 重啟後的補單/對帳一律以「向交易所重新查詢實際部位」為準(§6.3),不依賴舊訊號檔。
+- **持久化狀態(registry、帳本、MDD 水位、equity_history)一律放 C:\**,不可只存在 Z:\。
+- ramdisk 軟體若有「定期備份到硬碟」功能,對 `Z:\oms` 關閉或大幅調低(備份當下鎖檔)。
+- 防毒即時掃描排除 `Z:\oms`(原 C:\oms 持久化目錄也一併排除)。
 
 ### 2.2 過期與心跳規則
 
@@ -230,16 +265,18 @@ Streamlit 或 FastAPI + 簡單前端，功能優先序：
 ### 9.2 實盤機服務結構
 
 ```
-C:\oms\
-├── signals\        # PT 燒錄訊號寫入的目標部位檔（本機目錄，無 SMB 問題）
-├── collector\      # 訊號檔掃描
+Z:\oms\                 # ramdisk（暫態，重啟即清空；見 §2.3）
+└── signals\            # PT 燒錄訊號寫入的目標部位檔（微秒級寫入、零 SSD 磨損）
+
+C:\oms\                 # 持久化（重啟保留）
+├── collector\      # 訊號檔掃描（讀 Z:\oms\signals）
 ├── core\           # 淨額計算、虛擬帳本、MDD monitor（單一程序）
 ├── executor\       # 幣安下單佇列（唯一持有交易 key）
 ├── dashboard\
 └── db\             # PostgreSQL
 ```
 
-OMS 以 Docker Desktop（WSL2）跑既有 compose，`signals\` 以 bind mount 掛進 collector；設定開機自啟。若 Docker Desktop 在筆電上不穩，備案是原生 Python venv + Windows 服務（NSSM），計畫中列為決策點。
+OMS 以 Docker Desktop（WSL2）跑既有 compose，`Z:\oms\signals\` 以 bind mount 掛進 collector；設定開機自啟（collector 啟動時自建 signals 目錄，與寫入端自癒互為備援）。若 Docker Desktop 在筆電上不穩，備案是原生 Python venv + Windows 服務（NSSM），計畫中列為決策點。
 
 ### 9.3 燒錄產物同步與上架流程（開發機 → 實盤機）
 

@@ -1,0 +1,75 @@
+{
+  "schema": 1,
+  "strategy_id": "DualAnchorBreakout_NQ_H1_v2",
+  "base_strategy": "DualAnchorBreakout",
+  "source_variant": "DualAnchorBreakout_NQ",
+  "symbol": "CME.NQ",
+  "symbol_class": "futures",
+  "timeframe": "H1",
+  "params": {
+    "Length": 2.0,
+    "BandMult": 1.5,
+    "ATRMult": 1.75,
+    "ReentryBars": 41.0
+  },
+  "exit_modules": [
+    {
+      "id": "M6",
+      "signal": "RescueTeamExit",
+      "params": {
+        "Length": 380.0,
+        "std": 3.2
+      }
+    },
+    {
+      "id": "M4",
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params": {
+        "DAYRANGE": 4.94
+      }
+    },
+    {
+      "id": "M5",
+      "signal": "QuantPass_PT_Exit",
+      "params": {
+        "PT_Base": 0.029
+      }
+    },
+    {
+      "id": "M3",
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params": {
+        "EXITBAR": 9.0
+      }
+    },
+    {
+      "id": "M1",
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params": {
+        "STP": 1.8
+      }
+    },
+    {
+      "id": "M2",
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params": {
+        "ATRSTP": 4.6
+      }
+    }
+  ],
+  "stage4_final": {
+    "net_profit": 295395.0,
+    "max_intraday_drawdown": -25580.0,
+    "romad": 11.5479
+  },
+  "dependencies": [],
+  "oos": {
+    "net_profit": 26225.0,
+    "mdd": -41335.0,
+    "pass": false
+  },
+  "source_state_json": "results/nq_dualanchor_hourly_pipeline/state.json",
+  "source_state_sha256": "03487f7d8cf504cc4583a0eee5bfbcc76c684b1286ae07ef6a474585653fba8b",
+  "el_sha256": "106e601941667bb5822ae1acb18e22b389157bafcfe06d7e23abca127681536c",
+  "burned_at": "2026-07-24T03:39:14Z"
+}

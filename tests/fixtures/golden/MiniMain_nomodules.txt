@@ -2,7 +2,7 @@
   AUTOGEN - do not edit by hand
   strategy_id         : MiniMain_BTC_H1_v1
   source_state_sha256 : 0000000000000000000000000000000000000000000000000000000000000000
-  template_version    : 1
+  template_version    : 2
   main                : MiniMain_crypto  (params baked from stage2.main_champ)
   exit_modules        : (none)  (params baked from stage3)
 ===================================================================== }
@@ -22,13 +22,21 @@ variables:
 
 { ---- levels ---- }
 
-{ ==== OMS emit declarations (template v1) ==== }
+{ ==== OMS emit declarations (template v2) ==== }
 DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
+DefineDLLFunc: "kernel32.dll", int, "CreateDirectoryA", lpstr, long ;
+DefineDLLFunc: "kernel32.dll", long, "GetFileAttributesA", lpstr ;
+DefineDLLFunc: "kernel32.dll", int, "DeleteFileA", lpstr ;
+DefineDLLFunc: "kernel32.dll", long, "GetTickCount" ;
+DefineDLLFunc: "kernel32.dll", void, "Sleep", long ;
 variables:
     oms_q( "" ),
     oms_out( "" ),
     oms_tmp( "" ),
-    oms_json( "" ) ;
+    oms_json( "" ),
+    oms_seq( 0 ),
+    oms_try( 0 ),
+    oms_ok( 0 ) ;
 
 ATRv = AvgTrueRange( 14 ) ;
 UpLvl = Highest( High, Length )[1] + BandMult * ATRv ;
@@ -45,22 +53,39 @@ if MarketPosition = 1 then
 if MarketPosition = -1 then
     BuyToCover ( "MmSX" ) next bar at DnLvl + ATRMult * ATRv stop ;
 
-{ ==== OMS signal emit: real-time only, atomic tmp+rename (oms-spec 2.1) ==== }
+{ ==== OMS signal emit v2: ramdisk, self-healing dir, zero-throw retry (oms-spec 2.1) ==== }
 if GetAppInfo( aiRealTimeCalc ) = 1 then
 begin
-    oms_q = DoubleQuote ;
-    oms_out = "C:\oms\signals\MiniMain_BTC_H1_v1.json" ;
-    oms_tmp = oms_out + ".tmp" ;
-    oms_json =
-        "{" + NewLine +
-        "  " + oms_q + "strategy_id" + oms_q + ": " + oms_q + "MiniMain_BTC_H1_v1" + oms_q + "," + NewLine +
-        "  " + oms_q + "symbol" + oms_q + ": " + oms_q + "BTCUSDT" + oms_q + "," + NewLine +
-        "  " + oms_q + "target_units" + oms_q + ": " + NumToStr( CurrentContracts * MarketPosition, 0 ) + "," + NewLine +
-        "  " + oms_q + "theoretical_equity" + oms_q + ": " + NumToStr( NetProfit + OpenPositionProfit, 2 ) + "," + NewLine +
-        "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
-        "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
-        "}" + NewLine ;
-    FileDelete( oms_tmp ) ;
-    FileAppend( oms_tmp, oms_json ) ;
-    MoveFileExA( oms_tmp, oms_out, 1 ) ;
+    { self-healing directory: idempotent, survives ramdisk reboot wipe.
+      If the ramdisk is not mounted the emit is SKIPPED -- nothing throws. }
+    CreateDirectoryA( "Z:\oms", 0 ) ;
+    CreateDirectoryA( "Z:\oms\signals", 0 ) ;
+    if GetFileAttributesA( "Z:\oms\signals" ) <> -1 then
+    begin
+        oms_q = DoubleQuote ;
+        oms_out = "Z:\oms\signals\MiniMain_BTC_H1_v1.json" ;
+        oms_seq = oms_seq + 1 ;
+        oms_tmp = oms_out + "." + NumToStr( GetTickCount, 0 ) + "." + NumToStr( oms_seq, 0 ) + ".tmp" ;
+        oms_json =
+            "{" + NewLine +
+            "  " + oms_q + "strategy_id" + oms_q + ": " + oms_q + "MiniMain_BTC_H1_v1" + oms_q + "," + NewLine +
+            "  " + oms_q + "symbol" + oms_q + ": " + oms_q + "BTCUSDT" + oms_q + "," + NewLine +
+            "  " + oms_q + "target_units" + oms_q + ": " + NumToStr( CurrentContracts * MarketPosition, 0 ) + "," + NewLine +
+            "  " + oms_q + "theoretical_equity" + oms_q + ": " + NumToStr( NetProfit + OpenPositionProfit, 2 ) + "," + NewLine +
+            "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
+            "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
+            "}" + NewLine ;
+        FileAppend( oms_tmp, oms_json ) ;
+        oms_ok = 0 ;
+        oms_try = 0 ;
+        while oms_ok = 0 and oms_try < 5
+        begin
+            oms_ok = MoveFileExA( oms_tmp, oms_out, 1 ) ;
+            oms_try = oms_try + 1 ;
+            if oms_ok = 0 and oms_try < 5 then
+                Sleep( 30 ) ;
+        end ;
+        if oms_ok = 0 then
+            DeleteFileA( oms_tmp ) ;
+    end ;
 end ;

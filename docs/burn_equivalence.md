@@ -12,11 +12,17 @@
    A/B 各自要開的訊號、input 值、FULL 日期範圍。
 3. 開 MC64(**以系統管理員身分**)+ 對應 workspace(checklist 的 `workspace` 欄)。
 4. **手動編譯燒錄訊號**(無自動化):PowerLanguage Editor → New Signal →
-   名稱 = `strategy_id`(如 `DualAnchorBreakout_BTC_H1_v1`)→ 貼上
+   名稱 = `strategy_id`(如 `DualAnchorBreakout_BTC_H1_v2`)→ 貼上
    `burned/<Name>/<strategy_id>.txt` 全文 → Compile。
-   ⚠️ 首次編譯同時驗證 OMS 區塊的相容性:`GetAppInfo(aiRealTimeCalc)`、
+   ⚠️ 首次編譯同時驗證 OMS 區塊的相容性 — v1 已實證:`GetAppInfo(aiRealTimeCalc)`、
    `DoubleQuote`、`FormatDate/FormatTime`、`ELDateToDateTime/ELTimeToDateTime`、
-   `ComputerDateTime`、`DefineDLLFunc`。任一不過 → 回報,調整 templates.py。
+   `ComputerDateTime`、`DefineDLLFunc`+`MoveFileExA`;**v2 新增待驗**:
+   `CreateDirectoryA`、`GetFileAttributesA`、`DeleteFileA`、`GetTickCount`、
+   `Sleep`。任一不過 → 回報,調整 templates.py。
+   v2 emit 行為:零拋錯設計 — 訊號檔寫入 `Z:\oms\signals\`(ramdisk),
+   每次 emit 自癒建目錄(重開機清空自動恢復);Z: 未掛載或 rename 重試
+   5 次仍失敗 → 本 bar 靜默跳過(下一 bar 重發,OMS 靠 heartbeat 判 stale),
+   絕不拋 runtime error(拋錯會解除 AOE)。
 5. 把編譯好的燒錄訊號 **Insert 到對應商品的 chart** 上(Status 可先關)。
    Study Editor 編譯完後**關閉**(pipeline 慣例)。
 

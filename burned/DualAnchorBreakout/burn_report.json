@@ -1,65 +1,65 @@
 {
   "base_strategy": "DualAnchorBreakout",
-  "burned_at": "2026-07-22T12:34:21Z",
+  "burned_at": "2026-07-24T03:39:14Z",
   "results": [
     {
       "inst": "BTC",
-      "strategy_id": "DualAnchorBreakout_BTC_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_BTC_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BTC_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BTC_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BTC_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BTC_H1_v2.manifest.json"
       ]
     },
     {
       "inst": "ETH",
-      "strategy_id": "DualAnchorBreakout_ETH_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_ETH_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_ETH_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_ETH_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_ETH_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_ETH_H1_v2.manifest.json"
       ]
     },
     {
       "inst": "BNB",
-      "strategy_id": "DualAnchorBreakout_BNB_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_BNB_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BNB_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BNB_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BNB_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_BNB_H1_v2.manifest.json"
       ]
     },
     {
       "inst": "TXF",
-      "strategy_id": "DualAnchorBreakout_TXF_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_TXF_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_TXF_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_TXF_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_TXF_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_TXF_H1_v2.manifest.json"
       ]
     },
     {
       "inst": "NQ",
-      "strategy_id": "DualAnchorBreakout_NQ_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_NQ_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_NQ_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_NQ_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_NQ_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_NQ_H1_v2.manifest.json"
       ]
     },
     {
       "inst": "GC",
-      "strategy_id": "DualAnchorBreakout_GC_H1_v1",
-      "status": "reused",
+      "strategy_id": "DualAnchorBreakout_GC_H1_v2",
+      "status": "burned",
       "errors": [],
       "files": [
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_GC_H1_v1.txt",
-        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_GC_H1_v1.manifest.json"
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_GC_H1_v2.txt",
+        "C:\\Users\\Tim\\MultichartAI\\burned\\DualAnchorBreakout\\DualAnchorBreakout_GC_H1_v2.manifest.json"
       ]
     }
   ]
