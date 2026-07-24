@@ -2,7 +2,7 @@
   AUTOGEN - do not edit by hand
   strategy_id         : MiniMain_BTC_H1_v1
   source_state_sha256 : 0000000000000000000000000000000000000000000000000000000000000000
-  template_version    : 2
+  template_version    : 3
   main                : MiniMain_crypto  (params baked from stage2.main_champ)
   exit_modules        : M5=QuantPass_PT_Exit, M6=RescueTeamExit  (params baked from stage3)
 ===================================================================== }
@@ -26,13 +26,16 @@ variables:
 inputs: m5_PT_Base( 0.246 ) ;
 variables: m5_PT( 0 ) ;
 inputs: m6_Length( 140 ), m6_std( 5.1 ) ;
-{ ==== OMS emit declarations (template v2) ==== }
+{ ==== OMS emit declarations (template v3) ==== }
 DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
 DefineDLLFunc: "kernel32.dll", int, "CreateDirectoryA", lpstr, long ;
 DefineDLLFunc: "kernel32.dll", long, "GetFileAttributesA", lpstr ;
 DefineDLLFunc: "kernel32.dll", int, "DeleteFileA", lpstr ;
 DefineDLLFunc: "kernel32.dll", long, "GetTickCount" ;
 DefineDLLFunc: "kernel32.dll", void, "Sleep", long ;
+DefineDLLFunc: "kernel32.dll", long, "CreateFileA", lpstr, long, long, long, long, long, long ;
+DefineDLLFunc: "kernel32.dll", int, "WriteFile", long, lpstr, long, lplong, long ;
+DefineDLLFunc: "kernel32.dll", int, "CloseHandle", long ;
 variables:
     oms_q( "" ),
     oms_out( "" ),
@@ -40,7 +43,9 @@ variables:
     oms_json( "" ),
     oms_seq( 0 ),
     oms_try( 0 ),
-    oms_ok( 0 ) ;
+    oms_ok( 0 ),
+    oms_h( 0 ),
+    oms_written( 0 ) ;
 
 ATRv = AvgTrueRange( 14 ) ;
 UpLvl = Highest( High, Length )[1] + BandMult * ATRv ;
@@ -73,7 +78,7 @@ if marketposition<0 then begin
 	if c crosses under BollingerBand( c, m6_Length, -m6_std ) then Buytocover ( "Buytocover " ) next bar at market;
 end;
 
-{ ==== OMS signal emit v2: ramdisk, self-healing dir, zero-throw retry (oms-spec 2.1) ==== }
+{ ==== OMS signal emit v3: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
 if GetAppInfo( aiRealTimeCalc ) = 1 then
 begin
     { self-healing directory: idempotent, survives ramdisk reboot wipe.
@@ -95,15 +100,27 @@ begin
             "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
             "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
             "}" + NewLine ;
-        FileAppend( oms_tmp, oms_json ) ;
+        { write with OUR OWN handle (MC's FileAppend never releases its handle,
+          which blocks the rename) -- GENERIC_WRITE, no sharing, CREATE_ALWAYS }
         oms_ok = 0 ;
-        oms_try = 0 ;
-        while oms_ok = 0 and oms_try < 5
+        oms_h = CreateFileA( oms_tmp, 1073741824, 0, 0, 2, 128, 0 ) ;
+        if oms_h <> -1 and oms_h <> 0 then
         begin
-            oms_ok = MoveFileExA( oms_tmp, oms_out, 1 ) ;
-            oms_try = oms_try + 1 ;
-            if oms_ok = 0 and oms_try < 5 then
-                Sleep( 30 ) ;
+            oms_written = 0 ;
+            oms_ok = WriteFile( oms_h, oms_json, StrLen( oms_json ), oms_written, 0 ) ;
+            CloseHandle( oms_h ) ;
+        end ;
+        if oms_ok <> 0 then
+        begin
+            oms_ok = 0 ;
+            oms_try = 0 ;
+            while oms_ok = 0 and oms_try < 5
+            begin
+                oms_ok = MoveFileExA( oms_tmp, oms_out, 1 ) ;
+                oms_try = oms_try + 1 ;
+                if oms_ok = 0 and oms_try < 5 then
+                    Sleep( 30 ) ;
+            end ;
         end ;
         if oms_ok = 0 then
             DeleteFileA( oms_tmp ) ;

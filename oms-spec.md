@@ -55,13 +55,15 @@
 | `bar_time` | 訊號所屬 bar 的收盤時間，用於過期判斷 |
 | `emit_time` | 寫檔時間，作為 heartbeat |
 
-### 2.1.1 寫入端零拋錯規範(template v2,burner/templates.py)
+### 2.1.1 寫入端零拋錯規範(template v3,burner/templates.py)
 
-EL 無 try/catch,檔案內建函數一拋 runtime error 就會解除該策略的 AOE。因此 v2 emit 區塊:
+EL 無 try/catch,檔案內建函數一拋 runtime error 就會解除該策略的 AOE;且 **MC 的 FileAppend 開檔後永不釋放 handle**(實測 2026-07-24:v2 的 .tmp 全數被 MC 鎖住,rename/刪除全部 sharing violation),因此 v3 emit 區塊完全不用 EL 檔案內建函數:
 
 1. **自癒目錄**:每次 emit 先 `CreateDirectoryA`(冪等)+ `GetFileAttributesA` 確認;Z: 未掛載/重開機清空 → 本 bar 靜默跳過,不寫不拋。開機順序不依賴任何 boot 腳本。
-2. **唯一暫存檔名**:`{out}.{GetTickCount}.{seq}.tmp`,無同名爭搶,免 FileDelete。
-3. **rename 重試**:`MoveFileExA`(BOOL 回傳,不拋錯)失敗 → Sleep(30ms) 重試,共 5 次;全敗 → `DeleteFileA` 清殘檔 + 跳過本 bar(下一 bar 重發,OMS 靠 §2.2 heartbeat 判 stale)。
+2. **唯一暫存檔名**:`{out}.{GetTickCount}.{seq}.tmp`,無同名爭搶。
+3. **自持 handle 寫檔**:`CreateFileA(GENERIC_WRITE, share=0, CREATE_ALWAYS)` → `WriteFile` → `CloseHandle`(rename 前必先 close)— 每步回傳值可檢查,永不拋錯。
+4. **rename 重試**:`MoveFileExA`(BOOL 回傳)失敗 → Sleep(30ms) 重試,共 5 次;任何失敗 → `DeleteFileA` 清殘檔 + 跳過本 bar(下一 bar 重發,OMS 靠 §2.2 heartbeat 判 stale)。
+5. 時區注意:`bar_time` 為交易所時區(crypto = UTC),`emit_time` 為 PT 本機當地時間 — OMS 的 staleness 判定以**本機時鐘 vs emit_time** 比對,不可拿 bar_time 與 emit_time 直接互減。
 
 ### 2.1.2 讀取端 I/O 規範(collector 實作必守)
 

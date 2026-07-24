@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "strategy_id": "DualAnchorBreakout_BTC_H1_v3",
+  "base_strategy": "DualAnchorBreakout",
+  "source_variant": "DualAnchorBreakout_crypto",
+  "symbol": "BTCUSDT",
+  "symbol_class": "crypto",
+  "timeframe": "H1",
+  "params": {
+    "Length": 8.0,
+    "BandMult": 4.75,
+    "ATRMult": 5.5,
+    "ReentryBars": 0.0
+  },
+  "exit_modules": [
+    {
+      "id": "M5",
+      "signal": "QuantPass_PT_Exit",
+      "params": {
+        "PT_Base": 0.246
+      }
+    },
+    {
+      "id": "M1",
+      "signal": "SFJ_15Dworkshop_lesson4_ATRstop",
+      "params": {
+        "STP": 6.1
+      }
+    },
+    {
+      "id": "M2",
+      "signal": "SFJ_15Dworkshop_lesson9_1_TrailingStop",
+      "params": {
+        "ATRSTP": 40.6
+      }
+    }
+  ],
+  "stage4_final": {
+    "net_profit": 2335.01,
+    "max_intraday_drawdown": -329.96,
+    "romad": 7.0766
+  },
+  "dependencies": [],
+  "oos": {
+    "net_profit": 498.13,
+    "mdd": -329.96,
+    "pass": false
+  },
+  "source_state_json": "results/btc_dualanchor_hourly_pipeline/state.json",
+  "source_state_sha256": "fd4b0d7e5f7d90163b50bb0da94766a7b92bb454a0e60f2c44b777a0aa03acd8",
+  "el_sha256": "2af379d8d4b6d3db015db33af88e783faecb112c7d8f062500406c7d9517720e",
+  "burned_at": "2026-07-24T08:18:26Z"
+}

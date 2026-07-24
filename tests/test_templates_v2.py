@@ -1,4 +1,6 @@
-"""OMS emit block v2: Z: ramdisk path, self-healing dir, zero-throw retry."""
+"""OMS emit block v3: Z: ramdisk path, self-healing dir, own-handle write,
+zero-throw retry.  (v2's FileAppend was field-disproven: MC never releases
+FileAppend's handle, so the rename always hit a sharing violation.)"""
 from burner import TEMPLATE_VERSION, assembler, renderer, templates
 from conftest import MINIMAIN, make_src
 
@@ -12,9 +14,9 @@ def _burned():
     return renderer.render(sid, body, src, "MiniMain_crypto", TEMPLATE_VERSION)
 
 
-def test_template_version_is_2():
-    assert TEMPLATE_VERSION == "2"
-    assert "template_version    : 2" in _burned()
+def test_template_version_is_3():
+    assert TEMPLATE_VERSION == "3"
+    assert "template_version    : 3" in _burned()
 
 
 def test_signals_path_is_ramdisk():
@@ -27,12 +29,24 @@ def test_signals_path_is_ramdisk():
 def test_all_winapi_declared():
     text = _burned()
     for fn in ("MoveFileExA", "CreateDirectoryA", "GetFileAttributesA",
-               "DeleteFileA", "GetTickCount", "Sleep"):
+               "DeleteFileA", "GetTickCount", "Sleep",
+               "CreateFileA", "WriteFile", "CloseHandle"):
         assert f'"{fn}"' in text, fn
 
 
-def test_no_throwing_filedelete():
-    assert "FileDelete(" not in _burned().replace(" ", "")
+def test_no_el_file_builtins():
+    flat = _burned().replace(" ", "")
+    assert "FileDelete(" not in flat
+    assert "FileAppend(" not in flat  # MC holds FileAppend handles forever
+
+
+def test_own_handle_write_sequence():
+    text = _burned()
+    assert "CreateFileA( oms_tmp, 1073741824, 0, 0, 2, 128, 0 )" in text
+    assert "WriteFile( oms_h, oms_json, StrLen( oms_json ), oms_written, 0 )" in text
+    assert "CloseHandle( oms_h )" in text
+    # CloseHandle must come BEFORE the rename loop
+    assert text.index("CloseHandle( oms_h )") < text.index("MoveFileExA( oms_tmp")
 
 
 def test_self_healing_and_skip_guard():

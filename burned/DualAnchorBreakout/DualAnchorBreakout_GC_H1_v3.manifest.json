@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "strategy_id": "DualAnchorBreakout_GC_H1_v3",
+  "base_strategy": "DualAnchorBreakout",
+  "source_variant": "DualAnchorBreakout_NQ",
+  "symbol": "CME.GC",
+  "symbol_class": "futures",
+  "timeframe": "H1",
+  "params": {
+    "Length": 178.0,
+    "BandMult": 0.0,
+    "ATRMult": 1.75,
+    "ReentryBars": 24.0
+  },
+  "exit_modules": [
+    {
+      "id": "M5",
+      "signal": "QuantPass_PT_Exit",
+      "params": {
+        "PT_Base": 0.022
+      }
+    },
+    {
+      "id": "M6",
+      "signal": "RescueTeamExit",
+      "params": {
+        "Length": 140.0,
+        "std": 5.1
+      }
+    },
+    {
+      "id": "M4",
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params": {
+        "DAYRANGE": 4.92
+      }
+    }
+  ],
+  "stage4_final": {
+    "net_profit": 183070.0,
+    "max_intraday_drawdown": -10300.0,
+    "romad": 17.7738
+  },
+  "dependencies": [],
+  "oos": {
+    "net_profit": 56840.0,
+    "mdd": -11310.0,
+    "pass": false
+  },
+  "source_state_json": "results/gc_dualanchor_hourly_pipeline/state.json",
+  "source_state_sha256": "d3160a9a2aa7a00dd6b800af39c236cea87caff1da4fb78b58f1e7d879b28df7",
+  "el_sha256": "6fd56b51e86f2755b832f043156a49c30bf0a4eaf10fdc323dcfb86831757b8c",
+  "burned_at": "2026-07-24T08:18:26Z"
+}

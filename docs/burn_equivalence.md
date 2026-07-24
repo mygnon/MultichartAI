@@ -14,15 +14,19 @@
 4. **手動編譯燒錄訊號**(無自動化):PowerLanguage Editor → New Signal →
    名稱 = `strategy_id`(如 `DualAnchorBreakout_BTC_H1_v2`)→ 貼上
    `burned/<Name>/<strategy_id>.txt` 全文 → Compile。
-   ⚠️ 首次編譯同時驗證 OMS 區塊的相容性 — v1 已實證:`GetAppInfo(aiRealTimeCalc)`、
+   ⚠️ 首次編譯同時驗證 OMS 區塊的相容性 — v1/v2 已實證:`GetAppInfo(aiRealTimeCalc)`、
    `DoubleQuote`、`FormatDate/FormatTime`、`ELDateToDateTime/ELTimeToDateTime`、
-   `ComputerDateTime`、`DefineDLLFunc`+`MoveFileExA`;**v2 新增待驗**:
-   `CreateDirectoryA`、`GetFileAttributesA`、`DeleteFileA`、`GetTickCount`、
-   `Sleep`。任一不過 → 回報,調整 templates.py。
-   v2 emit 行為:零拋錯設計 — 訊號檔寫入 `Z:\oms\signals\`(ramdisk),
-   每次 emit 自癒建目錄(重開機清空自動恢復);Z: 未掛載或 rename 重試
-   5 次仍失敗 → 本 bar 靜默跳過(下一 bar 重發,OMS 靠 heartbeat 判 stale),
-   絕不拋 runtime error(拋錯會解除 AOE)。
+   `ComputerDateTime`、`CreateDirectoryA`、`GetFileAttributesA`、`GetTickCount`;
+   **v3 新增待驗**:`CreateFileA`、`WriteFile`(lplong byref)、`CloseHandle`。
+   任一不過 → 回報,調整 templates.py。
+   v3 emit 行為:零拋錯 + 自持 handle — 訊號檔寫入 `Z:\oms\signals\`(ramdisk),
+   每次 emit 自癒建目錄(重開機清空自動恢復);**寫檔用 CreateFileA/WriteFile/
+   CloseHandle 而非 FileAppend**(實測 2026-07-24:MC 的 FileAppend 開檔後
+   永不釋放 handle,rename/刪除全部 sharing violation,v2 的 .json 從未發佈);
+   Z: 未掛載、開檔失敗或 rename 重試 5 次仍失敗 → 本 bar 靜默跳過
+   (下一 bar 重發,OMS 靠 heartbeat 判 stale),絕不拋 runtime error
+   (拋錯會解除 AOE)。v2 遺留的 locked .tmp 在 MC 重啟後解鎖,手動刪除
+   或用 `signal_lock_stress --scan-dir` 盤點。
 5. 把編譯好的燒錄訊號 **Insert 到對應商品的 chart** 上(Status 可先關)。
    Study Editor 編譯完後**關閉**(pipeline 慣例)。
 
