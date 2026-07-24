@@ -277,9 +277,11 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 
 | 40 | **ERGateBreakout** (ERBand's ER gate on the Donchian EDGE: buffer = BandMult·ATR·(1−ER); B=0 = exact Donchian, nested A/B) | 85,779 | **ER-transplant 1/3: the OOS robustness transfers, the IS edge does NOT** — B interior 0.75-2.0 everywhere (the gate IS used, never →0) yet BNB IS 85.8K ≪ ERBand-on-SMA 113.2K; **BNB strict PASS 1.00× +$12,466**; **ETH stack RoMaD 12.99 = #2 ETH cell ever** (OOS +$1,860 high-tier, M5 step +39.5%); BTC IS Obj 17.6K (top BTC tier), break 1.125×; NQ all-4-candidates OOS-NEGATIVE (2nd all-negative cell, after HLMean-TXF); TXF +472,000 but kept only M5 (rare single-module keep); GC sparse 79tr weak; 5/6 OOS-profitable |
 
+| 41 | **ERTrailBreakout** (ER on the TRAIL slot: EffTrail = ATRMult·ATR·(1+BandMult·(2ER−1)); B=0 = fixed trail) | 94,834 | **ER-transplant 2/3: the trail slot REJECTS ER modulation** — BandMult→0-0.25 on 5/6 cells (BNB winner exactly B=0; only TXF interior 0.75-1.0): the fixed wide chandelier is already right (Law 1 reconfirmed from inside; echoes VolClock's fixed-clock verdict). Futures IS strong (**NQ Obj 4.91M = #2 NQ ever**, GC 1.88M top-tier, TXF 25.2M) but crypto OOS flips negative: **BNB −$1,470 = 2nd BNB OOS loss ever**, ETH −$333; 0 strict PASS, 4/6 OOS-profitable; opposite market-split to ERGate (crypto-good/futures-bad) — ER value is slot×market specific |
+
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-41 ERTrail / 42 ERPause (ER-transplant factorial with ERBand + ERGate), 43 DuoAdapt.
+42 ERPause (closes the ER-transplant factorial: gate=OOS-transfers, trail=rejected, pause=?), 43 DuoAdapt.
 
 ### Records ledger
 
@@ -288,7 +290,7 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 - **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > VolRatio 49.6K ≈ WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 210/210 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 216/216 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
