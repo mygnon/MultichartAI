@@ -279,9 +279,11 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 
 | 41 | **ERTrailBreakout** (ER on the TRAIL slot: EffTrail = ATRMult·ATR·(1+BandMult·(2ER−1)); B=0 = fixed trail) | 94,834 | **ER-transplant 2/3: the trail slot REJECTS ER modulation** — BandMult→0-0.25 on 5/6 cells (BNB winner exactly B=0; only TXF interior 0.75-1.0): the fixed wide chandelier is already right (Law 1 reconfirmed from inside; echoes VolClock's fixed-clock verdict). Futures IS strong (**NQ Obj 4.91M = #2 NQ ever**, GC 1.88M top-tier, TXF 25.2M) but crypto OOS flips negative: **BNB −$1,470 = 2nd BNB OOS loss ever**, ETH −$333; 0 strict PASS, 4/6 OOS-profitable; opposite market-split to ERGate (crypto-good/futures-bad) — ER value is slot×market specific |
 
+| 42 | **ERPauseBreakout** (ER on the COOLDOWN slot: effRe = Re·(1+BandMult·(1−2ER)), floor 0; B=0 = fixed cooldown) | 122,493 | **ER-TRANSPLANT FACTORIAL CLOSES (refs 14/40/41/42)** — ER is SLOT-SPECIFIC alpha, not a general upgrade: band-width-on-center = breaker (ERBand), edge gate = OOS-only transfer, trail + cooldown = REJECTED (B→0-0.5 here; ETH/NQ exactly 0 — **NQ converges to the EXACT Aged bare-Donchian champion** 5/0/6.75/25 Obj 4.81M, same 4.1× break). OOS carnage: BNB/TXF/NQ all-candidates-negative (BNB −$1,985 = 3rd BNB loss ever, all three from rejected-axis refs), 3/6 profitable, 0 PASS; **ETH stack RoMaD 11.97 = #3 ETH cell** (ERGate 12.99 #2 — the ER-transplants own the ETH podium behind SpaceGate); TXF Obj 28.16M, stack +55% → 5.67M; zero-flake run |
+
 ### Untested queue (pipelines + BATs ready; all carry the 5b46b3b seed/zoom clamp fix)
 
-42 ERPause (closes the ER-transplant factorial: gate=OOS-transfers, trail=rejected, pause=?), 43 DuoAdapt.
+43 DuoAdapt.
 
 ### Records ledger
 
@@ -290,7 +292,7 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 - **Stacked NP (BNB):** Inner 70.6K > AgedChannel 53.7K > RangeFrac 51.1K > Polarity 50.9K > HLMean 49.8K > VolRatio 49.6K ≈ WickBlend 49.4K ≈ KAMA 49.2K
 - **Futures IS Obj (TXF):** Trim 42.96M > WickBlend 40.77M > RangeFrac 38.55M > Feedback 34.6M > Heavy 32.77M
 - **Module single steps:** Pivot-BNB M5 +505% > RangeFrac-BTC M6 +326% > Decay-ETH M5 +251% > Union-GC M5 +243% > DayChannel-BNB M5 +220% > OpenRange-GC M6 +218%
-- **Module keep total: 216/216 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
+- **Module keep total: 222/222 pinned cells keep ≥1 module** (every matrix since the pinning fix); M5 PT_Exit most-kept > M6 > M2/M1 > M4 > M3. GC full-keeps (all 6): Decay, RangeSpike, Heavy-era GC
 
 ### Laws & axis conclusions
 
@@ -304,7 +306,7 @@ Each reference runs on 6 instruments (BNB/BTC/ETH + TXF/NQ/GC, all Hourly) in on
 8. **Validation family** (filter WHICH bars' extremes count — volume/polarity/rank): all 3 give BNB strict PASS and BandMult→0 (the filter replaces the price buffer).
 9. **Anchor granularity**: rolling → day → week = edge↓, robustness↑; session anchors produce BTC strict PASSes (Day/Week/OpenRange). **Composition triad**: static AND/OR is an IS↔OOS dial, not alpha — but the ER-weighted dynamic BLEND (ref 33) escapes the dial (IS above both parents AND strict PASS).
 10. **Extreme-age law** (refs 18+34, two-sided): recent extremes carry the signal — fading STALE levels helps (Decay BandMult interior ×6), while excluding the FRESHEST 1-2 bars is at best a small crypto refinement (Aged K→0-2; TXF/NQ take K=0).
-11. **Width-modulator axis** (refs 14+39, two-sided): modulating band width by vol regime (VolRatio, quadratic ATR²/ATRslow) beats modulating by trend efficiency (ERBand) on IS (138.2K > 113.2K) but LOSES the strict PASS ERBand keeps — the modulator choice is another IS↔OOS dial; both are 6/6-profitable-grade mild-break designs.
+11. **Width-modulator axis** (refs 14+39, two-sided): modulating band width by vol regime (VolRatio, quadratic ATR²/ATRslow) beats modulating by trend efficiency (ERBand) on IS (138.2K > 113.2K) but LOSES the strict PASS ERBand keeps — the modulator choice is another IS↔OOS dial; both are 6/6-profitable-grade mild-break designs. **ER-transplant factorial (refs 14/40/41/42) closes: ER is slot-specific alpha** — band-width-on-center (breaker) > edge gate (OOS transfers, IS doesn't) > trail/cooldown (rejected, B→0); the engine's decisive parts (exit, cooldown) resist adaptation, echoing VolClock's fixed-clock verdict.
 12. **Exit modules on trend-breakout mains genuinely HELP (162/162) — but ONLY with verified pinning** of the main's champion params (`fixed_inputs`, read-back). Any module result without verified pinning is invalid (the CCB per-instrument pipelines' S3/4 remain SUSPECT). A module stack lifts NP/RoMaD, not generalization (Pivot-BNB +210% but still weak-OOS). On counter-trend/reversal mains modules HURT (CT 24/24, QPRSI-ETH).
 
 ## Burn-in Codegen (`burner/`)
