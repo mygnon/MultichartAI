@@ -1,6 +1,8 @@
-"""OMS emit block v3: Z: ramdisk path, self-healing dir, own-handle write,
+"""OMS emit block v4: Z: ramdisk path, self-healing dir, own-handle write,
 zero-throw retry.  (v2's FileAppend was field-disproven: MC never releases
-FileAppend's handle, so the rename always hit a sharing violation.)"""
+FileAppend's handle, so the rename always hit a sharing violation.  v3's
+WriteFile was rejected by the MC compiler: lplong byref = "Incorrect argument
+type" -> v4 uses the pointer-free legacy _lcreat/_lwrite/_lclose.)"""
 from burner import TEMPLATE_VERSION, assembler, renderer, templates
 from conftest import MINIMAIN, make_src
 
@@ -14,9 +16,9 @@ def _burned():
     return renderer.render(sid, body, src, "MiniMain_crypto", TEMPLATE_VERSION)
 
 
-def test_template_version_is_3():
-    assert TEMPLATE_VERSION == "3"
-    assert "template_version    : 3" in _burned()
+def test_template_version_is_4():
+    assert TEMPLATE_VERSION == "4"
+    assert "template_version    : 4" in _burned()
 
 
 def test_signals_path_is_ramdisk():
@@ -30,8 +32,10 @@ def test_all_winapi_declared():
     text = _burned()
     for fn in ("MoveFileExA", "CreateDirectoryA", "GetFileAttributesA",
                "DeleteFileA", "GetTickCount", "Sleep",
-               "CreateFileA", "WriteFile", "CloseHandle"):
+               "_lcreat", "_lwrite", "_lclose"):
         assert f'"{fn}"' in text, fn
+    # no byref DLL types anywhere (MC rejects them)
+    assert "lplong" not in text and "lpdword" not in text
 
 
 def test_no_el_file_builtins():
@@ -42,11 +46,12 @@ def test_no_el_file_builtins():
 
 def test_own_handle_write_sequence():
     text = _burned()
-    assert "CreateFileA( oms_tmp, 1073741824, 0, 0, 2, 128, 0 )" in text
-    assert "WriteFile( oms_h, oms_json, StrLen( oms_json ), oms_written, 0 )" in text
-    assert "CloseHandle( oms_h )" in text
-    # CloseHandle must come BEFORE the rename loop
-    assert text.index("CloseHandle( oms_h )") < text.index("MoveFileExA( oms_tmp")
+    assert "oms_h = _lcreat( oms_tmp, 0 )" in text
+    assert "oms_written = _lwrite( oms_h, oms_json, StrLen( oms_json ) )" in text
+    assert "_lclose( oms_h )" in text
+    assert "if oms_written = StrLen( oms_json ) then" in text
+    # handle must be closed BEFORE the rename loop
+    assert text.index("_lclose( oms_h )") < text.index("MoveFileExA( oms_tmp")
 
 
 def test_self_healing_and_skip_guard():

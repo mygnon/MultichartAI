@@ -1,0 +1,265 @@
+{ =====================================================================
+  AUTOGEN - do not edit by hand
+  strategy_id         : DualAnchorBreakout_BTC_H1_v4
+  source_state_sha256 : fd4b0d7e5f7d90163b50bb0da94766a7b92bb454a0e60f2c44b777a0aa03acd8
+  template_version    : 4
+  main                : DualAnchorBreakout_crypto  (params baked from stage2.main_champ)
+  exit_modules        : M5=QuantPass_PT_Exit, M1=SFJ_15Dworkshop_lesson4_ATRstop, M2=SFJ_15Dworkshop_lesson9_1_TrailingStop  (params baked from stage3)
+===================================================================== }
+
+{===============================================================================
+  DualAnchorBreakout_crypto
+  -------------------------------------------------------------------------------
+  PowerLanguage (EasyLanguage / MultiCharts64) trading strategy for crypto.
+  Hourly resolution, Data1 only. Long + Short. DUAL-ANCHOR breakout — the gate is
+  the OUTERMOST of yesterday's session extreme and the rolling Donchian extreme
+  (must clear BOTH anchor families) — entered intrabar via STOP + ReentryBars
+  cooldown + ATR chandelier trail.
+
+  WHY A NEW BREAKOUT REFERENCE:
+  The OOS-robust breakout engine is the same skeleton everywhere — a rolling/non-lagged
+  reference LEVEL + an intrabar STOP fill AT that level + a WIDE ATR(14) chandelier
+  trailing exit + a post-exit ReentryBars cooldown. This 36th reference is designed
+  FROM the matrix evidence:
+    - DayChannelBreakout showed the SESSION anchor is the most OOS-robust family
+      (Length collapsed to 1 day; BTC + ETH strict PASS at exactly 1.00x) but the
+      weakest MAIN.
+    - The rolling Donchian is the IS-strongest family but OOS-fragile.
+  ConsensusBreakout AND-ed two references WITHIN the rolling family; this one
+  AND-s ACROSS anchor families:
+      UpLvl = MaxList( HighD(1), Highest(High, Length)[1] ) + BandMult*ATR
+      DnLvl = MinList( LowD(1),  Lowest(Low,  Length)[1] ) - BandMult*ATR
+  A fill must clear BOTH yesterday's session extreme (the OOS-robust gate, constant
+  within the day) AND the N-bar rolling extreme (the IS-strong gate, walking bar by
+  bar) — whichever is farther gates the trade. Small Length -> the session side
+  dominates; large Length -> the rolling side dominates; the value zone is where
+  the outer anchor ALTERNATES. Hypothesis: inherit the session family's mild OOS
+  breaks while the rolling side restores the absolute edge DayChannel lacked.
+
+  This is NOT mean-reversion: it BUYS the upper break and SHORTS the lower break
+  (continuation), with the wide ATR trail letting winners run.
+
+    - Long  : flat & cooldown done -> Buy       next bar at UpLvl STOP
+    - Short : flat & cooldown done -> SellShort  next bar at DnLvl STOP
+    - Exit  : ATR(14) chandelier trailing stop (the decisive exit). Flat-only.
+  Sizing: _Crypto1MUSD = Round(1,000,000 / Close, 0) ~ $1M notional per trade.
+
+  Inputs (all optimizable; names match the optimizer's ParamAxis exactly):
+    Length      - rolling Donchian lookback, bars
+    BandMult    - buffer beyond the dual-anchor level in ATR(14) multiples
+                  (0 = pure touch)
+    ATRMult     - trailing-stop distance in ATR(14) multiples (wider = looser)
+    ReentryBars - bars to stay flat after an exit before a new entry is allowed
+
+  ⚠️ Requires an INTRADAY chart (HighD/LowD read the completed prior session, same
+     family as PivotBreakout / DayChannel). HighD(1)/LowD(1) > 0 guarded — an
+     unloaded prior day falls back to the rolling extreme alone.
+
+  Defaults: Length=20, BandMult=0.0, ATRMult=3.0, ReentryBars=0
+  Author: generated for Tim / MultichartAI, 2026-07-08
+===============================================================================}
+
+inputs:
+    Length( 8 ),
+    BandMult( 4.75 ),
+    ATRMult( 5.5 ),
+    ReentryBars( 0 ) ;
+
+variables:
+    _Crypto1MUSD( 0 ),
+    ATRv( 0 ),
+    RollHi( 0 ),
+    RollLo( 0 ),
+    UpAnchor( 0 ),
+    DnAnchor( 0 ),
+    UpLvl( 0 ),
+    DnLvl( 0 ),
+    flatBars( 0 ),
+    TrailLong( 0 ),
+    TrailShort( 0 ) ;
+
+{ ---- position size: ~$1M notional per trade, price-normalized ---- }
+
+{ ==== burned exit-module declarations (params baked from stage3) ==== }
+inputs: m5_PT_Base( 0.246 ) ;
+variables: m5_PT( 0 ) ;
+inputs: m1_STP( 6.1 ) ;
+variables: m1_ATR( 0 ) ;
+inputs: m2_ATRSTP( 40.6 ) ;
+variables: m2_ATR( 0 ), m2_MP( 0 ), m2_POSH( 0 ), m2_POSL( 99999 ) ;
+{ ==== OMS emit declarations (template v4) ==== }
+DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
+DefineDLLFunc: "kernel32.dll", int, "CreateDirectoryA", lpstr, long ;
+DefineDLLFunc: "kernel32.dll", long, "GetFileAttributesA", lpstr ;
+DefineDLLFunc: "kernel32.dll", int, "DeleteFileA", lpstr ;
+DefineDLLFunc: "kernel32.dll", long, "GetTickCount" ;
+DefineDLLFunc: "kernel32.dll", void, "Sleep", long ;
+DefineDLLFunc: "kernel32.dll", long, "_lcreat", lpstr, int ;
+DefineDLLFunc: "kernel32.dll", long, "_lwrite", long, lpstr, long ;
+DefineDLLFunc: "kernel32.dll", long, "_lclose", long ;
+variables:
+    oms_q( "" ),
+    oms_out( "" ),
+    oms_tmp( "" ),
+    oms_json( "" ),
+    oms_seq( 0 ),
+    oms_try( 0 ),
+    oms_ok( 0 ),
+    oms_h( 0 ),
+    oms_written( 0 ) ;
+
+_Crypto1MUSD = Round( 1000000 / Close, 0 ) ;
+if _Crypto1MUSD < 1 then
+    _Crypto1MUSD = 1 ;
+
+ATRv = AvgTrueRange( 14 ) ;
+
+{ ---- dual anchor: outermost of yesterday's extreme and the rolling extreme ---- }
+RollHi = Highest( High, Length )[1] ;
+RollLo = Lowest( Low, Length )[1] ;
+if HighD( 1 ) > 0 then
+    UpAnchor = MaxList( HighD( 1 ), RollHi )
+else
+    UpAnchor = RollHi ;
+if LowD( 1 ) > 0 then
+    DnAnchor = MinList( LowD( 1 ), RollLo )
+else
+    DnAnchor = RollLo ;
+
+UpLvl = UpAnchor + BandMult * ATRv ;   { long breakout level  (clears BOTH anchors) }
+DnLvl = DnAnchor - BandMult * ATRv ;   { short breakout level (clears BOTH anchors) }
+
+{ ---- flat-cooldown counter: consecutive bars with no open position ---- }
+if MarketPosition = 0 then
+    flatBars = flatBars + 1
+else
+    flatBars = 0 ;
+
+{ ---- entries: dual-anchor breakout STOP, only when flat + cooldown done ---- }
+if MarketPosition = 0 and flatBars >= ReentryBars then
+begin
+    Buy ( "DaLE" ) _Crypto1MUSD contract next bar at UpLvl stop ;
+    SellShort ( "DaSE" ) _Crypto1MUSD contract next bar at DnLvl stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: long ---- }
+if MarketPosition = 1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailLong = EntryPrice - ATRMult * ATRv
+    else
+        TrailLong = MaxList( TrailLong, Close - ATRMult * ATRv ) ;
+    Sell ( "DaLX" ) next bar at TrailLong stop ;
+end ;
+
+{ ---- ATR chandelier trailing stop: short ---- }
+if MarketPosition = -1 then
+begin
+    if BarsSinceEntry = 0 then
+        TrailShort = EntryPrice + ATRMult * ATRv
+    else
+        TrailShort = MinList( TrailShort, Close + ATRMult * ATRv ) ;
+    BuyToCover ( "DaSX" ) next bar at TrailShort stop ;
+end ;
+
+{ ==== M5: QuantPass_PT_Exit (burned: PT_Base=0.246) ==== }
+if marketposition<>0 then begin 
+	m5_PT = entryprice+(m5_PT_Base*entryprice*marketposition) ; 
+end ; 
+if marketposition>0 then begin 
+	if C>m5_PT then sell ("LX_PT") next bar market;
+end
+else if marketposition<0 then begin 
+	if C<m5_PT then buytocover ("SX_PT") next bar market;
+end ; 
+
+{ ==== M1: SFJ_15Dworkshop_lesson4_ATRstop (burned: STP=6.1) ==== }
+{-------------------Copyrigth@2020.11.24 Jey -------------------
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+m1_ATR= AvgTrueRange(10); 
+
+IF marketposition=1  THEN SELL ( "M1_LX" ) NEXT BAR ENTRYPRICE - m1_STP * m1_ATR STOP;
+IF marketposition=-1 THEN BUYTOCOVER ( "M1_SX" ) NEXT BAR ENTRYPRICE + m1_STP * m1_ATR STOP;
+
+{ ==== M2: SFJ_15Dworkshop_lesson9_1_TrailingStop (burned: ATRSTP=40.6) ==== }
+{-------------------Copyrigth@2021.01.11 Jey -------------------
+CHAPTER 9
+Line:@shi4052s
+Fb:https://www.facebook.com/TradeSoEasy/
+Blog:https://itradesoeasy.com
+YOUTUBE:https://www.youtube.com/channel/UCwkV3p2C5wEeXwyE4QHRiCg
+-------------------------------------------------------------}
+
+m2_MP = MarketPosition ;
+m2_ATR=AvgTrueRange(10);
+
+if m2_MP<>m2_MP[1] then begin
+	m2_POSH=0;
+	m2_POSL=99999;
+end;
+
+if m2_MP = 1 then begin
+	IF High > m2_POSH THEN m2_POSH = High ;
+	SELL ( "AtrLX" ) next bar at m2_POSH - m2_ATR*m2_ATRSTP stop ;
+end;
+	
+if m2_MP =-1 then begin
+	IF LOW < m2_POSL THEN m2_POSL = L ;
+	BUYTOCOVER ( "AtrSX" ) next bar at m2_POSL + m2_ATR*m2_ATRSTP stop ;
+end;
+
+{ ==== OMS signal emit v4: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
+if GetAppInfo( aiRealTimeCalc ) = 1 then
+begin
+    { self-healing directory: idempotent, survives ramdisk reboot wipe.
+      If the ramdisk is not mounted the emit is SKIPPED -- nothing throws. }
+    CreateDirectoryA( "Z:\oms", 0 ) ;
+    CreateDirectoryA( "Z:\oms\signals", 0 ) ;
+    if GetFileAttributesA( "Z:\oms\signals" ) <> -1 then
+    begin
+        oms_q = DoubleQuote ;
+        oms_out = "Z:\oms\signals\DualAnchorBreakout_BTC_H1_v4.json" ;
+        oms_seq = oms_seq + 1 ;
+        oms_tmp = oms_out + "." + NumToStr( GetTickCount, 0 ) + "." + NumToStr( oms_seq, 0 ) + ".tmp" ;
+        oms_json =
+            "{" + NewLine +
+            "  " + oms_q + "strategy_id" + oms_q + ": " + oms_q + "DualAnchorBreakout_BTC_H1_v4" + oms_q + "," + NewLine +
+            "  " + oms_q + "symbol" + oms_q + ": " + oms_q + "BTCUSDT" + oms_q + "," + NewLine +
+            "  " + oms_q + "target_units" + oms_q + ": " + NumToStr( CurrentContracts * MarketPosition, 0 ) + "," + NewLine +
+            "  " + oms_q + "theoretical_equity" + oms_q + ": " + NumToStr( NetProfit + OpenPositionProfit, 2 ) + "," + NewLine +
+            "  " + oms_q + "bar_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ELDateToDateTime( Date ) ) + " " + FormatTime( "HH:mm:ss", ELTimeToDateTime( Time ) ) + oms_q + "," + NewLine +
+            "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
+            "}" + NewLine ;
+        { write with OUR OWN handle (MC's FileAppend never releases its handle,
+          which blocks the rename) -- legacy _lcreat/_lwrite/_lclose: create-
+          or-truncate, all params by value, handle closed before the rename }
+        oms_ok = 0 ;
+        oms_h = _lcreat( oms_tmp, 0 ) ;
+        if oms_h <> -1 then
+        begin
+            oms_written = _lwrite( oms_h, oms_json, StrLen( oms_json ) ) ;
+            _lclose( oms_h ) ;
+            if oms_written = StrLen( oms_json ) then
+                oms_ok = 1 ;
+        end ;
+        if oms_ok <> 0 then
+        begin
+            oms_ok = 0 ;
+            oms_try = 0 ;
+            while oms_ok = 0 and oms_try < 5
+            begin
+                oms_ok = MoveFileExA( oms_tmp, oms_out, 1 ) ;
+                oms_try = oms_try + 1 ;
+                if oms_ok = 0 and oms_try < 5 then
+                    Sleep( 30 ) ;
+            end ;
+        end ;
+        if oms_ok = 0 then
+            DeleteFileA( oms_tmp ) ;
+    end ;
+end ;

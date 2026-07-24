@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "strategy_id": "DualAnchorBreakout_ETH_H1_v4",
+  "base_strategy": "DualAnchorBreakout",
+  "source_variant": "DualAnchorBreakout_crypto",
+  "symbol": "ETHUSDT",
+  "symbol_class": "crypto",
+  "timeframe": "H1",
+  "params": {
+    "Length": 29.0,
+    "BandMult": 2.0,
+    "ATRMult": 15.75,
+    "ReentryBars": 1.0
+  },
+  "exit_modules": [
+    {
+      "id": "M5",
+      "signal": "QuantPass_PT_Exit",
+      "params": {
+        "PT_Base": 0.616
+      }
+    },
+    {
+      "id": "M6",
+      "signal": "RescueTeamExit",
+      "params": {
+        "Length": 40.0,
+        "std": 4.8
+      }
+    },
+    {
+      "id": "M4",
+      "signal": "SFJ_15Dworkshop_lesson11_3_high_volatility_exit",
+      "params": {
+        "DAYRANGE": 5.88
+      }
+    },
+    {
+      "id": "M3",
+      "signal": "SFJ_15Dworkshop_lesson10_3_EntryBarsAfterExit",
+      "params": {
+        "EXITBAR": 616.0
+      }
+    }
+  ],
+  "stage4_final": {
+    "net_profit": 5074.35,
+    "max_intraday_drawdown": -801.073,
+    "romad": 6.3344
+  },
+  "dependencies": [],
+  "oos": {
+    "net_profit": 489.29,
+    "mdd": -845.263,
+    "pass": false
+  },
+  "source_state_json": "results/eth_dualanchor_hourly_pipeline/state.json",
+  "source_state_sha256": "b4e72a4495a32f83de32242b6861679d30b2076bb2f202db051389811a6705f9",
+  "el_sha256": "48807bc86e73d4f2403dc1e3420a3b94309a6dd04287fecd363517855515c44c",
+  "burned_at": "2026-07-24T08:27:28Z"
+}

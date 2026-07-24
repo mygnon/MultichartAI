@@ -33,19 +33,20 @@ MODULE_SECTION_TMPL = Template(
 # declarations before executable statements); the body sits at file end.
 # Real-time-only guard: backtests / the equivalence gate never write files.
 #
-# v3 design: ZERO-THROW + WE OWN EVERY HANDLE.  EL has no try/catch and a
+# v4 design: ZERO-THROW + WE OWN EVERY HANDLE.  EL has no try/catch and a
 # file-builtin runtime error DISARMS Auto Order Execution; additionally,
 # MultiCharts' FileAppend keeps its file handle OPEN until MC closes (field-
 # verified 2026-07-24: every v2 .tmp stayed locked, so MoveFileExA/DeleteFileA
-# hit sharing violations and no .json was ever published).  So v3 does the
-# write itself via CreateFileA/WriteFile/CloseHandle — handle closed before
-# the rename — and every failable step is a WinAPI call with a checkable
-# return value:
+# hit sharing violations and no .json was ever published).  So v4 does the
+# write itself — handle closed before the rename — and every failable step is
+# a WinAPI call with a checkable return value:
 #   - self-healing directory (CreateDirectoryA idempotent; if the ramdisk is
 #     not mounted, GetFileAttributesA says so and the emit is SKIPPED)
 #   - unique .tmp name per write (GetTickCount + sequence) -> no name contention
-#   - CreateFileA(GENERIC_WRITE=1073741824, share=0, CREATE_ALWAYS=2,
-#     FILE_ATTRIBUTE_NORMAL=128) -> WriteFile -> CloseHandle (always)
+#   - _lcreat -> _lwrite -> _lclose (kernel32 legacy file API: CREATE_ALWAYS
+#     semantics, ALL parameters by value -- MC's DefineDLLFunc rejected
+#     WriteFile's lplong byref bytes-written pointer with "Incorrect argument
+#     type", and these legacy exports need no pointers at all)
 #   - MoveFileExA replace-existing rename retried 5x with Sleep(30ms); any
 #     failure -> DeleteFileA cleans the tmp (now possible: handle is ours and
 #     closed) and the emit is skipped (next bar re-emits; OMS treats a stale
@@ -53,7 +54,8 @@ MODULE_SECTION_TMPL = Template(
 # No EL file builtins remain — nothing can throw.
 # COMPILE-CHECK ITEMS (verified live: GetAppInfo/DoubleQuote/FormatDate/
 # ELDateToDateTime/ComputerDateTime/CreateDirectoryA/GetFileAttributesA/
-# GetTickCount; new in v3: CreateFileA, WriteFile (lplong byref), CloseHandle).
+# GetTickCount; REJECTED by MC compiler: WriteFile's lplong byref (v3);
+# new in v4: _lcreat, _lwrite, _lclose).
 
 OMS_DECLS_TMPL = Template("""{ ==== OMS emit declarations (template v$template_version) ==== }
 DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
@@ -62,9 +64,9 @@ DefineDLLFunc: "kernel32.dll", long, "GetFileAttributesA", lpstr ;
 DefineDLLFunc: "kernel32.dll", int, "DeleteFileA", lpstr ;
 DefineDLLFunc: "kernel32.dll", long, "GetTickCount" ;
 DefineDLLFunc: "kernel32.dll", void, "Sleep", long ;
-DefineDLLFunc: "kernel32.dll", long, "CreateFileA", lpstr, long, long, long, long, long, long ;
-DefineDLLFunc: "kernel32.dll", int, "WriteFile", long, lpstr, long, lplong, long ;
-DefineDLLFunc: "kernel32.dll", int, "CloseHandle", long ;
+DefineDLLFunc: "kernel32.dll", long, "_lcreat", lpstr, int ;
+DefineDLLFunc: "kernel32.dll", long, "_lwrite", long, lpstr, long ;
+DefineDLLFunc: "kernel32.dll", long, "_lclose", long ;
 variables:
     oms_q( "" ),
     oms_out( "" ),
@@ -77,7 +79,7 @@ variables:
     oms_written( 0 ) ;
 """)
 
-OMS_BODY_TMPL = Template("""{ ==== OMS signal emit v3: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
+OMS_BODY_TMPL = Template("""{ ==== OMS signal emit v4: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
 if GetAppInfo( aiRealTimeCalc ) = 1 then
 begin
     { self-healing directory: idempotent, survives ramdisk reboot wipe.
@@ -100,14 +102,16 @@ begin
             "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
             "}" + NewLine ;
         { write with OUR OWN handle (MC's FileAppend never releases its handle,
-          which blocks the rename) -- GENERIC_WRITE, no sharing, CREATE_ALWAYS }
+          which blocks the rename) -- legacy _lcreat/_lwrite/_lclose: create-
+          or-truncate, all params by value, handle closed before the rename }
         oms_ok = 0 ;
-        oms_h = CreateFileA( oms_tmp, 1073741824, 0, 0, 2, 128, 0 ) ;
-        if oms_h <> -1 and oms_h <> 0 then
+        oms_h = _lcreat( oms_tmp, 0 ) ;
+        if oms_h <> -1 then
         begin
-            oms_written = 0 ;
-            oms_ok = WriteFile( oms_h, oms_json, StrLen( oms_json ), oms_written, 0 ) ;
-            CloseHandle( oms_h ) ;
+            oms_written = _lwrite( oms_h, oms_json, StrLen( oms_json ) ) ;
+            _lclose( oms_h ) ;
+            if oms_written = StrLen( oms_json ) then
+                oms_ok = 1 ;
         end ;
         if oms_ok <> 0 then
         begin

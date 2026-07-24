@@ -2,7 +2,7 @@
   AUTOGEN - do not edit by hand
   strategy_id         : MiniMain_BTC_H1_v1
   source_state_sha256 : 0000000000000000000000000000000000000000000000000000000000000000
-  template_version    : 3
+  template_version    : 4
   main                : MiniMain_crypto  (params baked from stage2.main_champ)
   exit_modules        : (none)  (params baked from stage3)
 ===================================================================== }
@@ -22,16 +22,16 @@ variables:
 
 { ---- levels ---- }
 
-{ ==== OMS emit declarations (template v3) ==== }
+{ ==== OMS emit declarations (template v4) ==== }
 DefineDLLFunc: "kernel32.dll", int, "MoveFileExA", lpstr, lpstr, int ;
 DefineDLLFunc: "kernel32.dll", int, "CreateDirectoryA", lpstr, long ;
 DefineDLLFunc: "kernel32.dll", long, "GetFileAttributesA", lpstr ;
 DefineDLLFunc: "kernel32.dll", int, "DeleteFileA", lpstr ;
 DefineDLLFunc: "kernel32.dll", long, "GetTickCount" ;
 DefineDLLFunc: "kernel32.dll", void, "Sleep", long ;
-DefineDLLFunc: "kernel32.dll", long, "CreateFileA", lpstr, long, long, long, long, long, long ;
-DefineDLLFunc: "kernel32.dll", int, "WriteFile", long, lpstr, long, lplong, long ;
-DefineDLLFunc: "kernel32.dll", int, "CloseHandle", long ;
+DefineDLLFunc: "kernel32.dll", long, "_lcreat", lpstr, int ;
+DefineDLLFunc: "kernel32.dll", long, "_lwrite", long, lpstr, long ;
+DefineDLLFunc: "kernel32.dll", long, "_lclose", long ;
 variables:
     oms_q( "" ),
     oms_out( "" ),
@@ -58,7 +58,7 @@ if MarketPosition = 1 then
 if MarketPosition = -1 then
     BuyToCover ( "MmSX" ) next bar at DnLvl + ATRMult * ATRv stop ;
 
-{ ==== OMS signal emit v3: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
+{ ==== OMS signal emit v4: ramdisk, self-healing dir, own-handle write, zero-throw retry (oms-spec 2.1) ==== }
 if GetAppInfo( aiRealTimeCalc ) = 1 then
 begin
     { self-healing directory: idempotent, survives ramdisk reboot wipe.
@@ -81,14 +81,16 @@ begin
             "  " + oms_q + "emit_time" + oms_q + ": " + oms_q + FormatDate( "yyyy-MM-dd", ComputerDateTime ) + " " + FormatTime( "HH:mm:ss", ComputerDateTime ) + oms_q + NewLine +
             "}" + NewLine ;
         { write with OUR OWN handle (MC's FileAppend never releases its handle,
-          which blocks the rename) -- GENERIC_WRITE, no sharing, CREATE_ALWAYS }
+          which blocks the rename) -- legacy _lcreat/_lwrite/_lclose: create-
+          or-truncate, all params by value, handle closed before the rename }
         oms_ok = 0 ;
-        oms_h = CreateFileA( oms_tmp, 1073741824, 0, 0, 2, 128, 0 ) ;
-        if oms_h <> -1 and oms_h <> 0 then
+        oms_h = _lcreat( oms_tmp, 0 ) ;
+        if oms_h <> -1 then
         begin
-            oms_written = 0 ;
-            oms_ok = WriteFile( oms_h, oms_json, StrLen( oms_json ), oms_written, 0 ) ;
-            CloseHandle( oms_h ) ;
+            oms_written = _lwrite( oms_h, oms_json, StrLen( oms_json ) ) ;
+            _lclose( oms_h ) ;
+            if oms_written = StrLen( oms_json ) then
+                oms_ok = 1 ;
         end ;
         if oms_ok <> 0 then
         begin
